@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Bingo</title>
+<meta name="description" content="Sorteio de bingo com cadastro de cartelas por escaneamento e detecção automática de ganhador.">
+<meta name="theme-color" content="#7c3aed">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎱</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header__brand">
+    <span class="app-header__logo" aria-hidden="true">🎱</span>
+    <span class="app-header__title">Bingo</span>
+  </div>
+  <span class="app-header__game" id="gameLabel">Jogo #1</span>
+</header>
+
+<main class="app-main">
+
+  <!-- ===================== SORTEIO ===================== -->
+  <section class="view" id="view-sorteio" data-view="sorteio">
+    <div class="draw-stage">
+      <div class="draw-ball" id="currentBall">
+        <span class="draw-ball__letter" id="currentBallLetter">-</span>
+        <span class="draw-ball__number" id="currentBallNumber">--</span>
+      </div>
+      <button class="btn btn--primary btn--xl" id="btnSortear">Sortear número</button>
+      <p class="draw-stats" id="drawStats">0 de 0 números sorteados</p>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <h2>Últimas bolas sorteadas</h2>
+      </div>
+      <div class="chip-row" id="lastBallsRow">
+        <span class="empty-hint">Nenhum número sorteado ainda.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <h2>Painel de números</h2>
+      </div>
+      <div class="draw-board" id="drawBoard"></div>
+    </div>
+
+    <div class="card">
+      <div class="card__header">
+        <h2>Cartelas na partida <span class="badge" id="activeCardsCount">0</span></h2>
+      </div>
+      <div id="activeCardsSummary" class="cards-summary">
+        <span class="empty-hint">Nenhuma cartela cadastrada para este jogo. Vá em "Cartelas" para escanear.</span>
+      </div>
+    </div>
+
+    <button class="btn btn--danger btn--block" id="btnEncerrar">Encerrar jogo</button>
+  </section>
+
+  <!-- ===================== CARTELAS ===================== -->
+  <section class="view" id="view-cartelas" data-view="cartelas" hidden>
+    <div class="card">
+      <div class="card__header"><h2>Nova cartela</h2></div>
+      <div class="btn-group">
+        <button class="btn btn--primary btn--block" id="btnScan">📷 Escanear cartela</button>
+        <button class="btn btn--secondary btn--block" id="btnManual">✏️ Cadastrar manualmente</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><h2>Cartelas ativas <span class="badge" id="cartelasAtivasCount">0</span></h2></div>
+      <div id="cartelasAtivasList" class="card-list">
+        <span class="empty-hint">Nenhuma cartela ativa.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header collapsible" id="toggleHistorico">
+        <h2>Histórico de cartelas</h2>
+        <span class="chevron">▾</span>
+      </div>
+      <div id="cartelasHistoricoList" class="card-list" hidden>
+        <span class="empty-hint">Nenhum histórico ainda.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CONFIGURAÇÕES ===================== -->
+  <section class="view" id="view-config" data-view="config" hidden>
+    <form class="card" id="formConfig">
+      <div class="card__header"><h2>Intervalo do sorteio</h2></div>
+      <div class="field-row">
+        <label class="field">
+          <span>Número inicial</span>
+          <input type="number" id="cfgMin" min="1" required>
+        </label>
+        <label class="field">
+          <span>Número final</span>
+          <input type="number" id="cfgMax" min="2" required>
+        </label>
+      </div>
+
+      <div class="card__header"><h2>Exibição</h2></div>
+      <label class="field">
+        <span>Quantidade de últimas bolas exibidas</span>
+        <input type="number" id="cfgLastCount" min="1" max="50" required>
+      </label>
+
+      <div class="card__header"><h2>Critérios de vitória</h2></div>
+
+      <label class="field field--check">
+        <input type="checkbox" id="cfgCheia">
+        <span>Cartela Cheia</span>
+      </label>
+
+      <label class="field field--check">
+        <input type="checkbox" id="cfgQuatroPontas">
+        <span>Quatro Pontas (cantos da cartela)</span>
+      </label>
+
+      <label class="field field--check">
+        <input type="checkbox" id="cfgQuinaPrimeiraLetra">
+        <span>Quina da primeira letra sorteada</span>
+      </label>
+
+      <label class="field field--check">
+        <input type="checkbox" id="cfgQuina">
+        <span>Quina</span>
+      </label>
+      <label class="field" id="quinaTipoWrap">
+        <span>Tipo de quina válida</span>
+        <select id="cfgQuinaTipo">
+          <option value="horizontal">Horizontal (linha)</option>
+          <option value="transversal">Transversal (coluna)</option>
+          <option value="diagonal">Diagonal</option>
+          <option value="todos">Todos (qualquer uma)</option>
+        </select>
+      </label>
+
+      <div class="card__header"><h2>Cartela</h2></div>
+      <label class="field field--check">
+        <input type="checkbox" id="cfgFreeCenter">
+        <span>Cartelas possuem espaço livre no centro</span>
+      </label>
+
+      <button type="submit" class="btn btn--primary btn--block">Salvar configurações</button>
+      <p class="save-hint" id="configSaveHint" hidden>Configurações salvas ✓</p>
+    </form>
+  </section>
+
+</main>
+
+<nav class="bottom-nav">
+  <button class="bottom-nav__item is-active" data-nav="sorteio">
+    <span class="bottom-nav__icon">🎯</span><span>Sorteio</span>
+  </button>
+  <button class="bottom-nav__item" data-nav="cartelas">
+    <span class="bottom-nav__icon">🗂️</span><span>Cartelas</span>
+  </button>
+  <button class="bottom-nav__item" data-nav="config">
+    <span class="bottom-nav__icon">⚙️</span><span>Config</span>
+  </button>
+</nav>
+
+<!-- ===== Modal: Scan / Manual card ===== -->
+<div class="modal" id="cardModal" hidden>
+  <div class="modal__backdrop" data-close-modal></div>
+  <div class="modal__sheet">
+    <div class="modal__header">
+      <h2 id="cardModalTitle">Nova cartela</h2>
+      <button class="modal__close" data-close-modal aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal__body">
+
+      <div id="scanSection" hidden>
+        <div class="camera-box">
+          <video id="cameraVideo" playsinline autoplay muted></video>
+          <canvas id="cameraCanvas" hidden></canvas>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn--primary btn--block" id="btnCapture">Capturar foto</button>
+          <button class="btn btn--ghost btn--block" id="btnRetake" hidden>Tirar outra foto</button>
+        </div>
+        <p class="ocr-status" id="ocrStatus"></p>
+        <img id="capturedPreview" class="captured-preview" hidden alt="Foto capturada da cartela">
+      </div>
+
+      <label class="field">
+        <span>Nome do participante</span>
+        <input type="text" id="cardParticipant" placeholder="Ex: Maria Silva" required>
+      </label>
+
+      <p class="hint">Confira e corrija os números reconhecidos. O espaço central pode ser livre.</p>
+      <div class="letters-row" id="lettersRow"></div>
+      <div class="card-grid" id="cardGridInputs"></div>
+
+      <button class="btn btn--primary btn--block" id="btnSaveCard">Salvar cartela</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Winner alert ===== -->
+<div class="modal modal--winner" id="winnerModal" hidden>
+  <div class="modal__backdrop"></div>
+  <div class="modal__sheet modal__sheet--center">
+    <div class="winner-emoji">🏆</div>
+    <h2>BINGO!</h2>
+    <p class="winner-name" id="winnerName"></p>
+    <p class="winner-reason" id="winnerReason"></p>
+    <button class="btn btn--primary btn--block" id="btnCloseWinner">Continuar</button>
+  </div>
+</div>
+
+<!-- ===== Confirm dialog ===== -->
+<div class="modal" id="confirmModal" hidden>
+  <div class="modal__backdrop"></div>
+  <div class="modal__sheet modal__sheet--center">
+    <h2 id="confirmTitle">Confirmar</h2>
+    <p id="confirmMessage"></p>
+    <div class="btn-group">
+      <button class="btn btn--ghost btn--block" id="confirmCancel">Cancelar</button>
+      <button class="btn btn--danger btn--block" id="confirmOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="js/state.js"></script>
+<script src="js/ocr.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
