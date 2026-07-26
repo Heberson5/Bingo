@@ -243,7 +243,7 @@ function renderActiveCardsSummary() {
         <div class="card-item ${won ? 'is-winner' : ''}">
           <div>
             <div class="card-item__name">${escapeHtml(c.name)}</div>
-            <div class="card-item__meta">${markedCount}/${total} marcados${won ? ' · ' + achievementSummary(c.achievements) : ''}</div>
+            <div class="card-item__meta">${markedCount}/${total} marcados${cardNumberSuffix(c)}${won ? ' · ' + achievementSummary(c.achievements) : ''}</div>
           </div>
         </div>`;
     })
@@ -339,7 +339,13 @@ function escapeHtml(str) {
    CARTELAS
 ================================================================ */
 
+function cardNumberSuffix(c) {
+  return c.cardNumber ? ` · Cartela nº ${escapeHtml(c.cardNumber)}` : '';
+}
+
 function renderCartelas() {
+  renderEstoque();
+
   const active = activeCards();
   $('#cartelasAtivasCount').textContent = active.length;
   const list = $('#cartelasAtivasList');
@@ -348,7 +354,7 @@ function renderCartelas() {
         <div class="card-item ${c.achievements.length ? 'is-winner' : ''}" data-card-id="${c.id}">
           <div>
             <div class="card-item__name">${escapeHtml(c.name)}</div>
-            <div class="card-item__meta">Jogo #${c.gameId}${c.achievements.length ? ' · ' + achievementSummary(c.achievements) : ''}</div>
+            <div class="card-item__meta">Jogo #${c.gameId}${cardNumberSuffix(c)}${c.achievements.length ? ' · ' + achievementSummary(c.achievements) : ''}</div>
           </div>
           <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
         </div>`).join('')
@@ -361,12 +367,68 @@ function renderCartelas() {
         <div class="card-item is-used" data-card-id="${c.id}">
           <div>
             <div class="card-item__name">${escapeHtml(c.name)}</div>
-            <div class="card-item__meta">Jogo #${c.gameId} · ${c.achievements.length ? achievementSummary(c.achievements) : 'sem vitória'}</div>
+            <div class="card-item__meta">Jogo #${c.gameId}${cardNumberSuffix(c)} · ${c.achievements.length ? achievementSummary(c.achievements) : 'sem vitória'}</div>
           </div>
           <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
         </div>`).join('')
     : '<span class="empty-hint">Nenhum histórico ainda.</span>';
 }
+
+let assigningCardId = null;
+
+function renderEstoque() {
+  const stock = stockCards();
+  $('#estoqueCount').textContent = stock.length;
+  $('#estoqueList').innerHTML = stock.length
+    ? stock.map((c) => `
+        <div class="card-item" data-card-id="${c.id}">
+          <div>
+            <div class="card-item__name">${c.cardNumber ? 'Cartela nº ' + escapeHtml(c.cardNumber) : 'Cartela sem número'}</div>
+            <div class="card-item__meta">Aguardando entrega</div>
+          </div>
+          <div class="card-item__actions">
+            <button class="btn btn--secondary btn--small" data-assign-card>Entregar</button>
+            <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
+          </div>
+        </div>`).join('')
+    : '<span class="empty-hint">Nenhuma cartela em estoque.</span>';
+}
+
+function openAssignModal(card) {
+  assigningCardId = card.id;
+  $('#assignCardMeta').textContent = card.cardNumber ? `Cartela nº ${card.cardNumber}` : 'Cartela sem número registrado';
+  $('#assignNameInput').value = '';
+  $('#assignNameModal').hidden = false;
+  setTimeout(() => $('#assignNameInput').focus(), 50);
+}
+
+$('#estoqueList').addEventListener('click', (e) => {
+  const assignBtn = e.target.closest('[data-assign-card]');
+  if (assignBtn) {
+    const item = e.target.closest('[data-card-id]');
+    const card = Store.cards.find((c) => c.id === item.dataset.cardId);
+    if (card) openAssignModal(card);
+    return;
+  }
+  handleCardListClick(e);
+});
+
+$$('[data-close-assign-modal]').forEach((el) => el.addEventListener('click', () => {
+  $('#assignNameModal').hidden = true;
+  assigningCardId = null;
+}));
+
+$('#assignNameConfirm').addEventListener('click', () => {
+  const name = $('#assignNameInput').value.trim();
+  if (!name) { showToast('Informe o nome do participante.'); return; }
+  if (!assigningCardId) { $('#assignNameModal').hidden = true; return; }
+  assignCardName(assigningCardId, name);
+  $('#assignNameModal').hidden = true;
+  assigningCardId = null;
+  showToast('Cartela entregue!');
+  renderCartelas();
+  renderSorteio();
+});
 
 function handleCardListClick(e) {
   const btn = e.target.closest('[data-delete-card]');
@@ -375,9 +437,10 @@ function handleCardListClick(e) {
   const id = item.dataset.cardId;
   const card = Store.cards.find((c) => c.id === id);
   if (!card) return;
+  const label = card.name || (card.cardNumber ? `nº ${card.cardNumber}` : 'sem nome');
   openConfirm(
     'Excluir cartela?',
-    `A cartela de ${card.name} será excluída permanentemente. Essa ação não pode ser desfeita.`,
+    `A cartela de ${label} será excluída permanentemente. Essa ação não pode ser desfeita.`,
     () => {
       deleteCard(id);
       renderCartelas();
@@ -609,6 +672,7 @@ function openCardModal(mode) {
   currentModalMode = mode;
   $('#cardModalTitle').textContent = mode === 'scan' ? 'Escanear cartela' : 'Cadastrar cartela manualmente';
   $('#cardParticipant').value = '';
+  $('#cardNumberInput').value = '';
   $('#scanSection').hidden = mode !== 'scan';
   showCapturePhase();
   buildLettersRow();
@@ -689,7 +753,7 @@ $('#btnRecognize').addEventListener('click', async () => {
 
 $('#btnSaveCard').addEventListener('click', () => {
   const name = $('#cardParticipant').value.trim();
-  if (!name) { showToast('Informe o nome do participante.'); return; }
+  const cardNumber = $('#cardNumberInput').value.trim();
 
   const grid = readGridFromInputs();
   const flatCells = grid.flat().filter((c) => !c.free);
@@ -712,15 +776,17 @@ $('#btnSaveCard').addEventListener('click', () => {
   if (dup) {
     if (dup.status === 'used') {
       showToast('Esta cartela já foi usada em um jogo encerrado e não pode ser reutilizada.');
+    } else if (dup.status === 'stock') {
+      showToast('Esta cartela já está no estoque, aguardando ser entregue.');
     } else {
       showToast('Esta cartela já está cadastrada na partida atual.');
     }
     return;
   }
 
-  addCard(name, numericGrid);
+  addCard(name, numericGrid, cardNumber);
   closeCardModal();
-  showToast('Cartela salva com sucesso!');
+  showToast(name ? 'Cartela salva com sucesso!' : 'Cartela adicionada ao estoque — atribua um nome ao entregá-la.');
   renderCartelas();
   renderSorteio();
 });

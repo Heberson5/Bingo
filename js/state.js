@@ -120,20 +120,30 @@ function createEmptyGrid(freeCenter) {
   return grid;
 }
 
-function addCard(name, grid) {
+/**
+ * Registering a physical card doesn't have to happen at the exact
+ * moment it's handed to someone — a batch of cards can be scanned in
+ * ahead of time and kept as unnamed "stock", to be assigned a
+ * participant's name later, one at a time, as each card is actually
+ * given out. A card saved without a name becomes stock (not tied to
+ * any game); one saved with a name behaves as before.
+ */
+function addCard(name, grid, cardNumber) {
+  const trimmedName = (name || '').trim();
   const card = {
     id: 'card_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-    name: name.trim(),
+    name: trimmedName,
+    cardNumber: (cardNumber || '').trim(),
     grid,
-    gameId: Store.game.id,
-    status: 'active', // active | used
+    gameId: trimmedName ? Store.game.id : null,
+    status: trimmedName ? 'active' : 'stock', // stock | active | used
     achievements: [], // { key, label, drawIndex, drawnNumber, confirmed }
     createdAt: new Date().toISOString(),
   };
   Store.cards.push(card);
   Store.saveCards();
   // Apply any numbers already drawn in the current game.
-  applyDrawnNumbersToCard(card);
+  if (card.status === 'active') applyDrawnNumbersToCard(card);
   Store.saveCards();
   return card;
 }
@@ -145,6 +155,28 @@ function deleteCard(id) {
 
 function activeCards() {
   return Store.cards.filter((c) => c.status === 'active' && c.gameId === Store.game.id);
+}
+
+function stockCards() {
+  return Store.cards.filter((c) => c.status === 'stock');
+}
+
+/**
+ * Hands a stock card to a participant: attaches their name and folds
+ * it into the current game as a normal active card, picking up
+ * whatever numbers have already been drawn.
+ */
+function assignCardName(id, name) {
+  const trimmedName = (name || '').trim();
+  if (!trimmedName) return false;
+  const card = Store.cards.find((c) => c.id === id && c.status === 'stock');
+  if (!card) return false;
+  card.name = trimmedName;
+  card.status = 'active';
+  card.gameId = Store.game.id;
+  applyDrawnNumbersToCard(card);
+  Store.saveCards();
+  return true;
 }
 
 /**

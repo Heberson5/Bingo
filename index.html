@@ -126,6 +126,14 @@
         <button class="btn btn--primary btn--block" id="btnScan">📷 Escanear cartela</button>
         <button class="btn btn--secondary btn--block" id="btnManual">✏️ Cadastrar manualmente</button>
       </div>
+      <p class="hint">Deixe o nome em branco para guardar no estoque e atribuir o participante depois, na hora de entregar a cartela.</p>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><h2>Estoque de cartelas <span class="badge" id="estoqueCount">0</span></h2></div>
+      <div id="estoqueList" class="card-list">
+        <span class="empty-hint">Nenhuma cartela em estoque.</span>
+      </div>
     </div>
 
     <div class="card">
@@ -308,8 +316,13 @@
       </div>
 
       <label class="field">
-        <span>Nome do participante</span>
-        <input type="text" id="cardParticipant" placeholder="Ex: Maria Silva" required>
+        <span>Número da cartela (opcional)</span>
+        <input type="text" id="cardNumberInput" placeholder="Impresso no canto inferior esquerdo da cartela">
+      </label>
+
+      <label class="field">
+        <span>Nome do participante (opcional)</span>
+        <input type="text" id="cardParticipant" placeholder="Deixe em branco para guardar no estoque">
       </label>
 
       <p class="hint">Confira e corrija os números reconhecidos. O espaço central pode ser livre.</p>
@@ -342,6 +355,23 @@
     <div class="btn-group">
       <button class="btn btn--ghost btn--block" id="confirmCancel">Cancelar</button>
       <button class="btn btn--danger btn--block" id="confirmOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Assign a stock card to a participant ===== -->
+<div class="modal" id="assignNameModal" hidden>
+  <div class="modal__backdrop" data-close-assign-modal></div>
+  <div class="modal__sheet modal__sheet--center">
+    <h2>Entregar cartela</h2>
+    <p class="hint" id="assignCardMeta"></p>
+    <label class="field">
+      <span>Nome do participante</span>
+      <input type="text" id="assignNameInput" placeholder="Ex: Maria Silva">
+    </label>
+    <div class="btn-group">
+      <button class="btn btn--ghost btn--block" data-close-assign-modal>Cancelar</button>
+      <button class="btn btn--primary btn--block" id="assignNameConfirm">Confirmar entrega</button>
     </div>
   </div>
 </div>

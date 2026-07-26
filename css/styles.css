@@ -286,6 +286,7 @@ h1, h2, h3, p { margin: 0; }
   flex-shrink: 0;
 }
 .card-item__delete:hover, .card-item__delete:focus-visible { opacity: 1; }
+.card-item__actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 
 .card-list { display: flex; flex-direction: column; gap: 8px; }
 .card-list[hidden] { display: none; }
