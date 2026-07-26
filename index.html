@@ -12,11 +12,13 @@
 <body>
 
 <header class="app-header">
-  <div class="app-header__brand">
-    <span class="app-header__logo" aria-hidden="true">🎱</span>
-    <span class="app-header__title">Bingo</span>
+  <div class="app-header__inner">
+    <div class="app-header__brand">
+      <span class="app-header__logo" aria-hidden="true">🎱</span>
+      <span class="app-header__title">Bingo</span>
+    </div>
+    <span class="app-header__game" id="gameLabel">Jogo #1</span>
   </div>
-  <span class="app-header__game" id="gameLabel">Jogo #1</span>
 </header>
 
 <main class="app-main">
@@ -171,15 +173,17 @@
 </main>
 
 <nav class="bottom-nav">
-  <button class="bottom-nav__item is-active" data-nav="sorteio">
-    <span class="bottom-nav__icon">🎯</span><span>Sorteio</span>
-  </button>
-  <button class="bottom-nav__item" data-nav="cartelas">
-    <span class="bottom-nav__icon">🗂️</span><span>Cartelas</span>
-  </button>
-  <button class="bottom-nav__item" data-nav="config">
-    <span class="bottom-nav__icon">⚙️</span><span>Config</span>
-  </button>
+  <div class="bottom-nav__inner">
+    <button class="bottom-nav__item is-active" data-nav="sorteio">
+      <span class="bottom-nav__icon">🎯</span><span>Sorteio</span>
+    </button>
+    <button class="bottom-nav__item" data-nav="cartelas">
+      <span class="bottom-nav__icon">🗂️</span><span>Cartelas</span>
+    </button>
+    <button class="bottom-nav__item" data-nav="config">
+      <span class="bottom-nav__icon">⚙️</span><span>Config</span>
+    </button>
+  </div>
 </nav>
 
 <!-- ===== Modal: Scan / Manual card ===== -->
