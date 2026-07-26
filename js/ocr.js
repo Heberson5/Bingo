@@ -77,18 +77,19 @@ const Ocr = {
    * photos rarely have the card filling the whole frame, and the card
    * itself usually has a header row above the grid, so cropping from
    * the raw photo edges would slice the wrong content into each cell).
-   * The crop shrinks a bit further inward from each cell's edges to
-   * avoid grabbing the printed grid lines or a sliver of the neighbor
-   * cell, then upscales and boosts contrast for OCR.
+   * `inset` shrinks the crop inward from each cell's edges (as a
+   * fraction of the cell) to avoid grabbing printed grid lines or a
+   * sliver of the neighboring cell — how much is needed varies with how
+   * precisely the operator's rectangle lines up with the real grid, so
+   * recognizeCell tries a couple of values instead of a single fixed one.
    */
-  _extractCell(img, row, col, cropRect) {
+  _extractCell(img, row, col, cropRect, inset) {
     const originX = cropRect.x * img.width;
     const originY = cropRect.y * img.height;
     const regionW = cropRect.w * img.width;
     const regionH = cropRect.h * img.height;
     const cellW = regionW / 5;
     const cellH = regionH / 5;
-    const inset = 0.12; // shrink 12% inward on each side to avoid grid-line bleed
 
     const sx = originX + col * cellW + cellW * inset;
     const sy = originY + row * cellH + cellH * inset;
@@ -105,6 +106,27 @@ const Ocr = {
     return canvas.toDataURL('image/png');
   },
 
+  // Progressively less conservative crops + different page-segmentation
+  // modes, tried in order until one yields a digit. Most cells succeed
+  // on the first attempt; this only adds latency for the stragglers a
+  // single fixed crop/config would otherwise miss.
+  _CELL_ATTEMPTS: [
+    { inset: 0.08, psm: '7' }, // single line, tight-ish crop
+    { inset: 0.08, psm: '8' }, // single word
+    { inset: 0.02, psm: '7' }, // barely-inset crop, in case the grid didn't line up perfectly
+  ],
+
+  async _recognizeCell(worker, img, row, col, cropRect) {
+    for (const attempt of this._CELL_ATTEMPTS) {
+      await worker.setParameters({ tessedit_pageseg_mode: attempt.psm });
+      const cellDataUrl = this._extractCell(img, row, col, cropRect, attempt.inset);
+      const { data } = await worker.recognize(cellDataUrl);
+      const digits = (data.text || '').replace(/[^0-9]/g, '');
+      if (digits) return parseInt(digits, 10);
+    }
+    return null;
+  },
+
   /**
    * Runs OCR cell-by-cell over the 5x5 card grid (within cropRect, a
    * {x,y,w,h} rectangle in 0-1 fractions of the photo that the operator
@@ -119,10 +141,7 @@ const Ocr = {
 
     const img = await this._loadImage(dataUrl);
     const worker = await Tesseract.createWorker('eng');
-    await worker.setParameters({
-      tessedit_char_whitelist: '0123456789',
-      tessedit_pageseg_mode: '7', // treat each cell as a single line of text
-    });
+    await worker.setParameters({ tessedit_char_whitelist: '0123456789' });
 
     const grid = [];
     const totalCells = freeCenter ? 24 : 25;
@@ -136,10 +155,7 @@ const Ocr = {
             row.push(null);
             continue;
           }
-          const cellDataUrl = this._extractCell(img, r, c, cropRect);
-          const { data } = await worker.recognize(cellDataUrl);
-          const digits = (data.text || '').replace(/[^0-9]/g, '');
-          row.push(digits ? parseInt(digits, 10) : null);
+          row.push(await this._recognizeCell(worker, img, r, c, cropRect));
           done++;
           if (onProgress) onProgress(Math.round((done / totalCells) * 100));
         }
