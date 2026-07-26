@@ -307,25 +307,20 @@ h1, h2, h3, p { margin: 0; }
 .captured-box img { width: 100%; height: auto; display: block; margin: auto; }
 .ocr-status { font-size: 13px; color: var(--color-text-dim); text-align: center; min-height: 18px; }
 
-/* Draggable/resizable crop rectangle: the operator marks exactly the
-   5x5 number-grid area (excluding any header row or background), since
-   real photos rarely have the card filling the whole frame edge to edge. */
-.crop-rect {
-  position: absolute;
-  border: 2px solid var(--color-accent);
-  box-shadow: 0 0 0 2000px rgba(0,0,0,.5);
-  touch-action: none;
-  cursor: move;
-}
-.crop-grid {
+/* Four independently-draggable corner handles let the operator mark the
+   number grid's real corners — even when the photo was taken at an
+   angle and the grid looks like a trapezoid, not a rectangle. The app
+   perspective-corrects that quad before slicing it into 5x5, so a
+   plain axis-aligned box (which assumes evenly-spaced cells) isn't
+   enough once there's any camera tilt. */
+.quad-overlay {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  background-image:
-    repeating-linear-gradient(to right, rgba(255,255,255,.6) 0 2px, transparent 2px 20%),
-    repeating-linear-gradient(to bottom, rgba(255,255,255,.6) 0 2px, transparent 2px 20%);
 }
-.crop-handle {
+.quad-handle {
   position: absolute;
   width: 26px;
   height: 26px;
@@ -334,11 +329,8 @@ h1, h2, h3, p { margin: 0; }
   background: var(--color-accent);
   border: 3px solid #fff;
   touch-action: none;
+  cursor: grab;
 }
-.crop-handle[data-corner="nw"] { top: 0; left: 0; cursor: nwse-resize; }
-.crop-handle[data-corner="ne"] { top: 0; left: 100%; cursor: nesw-resize; }
-.crop-handle[data-corner="sw"] { top: 100%; left: 0; cursor: nesw-resize; }
-.crop-handle[data-corner="se"] { top: 100%; left: 100%; cursor: nwse-resize; }
 
 .letters-row {
   display: grid;

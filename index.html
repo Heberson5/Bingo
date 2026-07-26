@@ -183,13 +183,14 @@
         </div>
         <div class="camera-box captured-box" id="capturedWrap" hidden>
           <img id="capturedPreview" alt="Foto capturada da cartela">
-          <div class="crop-rect" id="cropRect">
-            <div class="crop-grid" aria-hidden="true"></div>
-            <div class="crop-handle" data-corner="nw"></div>
-            <div class="crop-handle" data-corner="ne"></div>
-            <div class="crop-handle" data-corner="sw"></div>
-            <div class="crop-handle" data-corner="se"></div>
-          </div>
+          <svg class="quad-overlay" id="quadOverlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polygon id="quadPolygon" fill="none" stroke="#f59e0b" stroke-width="0.6" vector-effect="non-scaling-stroke"></polygon>
+            <g id="quadGridLines" stroke="rgba(255,255,255,.65)" stroke-width="0.3" vector-effect="non-scaling-stroke"></g>
+          </svg>
+          <div class="quad-handle" data-corner="nw"></div>
+          <div class="quad-handle" data-corner="ne"></div>
+          <div class="quad-handle" data-corner="sw"></div>
+          <div class="quad-handle" data-corner="se"></div>
         </div>
         <p class="hint" id="scanHint">Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.</p>
         <div class="btn-group" id="captureControls">

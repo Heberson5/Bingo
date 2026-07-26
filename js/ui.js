@@ -293,10 +293,19 @@ function readGridFromInputs() {
 
 let currentModalMode = 'manual';
 let currentPhotoDataUrl = null;
-let cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+
+function defaultQuad() {
+  return {
+    nw: { x: 0.1, y: 0.1 },
+    ne: { x: 0.9, y: 0.1 },
+    se: { x: 0.9, y: 0.9 },
+    sw: { x: 0.1, y: 0.9 },
+  };
+}
+let quad = defaultQuad();
 
 const CAPTURE_HINT = 'Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.';
-const REVIEW_HINT = 'Arraste as bolinhas para o retângulo cobrir só a grade de números (sem o cabeçalho BINGO nem a borda da cartela). Gire a foto se estiver de lado. Depois toque em "Reconhecer números".';
+const REVIEW_HINT = 'Arraste cada bolinha para o canto correspondente da grade de números (sem o cabeçalho BINGO nem a borda da cartela) — funciona mesmo se a foto estiver em ângulo. Gire a foto se estiver de lado. Depois toque em "Reconhecer números".';
 
 function showCapturePhase() {
   currentPhotoDataUrl = null;
@@ -315,86 +324,66 @@ function showReviewPhase() {
   $('#reviewControls').hidden = false;
   $('#scanHint').textContent = REVIEW_HINT;
   $('#capturedPreview').src = currentPhotoDataUrl;
-  cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
-  applyCropRectStyle();
+  quad = defaultQuad();
+  applyQuadStyle();
 }
 
-/* ---------------- Crop rectangle (drag to mark the number grid) ---------------- */
+/* ---------------- Quad corners (drag to mark the number grid) ---------------- */
 
-function applyCropRectStyle() {
-  const el = $('#cropRect');
-  el.style.left = cropRect.x * 100 + '%';
-  el.style.top = cropRect.y * 100 + '%';
-  el.style.width = cropRect.w * 100 + '%';
-  el.style.height = cropRect.h * 100 + '%';
+function lerpPoint(a, b, t) {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
-const MIN_CROP_SIZE = 0.15;
-
-function clampCropRect() {
-  cropRect.w = Math.min(Math.max(cropRect.w, MIN_CROP_SIZE), 1);
-  cropRect.h = Math.min(Math.max(cropRect.h, MIN_CROP_SIZE), 1);
-  cropRect.x = Math.min(Math.max(cropRect.x, 0), 1 - cropRect.w);
-  cropRect.y = Math.min(Math.max(cropRect.y, 0), 1 - cropRect.h);
+function pointOnQuad(u, v) {
+  const top = lerpPoint(quad.nw, quad.ne, u);
+  const bottom = lerpPoint(quad.sw, quad.se, u);
+  return lerpPoint(top, bottom, v);
 }
 
-function setupCropInteractions() {
-  const wrap = $('#capturedWrap');
-  const rectEl = $('#cropRect');
+function applyQuadStyle() {
+  const poly = $('#quadPolygon');
+  poly.setAttribute('points', ['nw', 'ne', 'se', 'sw'].map((k) => `${quad[k].x * 100},${quad[k].y * 100}`).join(' '));
 
-  function dragFraction(startEvent, onMove) {
-    const bounds = wrap.getBoundingClientRect();
-    const start = { x: startEvent.clientX, y: startEvent.clientY };
-    const startRect = { ...cropRect };
-    const pointerId = startEvent.pointerId;
-
-    function onPointerMove(e) {
-      const dx = (e.clientX - start.x) / bounds.width;
-      const dy = (e.clientY - start.y) / bounds.height;
-      onMove(dx, dy, startRect);
-      clampCropRect();
-      applyCropRectStyle();
-    }
-    function onPointerUp() {
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-    }
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    startEvent.preventDefault();
+  const lines = [];
+  for (let i = 1; i < 5; i++) {
+    const t = i / 5;
+    const a = pointOnQuad(t, 0);
+    const b = pointOnQuad(t, 1);
+    lines.push(`<line x1="${a.x * 100}" y1="${a.y * 100}" x2="${b.x * 100}" y2="${b.y * 100}" />`);
+    const c = pointOnQuad(0, t);
+    const d = pointOnQuad(1, t);
+    lines.push(`<line x1="${c.x * 100}" y1="${c.y * 100}" x2="${d.x * 100}" y2="${d.y * 100}" />`);
   }
+  $('#quadGridLines').innerHTML = lines.join('');
 
-  rectEl.addEventListener('pointerdown', (e) => {
-    if (e.target.classList.contains('crop-handle')) return;
-    dragFraction(e, (dx, dy, start) => {
-      cropRect.x = start.x + dx;
-      cropRect.y = start.y + dy;
-    });
+  $$('.quad-handle').forEach((handle) => {
+    const corner = quad[handle.dataset.corner];
+    handle.style.left = corner.x * 100 + '%';
+    handle.style.top = corner.y * 100 + '%';
   });
+}
 
-  $$('.crop-handle', rectEl).forEach((handle) => {
+function setupQuadInteractions() {
+  const wrap = $('#capturedWrap');
+
+  $$('.quad-handle').forEach((handle) => {
     handle.addEventListener('pointerdown', (e) => {
-      e.stopPropagation();
+      e.preventDefault();
       const corner = handle.dataset.corner;
-      dragFraction(e, (dx, dy, start) => {
-        if (corner === 'se') {
-          cropRect.w = start.w + dx;
-          cropRect.h = start.h + dy;
-        } else if (corner === 'nw') {
-          cropRect.x = start.x + dx;
-          cropRect.y = start.y + dy;
-          cropRect.w = start.w - dx;
-          cropRect.h = start.h - dy;
-        } else if (corner === 'ne') {
-          cropRect.y = start.y + dy;
-          cropRect.w = start.w + dx;
-          cropRect.h = start.h - dy;
-        } else if (corner === 'sw') {
-          cropRect.x = start.x + dx;
-          cropRect.w = start.w - dx;
-          cropRect.h = start.h + dy;
-        }
-      });
+      const bounds = wrap.getBoundingClientRect();
+
+      function onPointerMove(ev) {
+        const x = Math.min(Math.max((ev.clientX - bounds.left) / bounds.width, 0), 1);
+        const y = Math.min(Math.max((ev.clientY - bounds.top) / bounds.height, 0), 1);
+        quad[corner] = { x, y };
+        applyQuadStyle();
+      }
+      function onPointerUp() {
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+      }
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
     });
   });
 }
@@ -425,7 +414,7 @@ function closeCardModal() {
 $('#btnScan').addEventListener('click', () => openCardModal('scan'));
 $('#btnManual').addEventListener('click', () => openCardModal('manual'));
 $$('[data-close-modal]').forEach((el) => el.addEventListener('click', closeCardModal));
-setupCropInteractions();
+setupQuadInteractions();
 
 $('#btnCapture').addEventListener('click', () => {
   currentPhotoDataUrl = Ocr.capture($('#cameraVideo'), $('#cameraCanvas'));
@@ -448,7 +437,7 @@ $('#btnRetake').addEventListener('click', () => {
 $('#btnRecognize').addEventListener('click', async () => {
   $('#ocrStatus').textContent = 'Reconhecendo números da cartela... 0%';
   try {
-    const recognizedGrid = await Ocr.recognizeGrid(currentPhotoDataUrl, Store.config.freeCenter, cropRect, (pct) => {
+    const recognizedGrid = await Ocr.recognizeGrid(currentPhotoDataUrl, Store.config.freeCenter, quad, (pct) => {
       $('#ocrStatus').textContent = `Reconhecendo números da cartela... ${pct}%`;
     });
     const count = fillGridFromCells(recognizedGrid);
