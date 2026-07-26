@@ -177,6 +177,13 @@ const Ocr = {
       colCoverage[x] = count / h;
     }
 
+    // Note: this can never exceed roughly (card width / photo width)
+    // for row coverage (and the equivalent for columns), since the
+    // rest of even a "fully card" row is background outside the card's
+    // horizontal span — so this must stay a low bar for *some*
+    // non-trivial card presence, not "most of the row". Rejecting rows
+    // /columns picked up from cluttered background is the uniformity
+    // check's job below, not this threshold's.
     const COVERAGE_THRESHOLD = 0.25;
     let top = 0, bottom = h - 1, left = 0, right = w - 1;
     while (top < h && rowCoverage[top] < COVERAGE_THRESHOLD) top++;
@@ -186,6 +193,30 @@ const Ocr = {
 
     const validBox = top < bottom && left < right && (bottom - top) > h * 0.25 && (right - left) > w * 0.25;
     if (!validBox) return null;
+
+    // Final sanity check: a real card is close to one uniform color
+    // (cream/white cardboard with thin dark print), so its interior
+    // should have low color variance. If the detected box still has
+    // high internal variance, it almost certainly swept in a chunk of
+    // busy background along with (or instead of) the card — safer to
+    // give up and let the operator frame it by hand than to hand back
+    // a confidently wrong box.
+    const sampleR = [], sampleG = [], sampleB = [];
+    for (let y = top; y <= bottom; y += 2) {
+      for (let x = left; x <= right; x += 2) {
+        const p = pixel(x, y);
+        sampleR.push(p.r); sampleG.push(p.g); sampleB.push(p.b);
+      }
+    }
+    const stddev = (arr) => {
+      const mean = arr.reduce((s, v) => s + v, 0) / arr.length;
+      const variance = arr.reduce((s, v) => s + (v - mean) ** 2, 0) / arr.length;
+      return Math.sqrt(variance);
+    };
+    const UNIFORMITY_THRESHOLD = 30;
+    if (sampleR.length < 4 || Math.max(stddev(sampleR), stddev(sampleG), stddev(sampleB)) > UNIFORMITY_THRESHOLD) {
+      return null;
+    }
 
     return {
       nw: { x: left / w, y: top / h },
