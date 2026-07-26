@@ -96,6 +96,7 @@ function renderSorteio() {
   renderLastBalls();
   renderDrawBoard();
   renderActiveCardsSummary();
+  renderCriteriaFlags();
   renderNearMisses();
   renderPendingPrizes();
 
@@ -105,9 +106,38 @@ function renderSorteio() {
   $('#btnMarcarManual').disabled = noMore;
 }
 
+/**
+ * A checkbox per active winning criterion, right by the number panel,
+ * so the operator can "dar baixa" (close) a prize the moment it's been
+ * awarded — without ending the whole game — and stop that criterion
+ * from generating (or still showing) any further claims for the rest
+ * of the round.
+ */
+function renderCriteriaFlags() {
+  const keys = activeCriteriaKeys();
+  $('#criteriaFlagsCard').hidden = keys.length === 0;
+  $('#criteriaFlagsList').innerHTML = keys
+    .map((key) => `
+      <label class="field field--check">
+        <input type="checkbox" data-criterion-flag="${key}" ${isCriterionClosed(key) ? 'checked' : ''}>
+        <span>${escapeHtml(criterionLabel(key))}${isCriterionClosed(key) ? ' — baixado' : ''}</span>
+      </label>`)
+    .join('');
+}
+
+$('#criteriaFlagsList').addEventListener('change', (e) => {
+  const input = e.target.closest('[data-criterion-flag]');
+  if (!input) return;
+  setCriterionClosed(input.dataset.criterionFlag, input.checked);
+  renderSorteio();
+  showToast(input.checked ? 'Critério baixado — não aparecerá mais nos painéis.' : 'Critério reaberto.');
+});
+
 function renderNearMisses() {
   const misses = findNearMisses();
-  $('#nearMissCount').textContent = misses.length;
+  const cardCount = distinctNearMissCardCount();
+
+  $('#nearMissCount').textContent = cardCount;
   $('#nearMissCard').hidden = misses.length === 0;
   $('#nearMissList').innerHTML = misses
     .map((m) => `
@@ -118,6 +148,10 @@ function renderNearMisses() {
         </div>
       </div>`)
     .join('');
+
+  const stat = $('#nearMissStat');
+  stat.hidden = cardCount === 0;
+  stat.textContent = cardCount > 0 ? `${cardCount} cartela${cardCount > 1 ? 's' : ''} a 1 número de ganhar` : '';
 }
 
 function renderPendingPrizes() {

@@ -59,6 +59,7 @@
         <button class="btn btn--secondary btn--xl btn--manual" id="btnMarcarManual">Manual</button>
       </div>
       <p class="draw-stats" id="drawStats">0 de 0 números sorteados</p>
+      <p class="draw-stats draw-stats--secondary" id="nearMissStat" hidden></p>
       <p class="hint hint--manual" id="manualModeHint" hidden>Modo manual ativo — toque no número sorteado no Painel de números abaixo.</p>
     </div>
 
@@ -95,6 +96,13 @@
           <div class="chip-row" id="lastBallsRow">
             <span class="empty-hint">Nenhum número sorteado ainda.</span>
           </div>
+        </div>
+
+        <div class="card" id="criteriaFlagsCard" hidden>
+          <div class="card__header">
+            <h2>Critérios em jogo</h2>
+          </div>
+          <div id="criteriaFlagsList" class="cards-summary"></div>
         </div>
 
         <div class="card">

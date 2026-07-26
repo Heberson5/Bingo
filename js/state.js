@@ -60,7 +60,7 @@ function save(key, value) {
 
 const Store = {
   config: loadJSON(STORAGE_KEYS.config, DEFAULT_CONFIG),
-  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null }),
+  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, closedCriteria: {} }),
   cards: loadArray(STORAGE_KEYS.cards),
   history: loadArray(STORAGE_KEYS.history),
 
@@ -346,6 +346,51 @@ function checkFourCorners(grid) {
 }
 
 /**
+ * Which criteria are enabled in Config right now, in display order.
+ */
+function activeCriteriaKeys() {
+  const cfg = Store.config;
+  const keys = [];
+  if (cfg.criteria.cheia) keys.push('cheia');
+  if (cfg.criteria.quatroPontas) keys.push('quatroPontas');
+  if (cfg.criteria.quinaPrimeiraLetra) keys.push('quinaPrimeiraLetra');
+  if (cfg.criteria.quina) keys.push('quina');
+  return keys;
+}
+
+function criterionLabel(key) {
+  if (key === 'cheia') return 'Cartela Cheia';
+  if (key === 'quatroPontas') return 'Quatro Pontas';
+  if (key === 'quina') return 'Quina';
+  if (key === 'quinaPrimeiraLetra') {
+    if (Store.game.firstNumber !== null) {
+      const colIdx = columnIndexForNumber(Store.game.firstNumber, Store.config.min, Store.config.max);
+      if (colIdx !== null) return `Quina da letra ${LETTERS[colIdx]} (primeira sorteada)`;
+    }
+    return 'Quina da primeira letra sorteada';
+  }
+  return key;
+}
+
+/**
+ * A criterion can be "dado baixa" (closed) mid-round once its prize has
+ * already been awarded, without ending the whole game — the numbers
+ * keep being drawn for the remaining prizes, but this criterion stops
+ * being evaluated, stops showing near-misses, and any of its still-
+ * pending (unconfirmed) claims stop being shown too. Resets to open for
+ * every criterion whenever a new game starts (see endGame/restartAllCards).
+ */
+function isCriterionClosed(key) {
+  return !!(Store.game.closedCriteria && Store.game.closedCriteria[key]);
+}
+
+function setCriterionClosed(key, closed) {
+  if (!Store.game.closedCriteria) Store.game.closedCriteria = {};
+  Store.game.closedCriteria[key] = closed;
+  Store.saveGame();
+}
+
+/**
  * Returns the newly-achieved criteria for this card (ones not already
  * recorded in card.achievements), tagging each with which draw (index
  * + number) completed it. That record is what lets the operator later
@@ -357,21 +402,23 @@ function evaluateCard(card) {
   const cfg = Store.config;
   const found = [];
 
-  if (cfg.criteria.cheia && checkFullCard(card.grid)) found.push({ key: 'cheia', label: 'Cartela Cheia' });
-
-  if (cfg.criteria.quatroPontas && checkFourCorners(card.grid)) {
-    found.push({ key: 'quatroPontas', label: 'Quatro Pontas' });
+  if (cfg.criteria.cheia && !isCriterionClosed('cheia') && checkFullCard(card.grid)) {
+    found.push({ key: 'cheia', label: criterionLabel('cheia') });
   }
 
-  if (cfg.criteria.quinaPrimeiraLetra && Store.game.firstNumber !== null) {
+  if (cfg.criteria.quatroPontas && !isCriterionClosed('quatroPontas') && checkFourCorners(card.grid)) {
+    found.push({ key: 'quatroPontas', label: criterionLabel('quatroPontas') });
+  }
+
+  if (cfg.criteria.quinaPrimeiraLetra && !isCriterionClosed('quinaPrimeiraLetra') && Store.game.firstNumber !== null) {
     const colIdx = columnIndexForNumber(Store.game.firstNumber, cfg.min, cfg.max);
     if (colIdx !== null && checkCol(card.grid, colIdx)) {
-      found.push({ key: 'quinaPrimeiraLetra', label: `Quina da letra ${LETTERS[colIdx]} (primeira sorteada)` });
+      found.push({ key: 'quinaPrimeiraLetra', label: criterionLabel('quinaPrimeiraLetra') });
     }
   }
 
-  if (cfg.criteria.quina && checkQuina(card.grid, cfg.quinaTipo)) {
-    found.push({ key: 'quina', label: 'Quina' });
+  if (cfg.criteria.quina && !isCriterionClosed('quina') && checkQuina(card.grid, cfg.quinaTipo)) {
+    found.push({ key: 'quina', label: criterionLabel('quina') });
   }
 
   const existingKeys = card.achievements.map((a) => a.key);
@@ -422,7 +469,7 @@ function pendingAchievements() {
   const list = [];
   for (const card of activeCards()) {
     for (const a of card.achievements) {
-      if (!a.confirmed && !a.expired) list.push({ card, ...a });
+      if (!a.confirmed && !a.expired && !isCriterionClosed(a.key)) list.push({ card, ...a });
     }
   }
   list.sort((a, b) => a.drawIndex - b.drawIndex);
@@ -439,7 +486,7 @@ function expiredAchievements() {
   const list = [];
   for (const card of activeCards()) {
     for (const a of card.achievements) {
-      if (!a.confirmed && a.expired) list.push({ card, ...a });
+      if (!a.confirmed && a.expired && !isCriterionClosed(a.key)) list.push({ card, ...a });
     }
   }
   list.sort((a, b) => b.drawIndex - a.drawIndex);
@@ -464,18 +511,18 @@ function evaluateNearMiss(card) {
   const grid = card.grid;
   const results = [];
 
-  if (cfg.criteria.cheia) {
+  if (cfg.criteria.cheia && !isCriterionClosed('cheia')) {
     const val = unmarkedValue(grid.flat());
     if (val !== null) results.push({ label: 'Cartela Cheia', neededNumber: val });
   }
 
-  if (cfg.criteria.quatroPontas) {
+  if (cfg.criteria.quatroPontas && !isCriterionClosed('quatroPontas')) {
     const corners = [grid[0][0], grid[0][4], grid[4][0], grid[4][4]];
     const val = unmarkedValue(corners);
     if (val !== null) results.push({ label: 'Quatro Pontas', neededNumber: val });
   }
 
-  if (cfg.criteria.quinaPrimeiraLetra && Store.game.firstNumber !== null) {
+  if (cfg.criteria.quinaPrimeiraLetra && !isCriterionClosed('quinaPrimeiraLetra') && Store.game.firstNumber !== null) {
     const colIdx = columnIndexForNumber(Store.game.firstNumber, cfg.min, cfg.max);
     if (colIdx !== null) {
       const val = unmarkedValue(colCells(grid, colIdx));
@@ -483,7 +530,7 @@ function evaluateNearMiss(card) {
     }
   }
 
-  if (cfg.criteria.quina) {
+  if (cfg.criteria.quina && !isCriterionClosed('quina')) {
     const tipo = cfg.quinaTipo;
     const lines = [];
     if (tipo === 'horizontal' || tipo === 'todos') {
@@ -513,6 +560,16 @@ function findNearMisses() {
   return list;
 }
 
+/**
+ * A card one number away from TWO different criteria at once still
+ * counts as a single card — this is what should drive any "how many
+ * cards are close to winning" count, as opposed to the raw near-miss
+ * list length, which is naturally the sum across criteria.
+ */
+function distinctNearMissCardCount() {
+  return new Set(findNearMisses().map((m) => m.card.id)).size;
+}
+
 /* ---------------- End game ---------------- */
 
 function endGame() {
@@ -536,7 +593,7 @@ function endGame() {
   });
   Store.saveHistory();
 
-  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null };
+  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null, closedCriteria: {} };
   Store.saveGame();
 }
 
