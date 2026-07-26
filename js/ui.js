@@ -144,11 +144,23 @@ function renderDrawBoard() {
       const num = s + row;
       if (num > e) { html += '<div></div>'; continue; }
       const drawn = drawnSet.has(num);
-      html += `<div class="board-num ${drawn ? 'is-drawn' : ''}">${num}</div>`;
+      html += `<div class="board-num ${drawn ? 'is-drawn' : ''}" data-num="${num}">${num}</div>`;
     }
   }
   board.innerHTML = html;
 }
+
+$('#drawBoard').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-num]');
+  if (!el) return;
+  const num = Number(el.dataset.num);
+  if (Store.game.drawnNumbers.includes(num)) {
+    showToast('Esse número já foi sorteado.');
+    return;
+  }
+  markNumberManually(num);
+  afterNumberDrawn();
+});
 
 function achievementSummary(achievements) {
   return achievements.map((a) => `${a.confirmed ? '✅' : '⏳'} ${a.label}`).join(', ');
