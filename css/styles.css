@@ -171,11 +171,15 @@ h1, h2, h3, p { margin: 0; }
   overflow-y: auto;
 }
 .board-col-label {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   text-align: center;
   font-weight: 800;
   color: var(--color-accent);
   font-size: 13px;
   padding-bottom: 4px;
+  background: var(--color-surface);
 }
 .board-num {
   aspect-ratio: 1;
