@@ -452,9 +452,7 @@ function defaultQuad() {
 let quad = defaultQuad();
 
 const CAPTURE_HINT = 'Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.';
-const DETECTING_HINT = 'Enquadrando a cartela automaticamente...';
-const AUTO_DETECTED_HINT = 'Cartela enquadrada automaticamente. Se os cantos não baterem certinho com a grade de números, arraste as bolinhas para ajustar. Gire a foto se estiver de lado. Depois toque em "Reconhecer números".';
-const MANUAL_FALLBACK_HINT = 'Não deu para enquadrar a cartela automaticamente — arraste cada bolinha para o canto correspondente da grade de números (sem o cabeçalho BINGO nem a borda da cartela). Gire a foto se estiver de lado. Depois toque em "Reconhecer números".';
+const REVIEW_HINT = 'Arraste cada bolinha para o canto correspondente da grade de números (sem o cabeçalho BINGO nem a borda da cartela) — funciona mesmo se a foto estiver em ângulo. Gire a foto se estiver de lado. Depois toque em "Reconhecer números".';
 
 function showCapturePhase() {
   currentPhotoDataUrl = null;
@@ -467,21 +465,15 @@ function showCapturePhase() {
   $('#ocrStatus').textContent = '';
 }
 
-async function showReviewPhase() {
+function showReviewPhase() {
   $('#cameraBox').hidden = true;
   $('#capturedWrap').hidden = false;
   $('#captureControls').hidden = true;
   $('#reviewControls').hidden = false;
   $('#capturedPreview').src = currentPhotoDataUrl;
-
   quad = defaultQuad();
   applyQuadStyle();
-  $('#scanHint').textContent = DETECTING_HINT;
-
-  const detected = await Ocr.autoDetectQuad(currentPhotoDataUrl).catch(() => null);
-  quad = detected || defaultQuad();
-  applyQuadStyle();
-  $('#scanHint').textContent = detected ? AUTO_DETECTED_HINT : MANUAL_FALLBACK_HINT;
+  $('#scanHint').textContent = REVIEW_HINT;
 }
 
 /* ---------------- Quad corners (drag to mark the number grid) ---------------- */
