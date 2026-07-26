@@ -176,18 +176,25 @@
     <div class="modal__body">
 
       <div id="scanSection" hidden>
-        <div class="camera-box">
+        <div class="camera-box" id="cameraBox">
           <video id="cameraVideo" playsinline autoplay muted></video>
           <canvas id="cameraCanvas" hidden></canvas>
           <div class="camera-grid-overlay" aria-hidden="true"></div>
         </div>
-        <p class="hint">Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.</p>
-        <div class="btn-group">
+        <div class="camera-box captured-box" id="capturedWrap" hidden>
+          <img id="capturedPreview" alt="Foto capturada da cartela">
+          <div class="camera-grid-overlay" aria-hidden="true"></div>
+        </div>
+        <p class="hint" id="scanHint">Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.</p>
+        <div class="btn-group" id="captureControls">
           <button class="btn btn--primary btn--block" id="btnCapture">Capturar foto</button>
-          <button class="btn btn--ghost btn--block" id="btnRetake" hidden>Tirar outra foto</button>
+        </div>
+        <div class="btn-group" id="reviewControls" hidden>
+          <button class="btn btn--secondary btn--block" id="btnRotate">↻ Girar foto</button>
+          <button class="btn btn--primary btn--block" id="btnRecognize">Reconhecer números</button>
+          <button class="btn btn--ghost btn--block" id="btnRetake">Tirar outra foto</button>
         </div>
         <p class="ocr-status" id="ocrStatus"></p>
-        <img id="capturedPreview" class="captured-preview" hidden alt="Foto capturada da cartela">
       </div>
 
       <label class="field">

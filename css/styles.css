@@ -133,6 +133,7 @@ h1, h2, h3, p { margin: 0; }
 .btn--danger { background: transparent; border: 1.5px solid var(--color-danger); color: var(--color-danger); }
 .btn--ghost { background: transparent; border: 1.5px solid var(--color-border); color: var(--color-text); }
 .btn-group { display: flex; flex-direction: column; gap: 10px; }
+.btn-group[hidden] { display: none; }
 
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
@@ -289,7 +290,7 @@ h1, h2, h3, p { margin: 0; }
   overflow: hidden;
   position: relative;
 }
-.camera-box video, .camera-box img { width: 100%; height: 100%; object-fit: cover; }
+.camera-box video { width: 100%; height: 100%; object-fit: cover; }
 .camera-grid-overlay {
   position: absolute;
   inset: 0;
@@ -299,8 +300,11 @@ h1, h2, h3, p { margin: 0; }
     repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 2px, transparent 2px 20%);
   border: 2px solid rgba(255,255,255,.55);
 }
-.camera-box:has(#cameraVideo[hidden]) .camera-grid-overlay { display: none; }
-.captured-preview { width: 100%; border-radius: 12px; margin-top: 8px; }
+/* The captured photo keeps its own aspect ratio (it may be portrait
+   after rotation), so it isn't force-cropped like the live 4:3 feed. */
+.captured-box { aspect-ratio: auto; display: flex; }
+.captured-box[hidden] { display: none; }
+.captured-box img { width: 100%; height: auto; display: block; margin: auto; }
 .ocr-status { font-size: 13px; color: var(--color-text-dim); text-align: center; min-height: 18px; }
 
 .letters-row {

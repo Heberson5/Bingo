@@ -292,17 +292,36 @@ function readGridFromInputs() {
 }
 
 let currentModalMode = 'manual';
+let currentPhotoDataUrl = null;
+
+const CAPTURE_HINT = 'Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.';
+const REVIEW_HINT = 'Gire a foto até a palavra BINGO ficar na horizontal (em cima) e as colunas baterem com as linhas guia. Depois toque em "Reconhecer números".';
+
+function showCapturePhase() {
+  currentPhotoDataUrl = null;
+  $('#cameraBox').hidden = false;
+  $('#capturedWrap').hidden = true;
+  $('#captureControls').hidden = false;
+  $('#reviewControls').hidden = true;
+  $('#scanHint').textContent = CAPTURE_HINT;
+  $('#ocrStatus').textContent = '';
+}
+
+function showReviewPhase() {
+  $('#cameraBox').hidden = true;
+  $('#capturedWrap').hidden = false;
+  $('#captureControls').hidden = true;
+  $('#reviewControls').hidden = false;
+  $('#scanHint').textContent = REVIEW_HINT;
+  $('#capturedPreview').src = currentPhotoDataUrl;
+}
 
 function openCardModal(mode) {
   currentModalMode = mode;
   $('#cardModalTitle').textContent = mode === 'scan' ? 'Escanear cartela' : 'Cadastrar cartela manualmente';
   $('#cardParticipant').value = '';
   $('#scanSection').hidden = mode !== 'scan';
-  $('#btnRetake').hidden = true;
-  $('#capturedPreview').hidden = true;
-  $('#ocrStatus').textContent = '';
-  $('#cameraVideo').hidden = false;
-  $('#btnCapture').hidden = false;
+  showCapturePhase();
   buildLettersRow();
   buildCardGridInputs();
   $('#cardModal').hidden = false;
@@ -310,8 +329,7 @@ function openCardModal(mode) {
   if (mode === 'scan') {
     Ocr.startCamera($('#cameraVideo')).catch((err) => {
       $('#ocrStatus').textContent = 'Câmera indisponível (' + err.message + '). Preencha manualmente abaixo.';
-      $('#cameraVideo').hidden = true;
-      $('#btnCapture').hidden = true;
+      $('#captureControls').hidden = true;
     });
   }
 }
@@ -325,41 +343,40 @@ $('#btnScan').addEventListener('click', () => openCardModal('scan'));
 $('#btnManual').addEventListener('click', () => openCardModal('manual'));
 $$('[data-close-modal]').forEach((el) => el.addEventListener('click', closeCardModal));
 
-$('#btnCapture').addEventListener('click', async () => {
-  const dataUrl = Ocr.capture($('#cameraVideo'), $('#cameraCanvas'));
-  $('#capturedPreview').src = dataUrl;
-  $('#capturedPreview').hidden = false;
-  $('#cameraVideo').hidden = true;
-  $('#btnCapture').hidden = true;
-  $('#btnRetake').hidden = false;
+$('#btnCapture').addEventListener('click', () => {
+  currentPhotoDataUrl = Ocr.capture($('#cameraVideo'), $('#cameraCanvas'));
   Ocr.stopCamera();
+  showReviewPhase();
+});
 
+$('#btnRotate').addEventListener('click', async () => {
+  currentPhotoDataUrl = await Ocr.rotate90(currentPhotoDataUrl);
+  $('#capturedPreview').src = currentPhotoDataUrl;
+});
+
+$('#btnRetake').addEventListener('click', () => {
+  showCapturePhase();
+  Ocr.startCamera($('#cameraVideo')).catch((err) => {
+    $('#ocrStatus').textContent = 'Câmera indisponível (' + err.message + ').';
+  });
+});
+
+$('#btnRecognize').addEventListener('click', async () => {
   $('#ocrStatus').textContent = 'Reconhecendo números da cartela... 0%';
   try {
-    const recognizedGrid = await Ocr.recognizeGrid(dataUrl, Store.config.freeCenter, (pct) => {
+    const recognizedGrid = await Ocr.recognizeGrid(currentPhotoDataUrl, Store.config.freeCenter, (pct) => {
       $('#ocrStatus').textContent = `Reconhecendo números da cartela... ${pct}%`;
     });
     const count = fillGridFromCells(recognizedGrid);
     const total = Store.config.freeCenter ? 24 : 25;
     if (count === 0) {
-      $('#ocrStatus').textContent = 'Não foi possível reconhecer os números automaticamente. Preencha manualmente abaixo.';
+      $('#ocrStatus').textContent = 'Não foi possível reconhecer os números automaticamente. Preencha manualmente abaixo, ou gire a foto e tente de novo.';
     } else {
       $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos. Confira e corrija antes de salvar — dá pra tocar em qualquer casa e ajustar.`;
     }
   } catch (err) {
     $('#ocrStatus').textContent = 'Falha no reconhecimento automático. Preencha manualmente. (' + err.message + ')';
   }
-});
-
-$('#btnRetake').addEventListener('click', () => {
-  $('#capturedPreview').hidden = true;
-  $('#cameraVideo').hidden = false;
-  $('#btnCapture').hidden = false;
-  $('#btnRetake').hidden = true;
-  $('#ocrStatus').textContent = '';
-  Ocr.startCamera($('#cameraVideo')).catch((err) => {
-    $('#ocrStatus').textContent = 'Câmera indisponível (' + err.message + ').';
-  });
 });
 
 $('#btnSaveCard').addEventListener('click', () => {

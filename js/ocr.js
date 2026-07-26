@@ -53,6 +53,25 @@ const Ocr = {
   },
 
   /**
+   * Rotates the given image 90° clockwise and returns the new data URL.
+   * Photos of a portrait card taken with the phone sideways come out
+   * rotated — this lets the operator straighten it before recognition,
+   * since sideways digits can't be read by OCR and the wrong edge would
+   * otherwise get sliced into rows instead of columns.
+   */
+  async rotate90(dataUrl) {
+    const img = await this._loadImage(dataUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.height;
+    canvas.height = img.width;
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    return canvas.toDataURL('image/png');
+  },
+
+  /**
    * Crops one grid cell out of the full card photo, upscales it (OCR
    * reads small printed digits far more reliably when enlarged) and
    * applies grayscale + contrast boost to help separate ink from paper.
