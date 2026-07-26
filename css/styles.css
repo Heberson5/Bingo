@@ -66,6 +66,7 @@ h1, h2, h3, p { margin: 0; }
   flex-direction: column;
   gap: 12px;
 }
+.card[hidden] { display: none; }
 .card__header { display: flex; align-items: center; justify-content: space-between; }
 .card__header h2 { font-size: 15px; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .04em; }
 .card__header.collapsible { cursor: pointer; }
@@ -80,6 +81,7 @@ h1, h2, h3, p { margin: 0; }
   border-radius: 999px;
   font-weight: 700;
 }
+.badge--prize { background: var(--color-accent); color: #3a2504; }
 
 /* ---------- Draw stage ---------- */
 .draw-stage {
@@ -127,13 +129,18 @@ h1, h2, h3, p { margin: 0; }
 .btn:active { transform: scale(.97); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn--block { width: 100%; }
+.btn--small { padding: 8px 14px; font-size: 13px; border-radius: 9px; flex-shrink: 0; }
 .btn--xl { font-size: 18px; padding: 18px 24px; border-radius: 16px; }
 .btn--primary { background: var(--color-primary); }
 .btn--secondary { background: var(--color-surface-2); border: 1px solid var(--color-border); }
 .btn--danger { background: transparent; border: 1.5px solid var(--color-danger); color: var(--color-danger); }
 .btn--ghost { background: transparent; border: 1.5px solid var(--color-border); color: var(--color-text); }
+.btn--manual { color: var(--color-text); }
 .btn-group { display: flex; flex-direction: column; gap: 10px; }
 .btn-group[hidden] { display: none; }
+.btn-row { display: flex; gap: 10px; width: 100%; }
+.btn-row .btn--primary { flex: 2; }
+.btn-row .btn--manual { flex: 1; }
 
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
@@ -202,6 +209,16 @@ h1, h2, h3, p { margin: 0; }
 .card-item__meta { font-size: 12px; color: var(--color-text-dim); }
 .card-item.is-winner { border-color: var(--color-success); box-shadow: 0 0 0 1px var(--color-success) inset; }
 .card-item.is-used { opacity: .55; }
+.card-item__delete {
+  background: none;
+  border: none;
+  font-size: 16px;
+  padding: 6px;
+  cursor: pointer;
+  opacity: .7;
+  flex-shrink: 0;
+}
+.card-item__delete:hover, .card-item__delete:focus-visible { opacity: 1; }
 
 .card-list { display: flex; flex-direction: column; gap: 8px; }
 .card-list[hidden] { display: none; }

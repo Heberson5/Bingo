@@ -118,7 +118,7 @@ function addCard(name, grid) {
     grid,
     gameId: Store.game.id,
     status: 'active', // active | used
-    achievements: [],
+    achievements: [], // { key, label, drawIndex, drawnNumber, confirmed }
     createdAt: new Date().toISOString(),
   };
   Store.cards.push(card);
@@ -127,6 +127,11 @@ function addCard(name, grid) {
   applyDrawnNumbersToCard(card);
   Store.saveCards();
   return card;
+}
+
+function deleteCard(id) {
+  Store.cards = Store.cards.filter((c) => c.id !== id);
+  Store.saveCards();
 }
 
 function activeCards() {
@@ -175,10 +180,12 @@ function availableNumbers() {
   return pool;
 }
 
-function drawNumber() {
-  const pool = availableNumbers();
-  if (pool.length === 0) return null;
-  const num = pool[Math.floor(Math.random() * pool.length)];
+/**
+ * Records `num` as drawn (whether it came from the app's random draw or
+ * was typed in manually because the operator is calling numbers from a
+ * physical globe/cage) and marks it on every active card.
+ */
+function commitDrawnNumber(num) {
   Store.game.drawnNumbers.push(num);
   if (Store.game.firstNumber === null) Store.game.firstNumber = num;
   Store.saveGame();
@@ -191,7 +198,26 @@ function drawNumber() {
     }
   }
   Store.saveCards();
+}
+
+function drawNumber() {
+  const pool = availableNumbers();
+  if (pool.length === 0) return null;
+  const num = pool[Math.floor(Math.random() * pool.length)];
+  commitDrawnNumber(num);
   return num;
+}
+
+/**
+ * Registers a number called manually (e.g. from a physical bingo
+ * globe) instead of the app's own random draw. Returns false without
+ * changing state if the number is out of range or already drawn.
+ */
+function markNumberManually(num) {
+  if (!Number.isInteger(num) || num < Store.config.min || num > Store.config.max) return false;
+  if (Store.game.drawnNumbers.includes(num)) return false;
+  commitDrawnNumber(num);
+  return true;
 }
 
 /* ---------------- Win checking ---------------- */
@@ -200,21 +226,26 @@ function isMarked(cell) {
   return cell.free || cell.marked;
 }
 
+function rowCells(grid, r) {
+  return grid[r];
+}
+function colCells(grid, c) {
+  return grid.map((row) => row[c]);
+}
+function diagCells(grid, which) {
+  const cells = [];
+  for (let i = 0; i < 5; i++) cells.push(which === 0 ? grid[i][i] : grid[i][4 - i]);
+  return cells;
+}
+
 function checkRow(grid, r) {
-  for (let c = 0; c < 5; c++) if (!isMarked(grid[r][c])) return false;
-  return true;
+  return rowCells(grid, r).every(isMarked);
 }
 function checkCol(grid, c) {
-  for (let r = 0; r < 5; r++) if (!isMarked(grid[r][c])) return false;
-  return true;
+  return colCells(grid, c).every(isMarked);
 }
 function checkDiagonals(grid) {
-  let d1 = true, d2 = true;
-  for (let i = 0; i < 5; i++) {
-    if (!isMarked(grid[i][i])) d1 = false;
-    if (!isMarked(grid[i][4 - i])) d2 = false;
-  }
-  return d1 || d2;
+  return diagCells(grid, 0).every(isMarked) || diagCells(grid, 1).every(isMarked);
 }
 
 function checkQuina(grid, tipo) {
@@ -236,8 +267,7 @@ function checkQuina(grid, tipo) {
 }
 
 function checkFullCard(grid) {
-  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) if (!isMarked(grid[r][c])) return false;
-  return true;
+  return grid.flat().every(isMarked);
 }
 
 function checkFourCorners(grid) {
@@ -245,8 +275,12 @@ function checkFourCorners(grid) {
 }
 
 /**
- * Returns a list of newly-achieved win descriptions for this card
- * (criteria not already present in card.achievements).
+ * Returns the newly-achieved criteria for this card (ones not already
+ * recorded in card.achievements), tagging each with which draw (index
+ * + number) completed it. That record is what lets the operator later
+ * work out who *really* won first if a card "passou batido" (the
+ * player missed calling it out) and more than one card is in play for
+ * the same prize — only the last-drawn number's completion counts.
  */
 function evaluateCard(card) {
   const cfg = Store.config;
@@ -269,9 +303,16 @@ function evaluateCard(card) {
     found.push({ key: 'quina', label: 'Quina' });
   }
 
-  const newOnes = found.filter((f) => !card.achievements.includes(f.key));
-  for (const f of newOnes) card.achievements.push(f.key);
-  return newOnes;
+  const existingKeys = card.achievements.map((a) => a.key);
+  const newOnes = found.filter((f) => !existingKeys.includes(f.key));
+  const drawIndex = Store.game.drawnNumbers.length;
+  const drawnNumber = Store.game.drawnNumbers[drawIndex - 1] ?? null;
+
+  for (const f of newOnes) {
+    card.achievements.push({ key: f.key, label: f.label, drawIndex, drawnNumber, confirmed: false });
+  }
+
+  return newOnes.map((f) => ({ key: f.key, label: f.label, drawIndex, drawnNumber }));
 }
 
 function evaluateAllActiveCards() {
@@ -284,6 +325,100 @@ function evaluateAllActiveCards() {
   return winners;
 }
 
+/**
+ * Marks a card's achievement as confirmed (the prize was actually
+ * handed out). Until this happens the win stays "pending" — the game
+ * keeps going and the card keeps appearing as a winner, since a
+ * pending win might turn out to not be the legitimate one once
+ * compared against other cards' draw order (see evaluateCard).
+ */
+function confirmAchievement(cardId, key) {
+  const card = Store.cards.find((c) => c.id === cardId);
+  if (!card) return;
+  const achievement = card.achievements.find((a) => a.key === key);
+  if (!achievement) return;
+  achievement.confirmed = true;
+  Store.saveCards();
+}
+
+function pendingAchievements() {
+  const list = [];
+  for (const card of activeCards()) {
+    for (const a of card.achievements) {
+      if (!a.confirmed) list.push({ card, ...a });
+    }
+  }
+  list.sort((a, b) => a.drawIndex - b.drawIndex);
+  return list;
+}
+
+/* ---------------- Near-miss ("faltando 1 número") ---------------- */
+
+function unmarkedValue(cells) {
+  const unmarked = cells.filter((c) => !isMarked(c));
+  if (unmarked.length === 1) return Number(unmarked[0].value);
+  return null;
+}
+
+/**
+ * Returns every criterion this card is exactly one number away from
+ * completing, so the operator can watch for it live instead of only
+ * finding out after someone shouts "Bingo!".
+ */
+function evaluateNearMiss(card) {
+  const cfg = Store.config;
+  const grid = card.grid;
+  const results = [];
+
+  if (cfg.criteria.cheia) {
+    const val = unmarkedValue(grid.flat());
+    if (val !== null) results.push({ label: 'Cartela Cheia', neededNumber: val });
+  }
+
+  if (cfg.criteria.quatroPontas) {
+    const corners = [grid[0][0], grid[0][4], grid[4][0], grid[4][4]];
+    const val = unmarkedValue(corners);
+    if (val !== null) results.push({ label: 'Quatro Pontas', neededNumber: val });
+  }
+
+  if (cfg.criteria.quinaPrimeiraLetra && Store.game.firstNumber !== null) {
+    const colIdx = columnIndexForNumber(Store.game.firstNumber, cfg.min, cfg.max);
+    if (colIdx !== null) {
+      const val = unmarkedValue(colCells(grid, colIdx));
+      if (val !== null) results.push({ label: `Quina da letra ${LETTERS[colIdx]}`, neededNumber: val });
+    }
+  }
+
+  if (cfg.criteria.quina) {
+    const tipo = cfg.quinaTipo;
+    const lines = [];
+    if (tipo === 'horizontal' || tipo === 'todos') {
+      for (let r = 0; r < 5; r++) lines.push({ cells: rowCells(grid, r), label: 'Quina (linha)' });
+    }
+    if (tipo === 'transversal' || tipo === 'todos') {
+      for (let c = 0; c < 5; c++) lines.push({ cells: colCells(grid, c), label: `Quina (coluna ${LETTERS[c]})` });
+    }
+    if (tipo === 'diagonal' || tipo === 'todos') {
+      lines.push({ cells: diagCells(grid, 0), label: 'Quina (diagonal)' });
+      lines.push({ cells: diagCells(grid, 1), label: 'Quina (diagonal)' });
+    }
+    for (const line of lines) {
+      const val = unmarkedValue(line.cells);
+      if (val !== null) results.push({ label: line.label, neededNumber: val });
+    }
+  }
+
+  return results;
+}
+
+function findNearMisses() {
+  const list = [];
+  for (const card of activeCards()) {
+    for (const miss of evaluateNearMiss(card)) list.push({ card, ...miss });
+  }
+  return list;
+}
+
 /* ---------------- End game ---------------- */
 
 function endGame() {
@@ -292,7 +427,9 @@ function endGame() {
   const winners = [];
   for (const card of cardsInGame) {
     card.status = 'used';
-    for (const key of card.achievements) winners.push({ name: card.name, criterion: key });
+    for (const a of card.achievements) {
+      winners.push({ name: card.name, criterion: a.label, confirmed: a.confirmed });
+    }
   }
   Store.saveCards();
 

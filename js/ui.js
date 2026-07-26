@@ -64,11 +64,53 @@ function renderSorteio() {
   renderLastBalls();
   renderDrawBoard();
   renderActiveCardsSummary();
+  renderNearMisses();
+  renderPendingPrizes();
 
   const noMore = availableNumbers().length === 0;
   $('#btnSortear').disabled = noMore;
   $('#btnSortear').textContent = noMore ? 'Todos os números já saíram' : 'Sortear número';
+  $('#btnMarcarManual').disabled = noMore;
 }
+
+function renderNearMisses() {
+  const misses = findNearMisses();
+  $('#nearMissCount').textContent = misses.length;
+  $('#nearMissCard').hidden = misses.length === 0;
+  $('#nearMissList').innerHTML = misses
+    .map((m) => `
+      <div class="card-item">
+        <div>
+          <div class="card-item__name">${escapeHtml(m.card.name)}</div>
+          <div class="card-item__meta">${escapeHtml(m.label)} · falta o <strong>${m.neededNumber}</strong> (${letterForNumber(m.neededNumber)})</div>
+        </div>
+      </div>`)
+    .join('');
+}
+
+function renderPendingPrizes() {
+  const pending = pendingAchievements();
+  $('#pendingPrizesCount').textContent = pending.length;
+  $('#pendingPrizesCard').hidden = pending.length === 0;
+  $('#pendingPrizesList').innerHTML = pending
+    .map((p) => `
+      <div class="card-item is-winner">
+        <div>
+          <div class="card-item__name">${escapeHtml(p.card.name)}</div>
+          <div class="card-item__meta">${escapeHtml(p.label)} · bola nº ${p.drawIndex} (${p.drawnNumber})</div>
+        </div>
+        <button class="btn btn--secondary btn--small" data-confirm-prize data-card-id="${p.card.id}" data-key="${p.key}">Confirmar prêmio</button>
+      </div>`)
+    .join('');
+}
+
+$('#pendingPrizesList').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-confirm-prize]');
+  if (!btn) return;
+  confirmAchievement(btn.dataset.cardId, btn.dataset.key);
+  renderSorteio();
+  showToast('Prêmio confirmado.');
+});
 
 function renderLastBalls() {
   const row = $('#lastBallsRow');
@@ -108,6 +150,10 @@ function renderDrawBoard() {
   board.innerHTML = html;
 }
 
+function achievementSummary(achievements) {
+  return achievements.map((a) => `${a.confirmed ? '✅' : '⏳'} ${a.label}`).join(', ');
+}
+
 function renderActiveCardsSummary() {
   const cards = activeCards();
   $('#activeCardsCount').textContent = cards.length;
@@ -125,17 +171,20 @@ function renderActiveCardsSummary() {
         <div class="card-item ${won ? 'is-winner' : ''}">
           <div>
             <div class="card-item__name">${escapeHtml(c.name)}</div>
-            <div class="card-item__meta">${markedCount}/${total} marcados${won ? ' · 🏆 ' + c.achievements.join(', ') : ''}</div>
+            <div class="card-item__meta">${markedCount}/${total} marcados${won ? ' · ' + achievementSummary(c.achievements) : ''}</div>
           </div>
         </div>`;
     })
     .join('');
 }
 
-$('#btnSortear').addEventListener('click', () => {
-  const num = drawNumber();
-  if (num === null) { showToast('Todos os números já foram sorteados.'); return; }
-
+/**
+ * Bounces the ball, re-renders the sorteio screen and checks for new
+ * winners — shared by the random draw and by manually recording a
+ * number called from a physical globe, since both should behave
+ * identically from that point on.
+ */
+function afterNumberDrawn() {
   const ball = $('#currentBall');
   ball.classList.remove('is-bouncing');
   void ball.offsetWidth;
@@ -148,7 +197,37 @@ $('#btnSortear').addEventListener('click', () => {
     winnerQueue.push(...winners);
     showNextWinner();
     renderActiveCardsSummary();
+    renderPendingPrizes();
   }
+}
+
+$('#btnSortear').addEventListener('click', () => {
+  const num = drawNumber();
+  if (num === null) { showToast('Todos os números já foram sorteados.'); return; }
+  afterNumberDrawn();
+});
+
+$('#btnMarcarManual').addEventListener('click', () => {
+  $('#manualNumberInput').value = '';
+  $('#manualNumberModal').hidden = false;
+  setTimeout(() => $('#manualNumberInput').focus(), 50);
+});
+
+$$('[data-close-manual-modal]').forEach((el) => el.addEventListener('click', () => {
+  $('#manualNumberModal').hidden = true;
+}));
+
+$('#manualNumberConfirm').addEventListener('click', () => {
+  const num = parseInt($('#manualNumberInput').value, 10);
+  if (Number.isNaN(num)) { showToast('Informe um número válido.'); return; }
+  if (Store.game.drawnNumbers.includes(num)) { showToast('Esse número já foi sorteado nesta partida.'); return; }
+  if (num < Store.config.min || num > Store.config.max) {
+    showToast(`Informe um número entre ${Store.config.min} e ${Store.config.max}.`);
+    return;
+  }
+  markNumberManually(num);
+  $('#manualNumberModal').hidden = true;
+  afterNumberDrawn();
 });
 
 function showNextWinner() {
@@ -197,11 +276,12 @@ function renderCartelas() {
   const list = $('#cartelasAtivasList');
   list.innerHTML = active.length
     ? active.map((c) => `
-        <div class="card-item ${c.achievements.length ? 'is-winner' : ''}">
+        <div class="card-item ${c.achievements.length ? 'is-winner' : ''}" data-card-id="${c.id}">
           <div>
             <div class="card-item__name">${escapeHtml(c.name)}</div>
-            <div class="card-item__meta">Jogo #${c.gameId}${c.achievements.length ? ' · 🏆 ' + c.achievements.join(', ') : ''}</div>
+            <div class="card-item__meta">Jogo #${c.gameId}${c.achievements.length ? ' · ' + achievementSummary(c.achievements) : ''}</div>
           </div>
+          <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
         </div>`).join('')
     : '<span class="empty-hint">Nenhuma cartela ativa.</span>';
 
@@ -209,14 +289,36 @@ function renderCartelas() {
   const hist = $('#cartelasHistoricoList');
   hist.innerHTML = used.length
     ? used.slice().reverse().map((c) => `
-        <div class="card-item is-used">
+        <div class="card-item is-used" data-card-id="${c.id}">
           <div>
             <div class="card-item__name">${escapeHtml(c.name)}</div>
-            <div class="card-item__meta">Jogo #${c.gameId} · ${c.achievements.length ? '🏆 ' + c.achievements.join(', ') : 'sem vitória'}</div>
+            <div class="card-item__meta">Jogo #${c.gameId} · ${c.achievements.length ? achievementSummary(c.achievements) : 'sem vitória'}</div>
           </div>
+          <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
         </div>`).join('')
     : '<span class="empty-hint">Nenhum histórico ainda.</span>';
 }
+
+function handleCardListClick(e) {
+  const btn = e.target.closest('[data-delete-card]');
+  if (!btn) return;
+  const item = e.target.closest('[data-card-id]');
+  const id = item.dataset.cardId;
+  const card = Store.cards.find((c) => c.id === id);
+  if (!card) return;
+  openConfirm(
+    'Excluir cartela?',
+    `A cartela de ${card.name} será excluída permanentemente. Essa ação não pode ser desfeita.`,
+    () => {
+      deleteCard(id);
+      renderCartelas();
+      renderSorteio();
+      showToast('Cartela excluída.');
+    }
+  );
+}
+$('#cartelasAtivasList').addEventListener('click', handleCardListClick);
+$('#cartelasHistoricoList').addEventListener('click', handleCardListClick);
 
 $('#toggleHistorico').addEventListener('click', () => {
   const list = $('#cartelasHistoricoList');
@@ -312,6 +414,7 @@ function showCapturePhase() {
   $('#cameraBox').hidden = false;
   $('#capturedWrap').hidden = true;
   $('#captureControls').hidden = false;
+  $('#btnCapture').hidden = false;
   $('#reviewControls').hidden = true;
   $('#scanHint').textContent = CAPTURE_HINT;
   $('#ocrStatus').textContent = '';
@@ -400,8 +503,8 @@ function openCardModal(mode) {
 
   if (mode === 'scan') {
     Ocr.startCamera($('#cameraVideo')).catch((err) => {
-      $('#ocrStatus').textContent = 'Câmera indisponível (' + err.message + '). Preencha manualmente abaixo.';
-      $('#captureControls').hidden = true;
+      $('#ocrStatus').textContent = 'Câmera indisponível (' + err.message + '). Use "Escolher da galeria" ou cadastre manualmente.';
+      $('#btnCapture').hidden = true;
     });
   }
 }
@@ -420,6 +523,21 @@ $('#btnCapture').addEventListener('click', () => {
   currentPhotoDataUrl = Ocr.capture($('#cameraVideo'), $('#cameraCanvas'));
   Ocr.stopCamera();
   showReviewPhase();
+});
+
+$('#btnGallery').addEventListener('click', () => $('#galleryInput').click());
+
+$('#galleryInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  e.target.value = ''; // allow picking the same file again later
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    currentPhotoDataUrl = reader.result;
+    Ocr.stopCamera();
+    showReviewPhase();
+  };
+  reader.readAsDataURL(file);
 });
 
 $('#btnRotate').addEventListener('click', async () => {

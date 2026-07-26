@@ -28,8 +28,25 @@
         <span class="draw-ball__letter" id="currentBallLetter">-</span>
         <span class="draw-ball__number" id="currentBallNumber">--</span>
       </div>
-      <button class="btn btn--primary btn--xl" id="btnSortear">Sortear número</button>
+      <div class="btn-row">
+        <button class="btn btn--primary btn--xl" id="btnSortear">Sortear número</button>
+        <button class="btn btn--secondary btn--xl btn--manual" id="btnMarcarManual">Manual</button>
+      </div>
       <p class="draw-stats" id="drawStats">0 de 0 números sorteados</p>
+    </div>
+
+    <div class="card" id="pendingPrizesCard" hidden>
+      <div class="card__header">
+        <h2>Prêmios pendentes <span class="badge badge--prize" id="pendingPrizesCount">0</span></h2>
+      </div>
+      <div id="pendingPrizesList" class="cards-summary"></div>
+    </div>
+
+    <div class="card" id="nearMissCard" hidden>
+      <div class="card__header">
+        <h2>Faltando 1 número <span class="badge" id="nearMissCount">0</span></h2>
+      </div>
+      <div id="nearMissList" class="cards-summary"></div>
     </div>
 
     <div class="card">
@@ -195,7 +212,9 @@
         <p class="hint" id="scanHint">Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.</p>
         <div class="btn-group" id="captureControls">
           <button class="btn btn--primary btn--block" id="btnCapture">Capturar foto</button>
+          <button class="btn btn--secondary btn--block" id="btnGallery">🖼️ Escolher da galeria</button>
         </div>
+        <input type="file" accept="image/*" id="galleryInput" hidden>
         <div class="btn-group" id="reviewControls" hidden>
           <button class="btn btn--secondary btn--block" id="btnRotate">↻ Girar foto</button>
           <button class="btn btn--primary btn--block" id="btnRecognize">Reconhecer números</button>
@@ -239,6 +258,23 @@
     <div class="btn-group">
       <button class="btn btn--ghost btn--block" id="confirmCancel">Cancelar</button>
       <button class="btn btn--danger btn--block" id="confirmOk">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Manual number entry ===== -->
+<div class="modal" id="manualNumberModal" hidden>
+  <div class="modal__backdrop" data-close-manual-modal></div>
+  <div class="modal__sheet modal__sheet--center">
+    <h2>Marcar número manual</h2>
+    <p class="hint">Use quando os números saírem de um globo físico, fora do app.</p>
+    <label class="field">
+      <span>Número sorteado</span>
+      <input type="number" id="manualNumberInput" inputmode="numeric">
+    </label>
+    <div class="btn-group">
+      <button class="btn btn--ghost btn--block" data-close-manual-modal>Cancelar</button>
+      <button class="btn btn--primary btn--block" id="manualNumberConfirm">Confirmar</button>
     </div>
   </div>
 </div>
