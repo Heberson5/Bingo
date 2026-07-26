@@ -80,13 +80,21 @@ const Ocr = {
    * the caller falls back to a default quad, which the operator can
    * still adjust manually either way.
    *
-   * Method: downscale for speed, estimate the background color from
-   * the photo's outer edge (cards are usually photographed with some
-   * margin around them), flag pixels that differ enough from that
-   * background as "card", then take the bounding box of the rows/
-   * columns that are mostly card pixels (a projection profile — cheap,
-   * and robust enough against small noise since it requires a whole
-   * row/column to mostly agree, not just isolated pixels).
+   * Method: downscale for speed, then for every row estimate that
+   * row's OWN background color from its own left/right margin pixels
+   * (and for every column, from that column's own top/bottom margin
+   * pixels) rather than a single global background color. Real
+   * backgrounds are rarely one uniform color — a wood table on one
+   * side, clothing on another — so a single global estimate either
+   * gets pulled toward whichever background happens to dominate the
+   * sampled ring, or (when the colors are very different from each
+   * other) collapses into a color that resembles none of them,
+   * misclassifying everything as "card". A per-row/per-column local
+   * reference stays correct across a patchwork background, as long as
+   * each row/column's own margin sample isn't itself mostly card (true
+   * whenever the card doesn't run edge-to-edge on both sides at once).
+   * The median (not mean) of each local sample is used so a card that
+   * intrudes into *part* of a margin sample doesn't skew it.
    */
   async autoDetectQuad(dataUrl) {
     const img = await this._loadImage(dataUrl);
@@ -102,40 +110,74 @@ const Ocr = {
     ctx.drawImage(img, 0, 0, w, h);
     const data = ctx.getImageData(0, 0, w, h).data;
 
-    const gray = new Float32Array(w * h);
-    for (let i = 0; i < w * h; i++) {
-      gray[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
-    }
+    const pixel = (x, y) => {
+      const idx = (y * w + x) * 4;
+      return { r: data[idx], g: data[idx + 1], b: data[idx + 2] };
+    };
+    const median = (arr) => {
+      const sorted = arr.slice().sort((a, b) => a - b);
+      return sorted[Math.floor(sorted.length / 2)];
+    };
+    const colorDist = (a, b) => {
+      const dr = a.r - b.r, dg = a.g - b.g, db = a.b - b.b;
+      return Math.sqrt(dr * dr + dg * dg + db * db);
+    };
 
-    const margin = Math.max(1, Math.round(Math.min(w, h) * 0.05));
-    let bgSum = 0, bgCount = 0;
+    const margin = Math.max(2, Math.round(Math.min(w, h) * 0.04));
+    const medianColor = (pixels) => ({
+      r: median(pixels.map((p) => p.r)),
+      g: median(pixels.map((p) => p.g)),
+      b: median(pixels.map((p) => p.b)),
+    });
+
+    // Left/right (and top/bottom) references are kept *separate*, not
+    // merged into one row/column estimate: a photo very often has a
+    // different-colored background on one side than the other (e.g.
+    // cloth on the left, clothing on the right), and merging those two
+    // colors into a single median produces a value that resembles
+    // neither — the same "phantom color" problem a single global
+    // background estimate has, just at row/column scale instead of
+    // whole-image scale. Requiring a pixel to differ from *both* side
+    // references before calling it "card" sidesteps that.
+    const rowBgLeft = new Array(h), rowBgRight = new Array(h);
     for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (x < margin || x >= w - margin || y < margin || y >= h - margin) {
-          bgSum += gray[y * w + x];
-          bgCount++;
-        }
-      }
+      const left = [], right = [];
+      for (let x = 0; x < margin; x++) left.push(pixel(x, y));
+      for (let x = w - margin; x < w; x++) right.push(pixel(x, y));
+      rowBgLeft[y] = medianColor(left);
+      rowBgRight[y] = medianColor(right);
     }
-    const bg = bgSum / bgCount;
+    const colBgTop = new Array(w), colBgBottom = new Array(w);
+    for (let x = 0; x < w; x++) {
+      const top = [], bottom = [];
+      for (let y = 0; y < margin; y++) top.push(pixel(x, y));
+      for (let y = h - margin; y < h; y++) bottom.push(pixel(x, y));
+      colBgTop[x] = medianColor(top);
+      colBgBottom[x] = medianColor(bottom);
+    }
 
-    const DIFF_THRESHOLD = 28;
-    const isCardPixel = (x, y) => Math.abs(gray[y * w + x] - bg) > DIFF_THRESHOLD;
+    const COLOR_DIST_THRESHOLD = 45;
 
     const rowCoverage = new Float32Array(h);
     for (let y = 0; y < h; y++) {
       let count = 0;
-      for (let x = 0; x < w; x++) if (isCardPixel(x, y)) count++;
+      for (let x = 0; x < w; x++) {
+        const p = pixel(x, y);
+        if (colorDist(p, rowBgLeft[y]) > COLOR_DIST_THRESHOLD && colorDist(p, rowBgRight[y]) > COLOR_DIST_THRESHOLD) count++;
+      }
       rowCoverage[y] = count / w;
     }
     const colCoverage = new Float32Array(w);
     for (let x = 0; x < w; x++) {
       let count = 0;
-      for (let y = 0; y < h; y++) if (isCardPixel(x, y)) count++;
+      for (let y = 0; y < h; y++) {
+        const p = pixel(x, y);
+        if (colorDist(p, colBgTop[x]) > COLOR_DIST_THRESHOLD && colorDist(p, colBgBottom[x]) > COLOR_DIST_THRESHOLD) count++;
+      }
       colCoverage[x] = count / h;
     }
 
-    const COVERAGE_THRESHOLD = 0.3;
+    const COVERAGE_THRESHOLD = 0.25;
     let top = 0, bottom = h - 1, left = 0, right = w - 1;
     while (top < h && rowCoverage[top] < COVERAGE_THRESHOLD) top++;
     while (bottom > 0 && rowCoverage[bottom] < COVERAGE_THRESHOLD) bottom--;
