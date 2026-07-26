@@ -180,14 +180,23 @@ function assignCardName(id, name) {
 }
 
 /**
- * Finds any card (active or already used/archived, from any game) that
- * has the exact same set of numbers as the given grid. Used to prevent
- * registering the same physical card twice, and to block reusing a
- * card that already played (and finished) a previous game.
+ * Finds any card (stock, active, or already used/archived, from any
+ * game) that's the same physical card as the one being registered —
+ * used to prevent registering the same card twice, and to block
+ * reusing a card that already played a previous game. Two cards count
+ * as the same if they share a printed card number OR the exact same
+ * set of numbers; checking both matters because a typo'd/missing card
+ * number shouldn't defeat the grid check, and a misread OCR digit
+ * (producing a slightly different grid) shouldn't defeat the number
+ * check when the card number was read correctly.
  */
-function findDuplicateCard(grid) {
+function findDuplicateCard(grid, cardNumber) {
   const flat = flattenValues(grid);
-  return Store.cards.find((c) => sameValues(flattenValues(c.grid), flat)) || null;
+  const trimmedNumber = (cardNumber || '').trim();
+  return Store.cards.find((c) => {
+    if (trimmedNumber && c.cardNumber && c.cardNumber === trimmedNumber) return true;
+    return sameValues(flattenValues(c.grid), flat);
+  }) || null;
 }
 
 function flattenValues(grid) {
@@ -529,4 +538,33 @@ function endGame() {
 
   Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null };
   Store.saveGame();
+}
+
+/**
+ * The only way a card that's already been used (or is mid-game) can
+ * ever become available again — every card, regardless of its current
+ * status, goes back to stock with no participant, ready to be handed
+ * out again via "Entregar". The card's own identity (its numbers and
+ * printed card number) is never touched, only its game/participant
+ * state — registering a card is a one-time action forever, but
+ * *playing* a card can restart. Whatever game is in progress gets
+ * archived to history first, same as ending it normally, so no draws
+ * or winners are silently lost.
+ */
+function restartAllCards() {
+  const hasGameInProgress = Store.game.drawnNumbers.length > 0 || Store.cards.some((c) => c.gameId === Store.game.id);
+  if (hasGameInProgress) endGame();
+
+  for (const card of Store.cards) {
+    card.status = 'stock';
+    card.gameId = null;
+    card.name = '';
+    card.achievements = [];
+    for (const row of card.grid) {
+      for (const cell of row) {
+        cell.marked = cell.free;
+      }
+    }
+  }
+  Store.saveCards();
 }

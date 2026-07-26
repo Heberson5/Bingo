@@ -459,6 +459,23 @@ $('#toggleHistorico').addEventListener('click', () => {
   chevron.classList.toggle('is-open', !list.hidden);
 });
 
+$('#btnReiniciarCartelas').addEventListener('click', () => {
+  if (Store.cards.length === 0) {
+    showToast('Não há cartelas cadastradas.');
+    return;
+  }
+  openConfirm(
+    'Reiniciar cartelas?',
+    'Todas as cartelas cadastradas, mesmo as já usadas em jogos anteriores, voltarão para o estoque sem participante, prontas para serem entregues novamente. O jogo atual em andamento será encerrado e arquivado no histórico antes disso. Essa ação não pode ser desfeita.',
+    () => {
+      restartAllCards();
+      renderCartelas();
+      renderSorteio();
+      showToast('Cartelas reiniciadas — todas voltaram para o estoque.');
+    }
+  );
+});
+
 /* ---------------- Card modal (scan / manual) ---------------- */
 
 function buildLettersRow() {
@@ -772,7 +789,7 @@ $('#btnSaveCard').addEventListener('click', () => {
     value: cell.free ? null : Number(cell.value),
   })));
 
-  const dup = findDuplicateCard(numericGrid);
+  const dup = findDuplicateCard(numericGrid, cardNumber);
   if (dup) {
     if (dup.status === 'used') {
       showToast('Esta cartela já foi usada em um jogo encerrado e não pode ser reutilizada.');
