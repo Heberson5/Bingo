@@ -260,16 +260,18 @@ function buildCardGridInputs() {
   }
 }
 
-function fillGridFromRecognized(numbers) {
-  const queue = numbers.slice();
+function fillGridFromCells(recognizedGrid) {
+  let count = 0;
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 5; c++) {
       const cell = cardGridCells[r][c];
       if (cell.isFree) continue;
-      const next = queue.shift();
-      cell.el.value = next !== undefined ? next : '';
+      const value = recognizedGrid[r][c];
+      cell.el.value = value !== null && value !== undefined ? value : '';
+      if (value !== null && value !== undefined) count++;
     }
   }
+  return count;
 }
 
 function readGridFromInputs() {
@@ -332,16 +334,17 @@ $('#btnCapture').addEventListener('click', async () => {
   $('#btnRetake').hidden = false;
   Ocr.stopCamera();
 
-  $('#ocrStatus').textContent = 'Reconhecendo números... 0%';
+  $('#ocrStatus').textContent = 'Reconhecendo números da cartela... 0%';
   try {
-    const numbers = await Ocr.recognizeNumbers(dataUrl, (pct) => {
-      $('#ocrStatus').textContent = `Reconhecendo números... ${pct}%`;
+    const recognizedGrid = await Ocr.recognizeGrid(dataUrl, Store.config.freeCenter, (pct) => {
+      $('#ocrStatus').textContent = `Reconhecendo números da cartela... ${pct}%`;
     });
-    if (numbers.length === 0) {
-      $('#ocrStatus').textContent = 'Não foi possível reconhecer números automaticamente. Preencha manualmente.';
+    const count = fillGridFromCells(recognizedGrid);
+    const total = Store.config.freeCenter ? 24 : 25;
+    if (count === 0) {
+      $('#ocrStatus').textContent = 'Não foi possível reconhecer os números automaticamente. Preencha manualmente abaixo.';
     } else {
-      fillGridFromRecognized(numbers);
-      $('#ocrStatus').textContent = `${numbers.length} número(s) reconhecido(s). Confira e corrija antes de salvar.`;
+      $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos. Confira e corrija antes de salvar — dá pra tocar em qualquer casa e ajustar.`;
     }
   } catch (err) {
     $('#ocrStatus').textContent = 'Falha no reconhecimento automático. Preencha manualmente. (' + err.message + ')';
