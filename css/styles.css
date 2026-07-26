@@ -499,8 +499,12 @@ h1, h2, h3, p { margin: 0; }
   .draw-ball { width: 180px; height: 180px; }
   .draw-board { max-height: 380px; }
   .modal__sheet:not(.modal__sheet--center) {
-    align-items: center;
-    justify-content: center;
+    /* Only positions the sheet as a whole within the outer .modal —
+       must NOT set align-items/justify-content here too, since the
+       sheet is itself a flex column for its own children (header,
+       body); centering those vertically pushes tall content (like the
+       scan modal, header included) above the visible viewport once it
+       exceeds max-height, hiding the close button entirely. */
     margin: auto;
     max-width: 480px;
     border-radius: 20px;
