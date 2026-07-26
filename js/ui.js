@@ -25,6 +25,8 @@ function switchView(name) {
   $$('.bottom-nav__item, .side-nav__item').forEach((b) => b.classList.toggle('is-active', b.dataset.nav === name));
   if (name === 'sorteio') renderSorteio();
   if (name === 'cartelas') renderCartelas();
+  if (name === 'historico') renderHistorico();
+  if (name === 'dashboard') renderDashboard();
   if (name === 'config') renderConfigForm();
 }
 
@@ -165,13 +167,19 @@ function renderPendingPrizes() {
   $('#pendingPrizesList').innerHTML = pending
     .map((p) => `
       <div class="card-item is-winner">
-        <div>
-          <div class="card-item__name">${escapeHtml(p.card.name)}</div>
-          <div class="card-item__meta">Concorrendo: ${escapeHtml(p.label)} · completou com a bola nº ${p.drawIndex} (${p.drawnNumber})</div>
+        <div class="card-item__main">
+          <label class="card-item__check">
+            <input type="checkbox" data-select-prize data-card-id="${p.card.id}" data-key="${p.key}">
+          </label>
+          <div>
+            <div class="card-item__name">${escapeHtml(p.card.name)}</div>
+            <div class="card-item__meta">Concorrendo: ${escapeHtml(p.label)} · completou com a bola nº ${p.drawIndex} (${p.drawnNumber})${cardNumberSuffix(p.card)}</div>
+          </div>
         </div>
-        <button class="btn btn--secondary btn--small" data-confirm-prize data-card-id="${p.card.id}" data-key="${p.key}">Confirmar prêmio</button>
+        <button class="btn btn--secondary btn--small" data-confirm-prize data-card-id="${p.card.id}" data-key="${p.key}">Confirmar</button>
       </div>`)
     .join('');
+  $('#btnConfirmSelectedPrizes').hidden = true;
 
   $('#expiredPrizesWrap').hidden = expired.length === 0;
   $('#expiredPrizesCount').textContent = expired.length;
@@ -189,9 +197,25 @@ function renderPendingPrizes() {
 $('#pendingPrizesList').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-confirm-prize]');
   if (!btn) return;
-  confirmAchievement(btn.dataset.cardId, btn.dataset.key);
+  const prize = $('#prizeNameInput').value.trim();
+  confirmAchievement(btn.dataset.cardId, btn.dataset.key, prize);
   renderSorteio();
   showToast('Prêmio confirmado.');
+});
+
+$('#pendingPrizesList').addEventListener('change', (e) => {
+  const cb = e.target.closest('[data-select-prize]');
+  if (!cb) return;
+  $('#btnConfirmSelectedPrizes').hidden = $$('[data-select-prize]:checked', $('#pendingPrizesList')).length === 0;
+});
+
+$('#btnConfirmSelectedPrizes').addEventListener('click', () => {
+  const checked = $$('[data-select-prize]:checked', $('#pendingPrizesList'));
+  if (checked.length === 0) return;
+  const prize = $('#prizeNameInput').value.trim();
+  checked.forEach((cb) => confirmAchievement(cb.dataset.cardId, cb.dataset.key, prize));
+  renderSorteio();
+  showToast(`${checked.length} prêmio(s) confirmado(s)${prize ? ' — ' + prize : ''}.`);
 });
 
 function renderLastBalls() {
@@ -257,7 +281,11 @@ $('#drawBoard').addEventListener('click', (e) => {
 });
 
 function achievementSummary(achievements) {
-  return achievements.map((a) => `${a.confirmed ? '✅' : a.expired ? '❌' : '⏳'} ${a.label}`).join(', ');
+  return achievements.map((a) => {
+    const icon = a.confirmed ? '✅' : a.expired ? '❌' : '⏳';
+    const prize = a.confirmed && a.prize ? ` (${a.prize})` : '';
+    return `${icon} ${a.label}${prize}`;
+  }).join(', ');
 }
 
 function renderActiveCardsSummary() {
@@ -410,23 +438,114 @@ function renderCartelas() {
 
 let assigningCardId = null;
 
-function renderEstoque() {
+/**
+ * The stock list is meant to hold hundreds/thousands of pre-registered
+ * cards (a whole manufacturer batch imported via CSV), so it can't be
+ * rendered as one long DOM list — that's what made the print button
+ * unreachable after importing 1000 cards. It's browsed in fixed-size
+ * blocks instead, filterable by the printed card number, with a
+ * selection that survives page changes so "select all" + bulk delete
+ * can act on every match, not just the ones currently on screen.
+ */
+const ESTOQUE_PAGE_SIZE = 50;
+let estoqueSearchQuery = '';
+let estoquePage = 1;
+let estoqueSelected = new Set();
+
+function filteredStockCards() {
   const stock = stockCards();
-  $('#estoqueCount').textContent = stock.length;
-  $('#estoqueList').innerHTML = stock.length
-    ? stock.map((c) => `
+  const query = estoqueSearchQuery.trim().toLowerCase();
+  if (!query) return stock;
+  return stock.filter((c) => (c.cardNumber || '').toLowerCase().includes(query));
+}
+
+function updateEstoqueSelectionUi(filtered) {
+  const list = filtered || filteredStockCards();
+  $('#estoqueBulkBar').hidden = estoqueSelected.size === 0;
+  $('#estoqueBulkCount').textContent = estoqueSelected.size;
+  const selectAll = $('#estoqueSelectAll');
+  selectAll.checked = list.length > 0 && list.every((c) => estoqueSelected.has(c.id));
+}
+
+function renderEstoque() {
+  const all = stockCards();
+  const validIds = new Set(all.map((c) => c.id));
+  for (const id of Array.from(estoqueSelected)) if (!validIds.has(id)) estoqueSelected.delete(id);
+
+  const filtered = filteredStockCards();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ESTOQUE_PAGE_SIZE));
+  if (estoquePage > totalPages) estoquePage = totalPages;
+  const start = (estoquePage - 1) * ESTOQUE_PAGE_SIZE;
+  const pageItems = filtered.slice(start, start + ESTOQUE_PAGE_SIZE);
+
+  $('#estoqueCount').textContent = all.length;
+  $('#estoqueList').innerHTML = pageItems.length
+    ? pageItems.map((c) => `
         <div class="card-item" data-card-id="${c.id}">
-          <div>
-            <div class="card-item__name">${c.cardNumber ? 'Cartela nº ' + escapeHtml(c.cardNumber) : 'Cartela sem número'}</div>
-            <div class="card-item__meta">Aguardando entrega</div>
+          <div class="card-item__main">
+            <label class="card-item__check">
+              <input type="checkbox" data-select-card ${estoqueSelected.has(c.id) ? 'checked' : ''}>
+            </label>
+            <div>
+              <div class="card-item__name">${c.cardNumber ? 'Cartela nº ' + escapeHtml(c.cardNumber) : 'Cartela sem número'}</div>
+              <div class="card-item__meta">Aguardando entrega</div>
+            </div>
           </div>
           <div class="card-item__actions">
             <button class="btn btn--secondary btn--small" data-assign-card>Entregar</button>
             <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
           </div>
         </div>`).join('')
-    : '<span class="empty-hint">Nenhuma cartela em estoque.</span>';
+    : `<span class="empty-hint">${estoqueSearchQuery ? 'Nenhuma cartela encontrada para essa busca.' : 'Nenhuma cartela em estoque.'}</span>`;
+
+  $('#estoquePagination').hidden = filtered.length <= ESTOQUE_PAGE_SIZE;
+  $('#estoquePageInfo').textContent = `Página ${estoquePage} de ${totalPages} · ${filtered.length} cartela(s)`;
+  $('#estoquePrev').disabled = estoquePage <= 1;
+  $('#estoqueNext').disabled = estoquePage >= totalPages;
+
+  updateEstoqueSelectionUi(filtered);
 }
+
+$('#estoqueSearchInput').addEventListener('input', (e) => {
+  estoqueSearchQuery = e.target.value;
+  estoquePage = 1;
+  renderEstoque();
+});
+
+$('#estoquePrev').addEventListener('click', () => { estoquePage--; renderEstoque(); });
+$('#estoqueNext').addEventListener('click', () => { estoquePage++; renderEstoque(); });
+
+$('#estoqueSelectAll').addEventListener('change', (e) => {
+  const filtered = filteredStockCards();
+  if (e.target.checked) filtered.forEach((c) => estoqueSelected.add(c.id));
+  else filtered.forEach((c) => estoqueSelected.delete(c.id));
+  renderEstoque();
+});
+
+$('#estoqueList').addEventListener('change', (e) => {
+  const cb = e.target.closest('[data-select-card]');
+  if (!cb) return;
+  const item = e.target.closest('[data-card-id]');
+  if (cb.checked) estoqueSelected.add(item.dataset.cardId);
+  else estoqueSelected.delete(item.dataset.cardId);
+  updateEstoqueSelectionUi();
+});
+
+$('#btnDeleteSelectedEstoque').addEventListener('click', () => {
+  const count = estoqueSelected.size;
+  if (count === 0) return;
+  openConfirm(
+    'Excluir cartelas selecionadas?',
+    `${count} cartela(s) do estoque serão excluídas permanentemente. Essa ação não pode ser desfeita.`,
+    () => {
+      deleteCards(Array.from(estoqueSelected));
+      estoqueSelected.clear();
+      renderCartelas();
+      renderSorteio();
+      showToast(`${count} cartela(s) excluída(s).`);
+    }
+  );
+});
 
 function openAssignModal(card) {
   assigningCardId = card.id;
@@ -1028,6 +1147,97 @@ function printCards(perPage) {
 }
 
 $$('[data-print-cards]').forEach((btn) => btn.addEventListener('click', () => printCards(Number(btn.dataset.printCards))));
+
+/* ================================================================
+   HISTÓRICO DE PARTIDAS
+================================================================ */
+
+function formatDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+function formatDurationMs(ms) {
+  if (!ms || ms <= 0) return '—';
+  const totalMin = Math.round(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h}h ${m}min` : `${m} min`;
+}
+
+function formatGameDuration(game) {
+  if (!game.startedAt || !game.endedAt) return '—';
+  return formatDurationMs(new Date(game.endedAt) - new Date(game.startedAt));
+}
+
+function renderHistorico() {
+  const games = Store.history.slice().reverse();
+  $('#historicoCount').textContent = games.length;
+  $('#historicoList').innerHTML = games.length
+    ? games.map((g) => `
+        <div class="card history-card">
+          <div class="card__header">
+            <h2>Jogo #${g.gameId}</h2>
+            <span class="card-item__meta">${formatDateTime(g.endedAt)} · ${formatGameDuration(g)}</span>
+          </div>
+          <div class="card-item__meta">${g.cardsCount} cartela(s) em jogo</div>
+          ${g.winners.length
+            ? `<div class="cards-summary">${g.winners.map((w) => `
+                <div class="card-item ${w.confirmed ? 'is-winner' : 'card-item--expired'}">
+                  <div>
+                    <div class="card-item__name">${escapeHtml(w.name || 'Sem nome')}</div>
+                    <div class="card-item__meta">${escapeHtml(w.criterion)}${w.cardNumber ? ' · Cartela nº ' + escapeHtml(w.cardNumber) : ''}${w.prize ? ' · Prêmio: ' + escapeHtml(w.prize) : ''}${!w.confirmed ? ' · não confirmado' : ''}</div>
+                  </div>
+                </div>`).join('')}</div>`
+            : '<span class="empty-hint">Nenhum ganhador registrado.</span>'}
+        </div>`).join('')
+    : '<span class="empty-hint">Nenhuma partida encerrada ainda.</span>';
+}
+
+/* ================================================================
+   DASHBOARD
+================================================================ */
+
+function renderBarList(el, entries) {
+  if (entries.length === 0) {
+    el.innerHTML = '<span class="empty-hint">Sem dados ainda.</span>';
+    return;
+  }
+  const max = Math.max(...entries.map(([, v]) => v));
+  el.innerHTML = entries.map(([label, value]) => `
+    <div class="bar-row">
+      <span class="bar-row__label">${escapeHtml(label)}</span>
+      <div class="bar-row__track"><div class="bar-row__fill" style="width:${max ? (value / max * 100) : 0}%"></div></div>
+      <span class="bar-row__value">${value}</span>
+    </div>`).join('');
+}
+
+function sortedEntries(map) {
+  return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+}
+
+function formatDayLabel(key) {
+  const [, m, d] = key.split('-');
+  return `${d}/${m}`;
+}
+function formatMonthLabel(key) {
+  const [y, m] = key.split('-');
+  return `${m}/${y}`;
+}
+
+function renderDashboard() {
+  const stats = dashboardStats();
+  $('#dashTotalGames').textContent = stats.totalGames;
+  $('#dashAvgDuration').textContent = formatDurationMs(stats.avgDurationMs);
+  $('#dashTotalCards').textContent = stats.totalCards;
+  $('#dashTotalWinners').textContent = stats.totalConfirmedPrizes;
+
+  renderBarList($('#dashByDay'), sortedEntries(stats.byDay).slice(-14).map(([k, v]) => [formatDayLabel(k), v]));
+  renderBarList($('#dashByMonth'), sortedEntries(stats.byMonth).slice(-12).map(([k, v]) => [formatMonthLabel(k), v]));
+  renderBarList($('#dashByYear'), sortedEntries(stats.byYear));
+}
 
 /* ================================================================
    CONFIGURAÇÕES

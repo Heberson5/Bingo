@@ -25,6 +25,12 @@
   <button class="side-nav__item" data-nav="cartelas">
     <span class="side-nav__icon">🗂️</span><span class="side-nav__label">Cartelas</span>
   </button>
+  <button class="side-nav__item" data-nav="historico">
+    <span class="side-nav__icon">📜</span><span class="side-nav__label">Histórico</span>
+  </button>
+  <button class="side-nav__item" data-nav="dashboard">
+    <span class="side-nav__icon">📊</span><span class="side-nav__label">Dashboard</span>
+  </button>
   <button class="side-nav__item" data-nav="config">
     <span class="side-nav__icon">⚙️</span><span class="side-nav__label">Config</span>
   </button>
@@ -70,7 +76,13 @@
             <div class="card__header">
               <h2>Ganhadores <span class="badge badge--prize" id="pendingPrizesCount">0</span></h2>
             </div>
+            <label class="field">
+              <span>Prêmio (opcional)</span>
+              <input type="text" id="prizeNameInput" placeholder="Ex: 1º prêmio - Liquidificador">
+            </label>
             <div id="pendingPrizesList" class="cards-summary"></div>
+            <button class="btn btn--primary btn--small" id="btnConfirmSelectedPrizes" hidden>Confirmar selecionados com este prêmio</button>
+            <p class="hint">Marque mais de uma cartela para vincular o mesmo prêmio a todos os ganhadores selecionados.</p>
           </div>
           <div id="expiredPrizesWrap" hidden>
             <div class="card__header">
@@ -150,8 +162,27 @@
 
     <div class="card">
       <div class="card__header"><h2>Estoque de cartelas <span class="badge" id="estoqueCount">0</span></h2></div>
+      <label class="field">
+        <span>Buscar por número da cartela</span>
+        <input type="text" id="estoqueSearchInput" placeholder="Ex: 0042" inputmode="numeric">
+      </label>
+      <div class="list-toolbar">
+        <label class="field field--check">
+          <input type="checkbox" id="estoqueSelectAll">
+          <span>Selecionar todas</span>
+        </label>
+        <div class="list-toolbar__bulk" id="estoqueBulkBar" hidden>
+          <span id="estoqueBulkCount">0</span> selecionada(s)
+          <button class="btn btn--danger btn--small" id="btnDeleteSelectedEstoque">Excluir selecionadas</button>
+        </div>
+      </div>
       <div id="estoqueList" class="card-list">
         <span class="empty-hint">Nenhuma cartela em estoque.</span>
+      </div>
+      <div class="pagination" id="estoquePagination" hidden>
+        <button class="btn btn--ghost btn--small" id="estoquePrev">‹ Anterior</button>
+        <span class="pagination__info" id="estoquePageInfo"></span>
+        <button class="btn btn--ghost btn--small" id="estoqueNext">Próxima ›</button>
       </div>
     </div>
 
@@ -186,6 +217,54 @@
       <div class="card__header"><h2>Redistribuir cartelas</h2></div>
       <p class="hint">Libera todas as cartelas já cadastradas — mesmo as usadas em jogos anteriores — para serem entregues de novo, sem participante. Os números e o número de cada cartela continuam salvos. Use ao começar uma nova sessão reaproveitando o mesmo talão físico.</p>
       <button class="btn btn--danger btn--block" id="btnReiniciarCartelas">Reiniciar cartelas</button>
+    </div>
+  </section>
+
+  <!-- ===================== HISTÓRICO DE PARTIDAS ===================== -->
+  <section class="view" id="view-historico" data-view="historico" hidden>
+    <div class="card">
+      <div class="card__header"><h2>Histórico de partidas <span class="badge" id="historicoCount">0</span></h2></div>
+      <p class="hint">Cada partida encerrada mostra a rodada, data, duração, ganhadores, número da cartela e o prêmio vinculado.</p>
+      <div id="historicoList" class="cards-summary">
+        <span class="empty-hint">Nenhuma partida encerrada ainda.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <section class="view" id="view-dashboard" data-view="dashboard" hidden>
+    <div class="card">
+      <div class="card__header"><h2>Resumo</h2></div>
+      <div class="stats-grid">
+        <div class="stat-tile">
+          <span class="stat-tile__value" id="dashTotalGames">0</span>
+          <span class="stat-tile__label">Partidas encerradas</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-tile__value" id="dashAvgDuration">—</span>
+          <span class="stat-tile__label">Duração média</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-tile__value" id="dashTotalCards">0</span>
+          <span class="stat-tile__label">Cartelas em jogo (total)</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-tile__value" id="dashTotalWinners">0</span>
+          <span class="stat-tile__label">Prêmios confirmados</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card__header"><h2>Partidas por dia</h2></div>
+      <div id="dashByDay" class="bar-list"></div>
+    </div>
+    <div class="card">
+      <div class="card__header"><h2>Partidas por mês</h2></div>
+      <div id="dashByMonth" class="bar-list"></div>
+    </div>
+    <div class="card">
+      <div class="card__header"><h2>Partidas por ano</h2></div>
+      <div id="dashByYear" class="bar-list"></div>
     </div>
   </section>
 
@@ -299,6 +378,12 @@
     </button>
     <button class="bottom-nav__item" data-nav="cartelas">
       <span class="bottom-nav__icon">🗂️</span><span>Cartelas</span>
+    </button>
+    <button class="bottom-nav__item" data-nav="historico">
+      <span class="bottom-nav__icon">📜</span><span>Histórico</span>
+    </button>
+    <button class="bottom-nav__item" data-nav="dashboard">
+      <span class="bottom-nav__icon">📊</span><span>Dashboard</span>
     </button>
     <button class="bottom-nav__item" data-nav="config">
       <span class="bottom-nav__icon">⚙️</span><span>Config</span>

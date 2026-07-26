@@ -60,7 +60,7 @@ function save(key, value) {
 
 const Store = {
   config: loadJSON(STORAGE_KEYS.config, DEFAULT_CONFIG),
-  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, closedCriteria: {} }),
+  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {} }),
   cards: loadArray(STORAGE_KEYS.cards),
   history: loadArray(STORAGE_KEYS.history),
 
@@ -150,6 +150,12 @@ function addCard(name, grid, cardNumber) {
 
 function deleteCard(id) {
   Store.cards = Store.cards.filter((c) => c.id !== id);
+  Store.saveCards();
+}
+
+function deleteCards(ids) {
+  const idSet = new Set(ids);
+  Store.cards = Store.cards.filter((c) => !idSet.has(c.id));
   Store.saveCards();
 }
 
@@ -279,6 +285,7 @@ function commitDrawnNumber(num) {
 
   Store.game.drawnNumbers.push(num);
   if (Store.game.firstNumber === null) Store.game.firstNumber = num;
+  if (!Store.game.startedAt) Store.game.startedAt = new Date().toISOString();
   Store.saveGame();
 
   for (const card of activeCards()) {
@@ -469,13 +476,20 @@ function evaluateAllActiveCards() {
  * keeps going and the card keeps appearing as a winner, since a
  * pending win might turn out to not be the legitimate one once
  * compared against other cards' draw order (see evaluateCard).
+ *
+ * `prize` is a free-text description of what was awarded (e.g. "1º
+ * prêmio - Liquidificador"). Confirming several achievements with the
+ * same prize text is exactly how more than one simultaneous winner
+ * gets linked to a single prize — there's no separate "prize" entity,
+ * just a shared label written onto each winning achievement.
  */
-function confirmAchievement(cardId, key) {
+function confirmAchievement(cardId, key, prize) {
   const card = Store.cards.find((c) => c.id === cardId);
   if (!card) return;
   const achievement = card.achievements.find((a) => a.key === key);
   if (!achievement) return;
   achievement.confirmed = true;
+  achievement.prize = (prize || '').trim();
   Store.saveCards();
 }
 
@@ -599,13 +613,20 @@ function endGame() {
   for (const card of cardsInGame) {
     card.status = 'used';
     for (const a of card.achievements) {
-      winners.push({ name: card.name, criterion: a.label, confirmed: a.confirmed });
+      winners.push({
+        name: card.name,
+        cardNumber: card.cardNumber,
+        criterion: a.label,
+        prize: a.prize || '',
+        confirmed: a.confirmed,
+      });
     }
   }
   Store.saveCards();
 
   Store.history.push({
     gameId: finishedGameId,
+    startedAt: Store.game.startedAt,
     endedAt: new Date().toISOString(),
     drawnNumbers: Store.game.drawnNumbers.slice(),
     cardsCount: cardsInGame.length,
@@ -613,7 +634,7 @@ function endGame() {
   });
   Store.saveHistory();
 
-  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null, closedCriteria: {} };
+  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {} };
   Store.saveGame();
 }
 
@@ -644,4 +665,45 @@ function restartAllCards() {
     }
   }
   Store.saveCards();
+}
+
+/* ---------------- Dashboard ---------------- */
+
+/**
+ * Turns the flat game history into the counts a dashboard actually
+ * needs: how long games took, and how many finished per day/month/year
+ * (keyed as 'YYYY-MM-DD' / 'YYYY-MM' / 'YYYY' so callers can sort and
+ * format them without re-parsing dates).
+ */
+function dashboardStats() {
+  const games = Store.history;
+  const durationsMs = [];
+  const byDay = new Map();
+  const byMonth = new Map();
+  const byYear = new Map();
+
+  for (const g of games) {
+    if (g.startedAt && g.endedAt) {
+      const ms = new Date(g.endedAt) - new Date(g.startedAt);
+      if (ms > 0) durationsMs.push(ms);
+    }
+    if (!g.endedAt) continue;
+    const iso = g.endedAt;
+    const dayKey = iso.slice(0, 10);
+    const monthKey = iso.slice(0, 7);
+    const yearKey = iso.slice(0, 4);
+    byDay.set(dayKey, (byDay.get(dayKey) || 0) + 1);
+    byMonth.set(monthKey, (byMonth.get(monthKey) || 0) + 1);
+    byYear.set(yearKey, (byYear.get(yearKey) || 0) + 1);
+  }
+
+  const avgDurationMs = durationsMs.length
+    ? durationsMs.reduce((sum, v) => sum + v, 0) / durationsMs.length
+    : 0;
+  const totalCards = games.reduce((sum, g) => sum + g.cardsCount, 0);
+  const totalConfirmedPrizes = games.reduce(
+    (sum, g) => sum + g.winners.filter((w) => w.confirmed).length, 0
+  );
+
+  return { totalGames: games.length, avgDurationMs, totalCards, totalConfirmedPrizes, byDay, byMonth, byYear };
 }
