@@ -72,6 +72,88 @@ const Ocr = {
   },
 
   /**
+   * Best-effort automatic framing: guesses the card's bounding box by
+   * contrasting it against the background, so the operator usually
+   * doesn't have to drag all 4 corners by hand. Returns a quad
+   * (nw/ne/se/sw, fractions of the photo) or null when the photo
+   * doesn't have a clear enough card-vs-background contrast to trust —
+   * the caller falls back to a default quad, which the operator can
+   * still adjust manually either way.
+   *
+   * Method: downscale for speed, estimate the background color from
+   * the photo's outer edge (cards are usually photographed with some
+   * margin around them), flag pixels that differ enough from that
+   * background as "card", then take the bounding box of the rows/
+   * columns that are mostly card pixels (a projection profile — cheap,
+   * and robust enough against small noise since it requires a whole
+   * row/column to mostly agree, not just isolated pixels).
+   */
+  async autoDetectQuad(dataUrl) {
+    const img = await this._loadImage(dataUrl);
+    const maxDim = 240;
+    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, w, h);
+    const data = ctx.getImageData(0, 0, w, h).data;
+
+    const gray = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      gray[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+    }
+
+    const margin = Math.max(1, Math.round(Math.min(w, h) * 0.05));
+    let bgSum = 0, bgCount = 0;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        if (x < margin || x >= w - margin || y < margin || y >= h - margin) {
+          bgSum += gray[y * w + x];
+          bgCount++;
+        }
+      }
+    }
+    const bg = bgSum / bgCount;
+
+    const DIFF_THRESHOLD = 28;
+    const isCardPixel = (x, y) => Math.abs(gray[y * w + x] - bg) > DIFF_THRESHOLD;
+
+    const rowCoverage = new Float32Array(h);
+    for (let y = 0; y < h; y++) {
+      let count = 0;
+      for (let x = 0; x < w; x++) if (isCardPixel(x, y)) count++;
+      rowCoverage[y] = count / w;
+    }
+    const colCoverage = new Float32Array(w);
+    for (let x = 0; x < w; x++) {
+      let count = 0;
+      for (let y = 0; y < h; y++) if (isCardPixel(x, y)) count++;
+      colCoverage[x] = count / h;
+    }
+
+    const COVERAGE_THRESHOLD = 0.3;
+    let top = 0, bottom = h - 1, left = 0, right = w - 1;
+    while (top < h && rowCoverage[top] < COVERAGE_THRESHOLD) top++;
+    while (bottom > 0 && rowCoverage[bottom] < COVERAGE_THRESHOLD) bottom--;
+    while (left < w && colCoverage[left] < COVERAGE_THRESHOLD) left++;
+    while (right > 0 && colCoverage[right] < COVERAGE_THRESHOLD) right--;
+
+    const validBox = top < bottom && left < right && (bottom - top) > h * 0.25 && (right - left) > w * 0.25;
+    if (!validBox) return null;
+
+    return {
+      nw: { x: left / w, y: top / h },
+      ne: { x: right / w, y: top / h },
+      se: { x: right / w, y: bottom / h },
+      sw: { x: left / w, y: bottom / h },
+    };
+  },
+
+  /**
    * Computes the projective homography that maps the unit square
    * (u,v) in [0,1]x[0,1] onto an arbitrary quadrilateral p0-p1-p2-p3
    * (corners in TL, TR, BR, BL order), using Paul Heckbert's
