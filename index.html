@@ -138,6 +138,17 @@
     </div>
 
     <div class="card">
+      <div class="card__header"><h2>Importar cartelas (CSV)</h2></div>
+      <p class="hint">Planilha com uma cartela por linha: número da cartela, nome (opcional), depois os 25 números na ordem B1-B5, I1-I5, N1-N5, G1-G5, O1-O5. A casa central (N3) fica em branco se a cartela tiver espaço livre. Cartelas sem nome vão para o estoque.</p>
+      <div class="btn-group">
+        <button class="btn btn--secondary btn--block" id="btnDownloadCsvTemplate">⬇️ Baixar modelo CSV</button>
+        <button class="btn btn--primary btn--block" id="btnImportCsv">📄 Escolher arquivo CSV</button>
+      </div>
+      <input type="file" accept=".csv,text/csv" id="csvFileInput" hidden>
+      <p class="ocr-status" id="csvImportStatus"></p>
+    </div>
+
+    <div class="card">
       <div class="card__header"><h2>Estoque de cartelas <span class="badge" id="estoqueCount">0</span></h2></div>
       <div id="estoqueList" class="card-list">
         <span class="empty-hint">Nenhuma cartela em estoque.</span>
@@ -148,6 +159,16 @@
       <div class="card__header"><h2>Cartelas ativas <span class="badge" id="cartelasAtivasCount">0</span></h2></div>
       <div id="cartelasAtivasList" class="card-list">
         <span class="empty-hint">Nenhuma cartela ativa.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><h2>Imprimir cartelas</h2></div>
+      <p class="hint">Gera uma folha A4 pronta para impressão com todas as cartelas cadastradas (estoque e ativas), separadas por linhas finas para recortar.</p>
+      <div class="btn-group">
+        <button class="btn btn--secondary btn--block" data-print-cards="2">2 por página</button>
+        <button class="btn btn--secondary btn--block" data-print-cards="4">4 por página</button>
+        <button class="btn btn--secondary btn--block" data-print-cards="6">6 por página</button>
       </div>
     </div>
 
@@ -391,6 +412,9 @@
 </div>
 
 <div class="toast" id="toast" hidden></div>
+
+<!-- Populated only right before window.print() — see @media print in styles.css. -->
+<div id="printArea"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="js/state.js"></script>

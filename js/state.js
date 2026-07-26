@@ -210,6 +210,26 @@ function sameValues(a, b) {
   return a.every((v, i) => v === b[i]);
 }
 
+/**
+ * Same column-range check as the manual/scan entry form, but against a
+ * plain in-memory grid instead of the DOM inputs — used by CSV import,
+ * where there's no card-entry form to read from.
+ */
+function invalidCellsInPlainGrid(grid) {
+  const ranges = getColumnRanges(Store.config.min, Store.config.max);
+  const invalid = [];
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const cell = grid[r][c];
+      if (cell.free) continue;
+      const value = Number(cell.value);
+      const [min, max] = ranges[c];
+      if (value < min || value > max) invalid.push({ r, c, value, letter: LETTERS[c], min, max });
+    }
+  }
+  return invalid;
+}
+
 function applyDrawnNumbersToCard(card) {
   for (const row of card.grid) {
     for (const cell of row) {

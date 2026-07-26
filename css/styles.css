@@ -592,3 +592,76 @@ h1, h2, h3, p { margin: 0; }
   .sorteio-main { flex: 1; order: 1; }
   .sorteio-aside { width: 300px; flex-shrink: 0; order: 2; position: sticky; top: 16px; }
 }
+
+/* ---------- Print (2/4/6 cartelas por página A4) ----------
+   #printArea stays empty/hidden during normal use; printCards() fills
+   it right before window.print(), and only it is visible in print
+   media — the rest of the app (nav, modals, everything) is hidden so
+   the printed sheet shows nothing but the cards themselves. */
+#printArea { display: none; }
+
+@media print {
+  html, body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; margin: 0; padding: 0; }
+
+  @page { size: A4; margin: 10mm; }
+
+  .print-page {
+    width: 100%;
+    /* Slightly under the full 277mm printable height (297mm page minus
+       the 10mm top/bottom @page margins) so rounding/border thickness
+       never pushes the grid a hair past one page, which would otherwise
+       silently print a trailing blank page. */
+    height: 270mm;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6mm;
+    page-break-after: always;
+    overflow: hidden;
+  }
+  .print-page:last-child { page-break-after: auto; }
+  .print-page--2 { grid-template-rows: repeat(1, 1fr); }
+  .print-page--4 { grid-template-rows: repeat(2, 1fr); }
+  .print-page--6 { grid-template-rows: repeat(3, 1fr); }
+
+  .print-card {
+    border: 0.75pt solid #000;
+    border-radius: 3mm;
+    padding: 3mm;
+    display: flex;
+    flex-direction: column;
+    gap: 2mm;
+    break-inside: avoid;
+    background: #fff;
+    color: #000;
+  }
+  .print-card__header {
+    font-size: 11pt;
+    font-weight: 700;
+    text-align: center;
+  }
+  .print-card__letters {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    text-align: center;
+    font-weight: 800;
+    font-size: 12pt;
+  }
+  .print-card__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 0.5mm;
+    flex: 1;
+  }
+  .print-card__cell {
+    border: 0.5pt solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11pt;
+    font-weight: 700;
+  }
+  .print-card__cell--free { font-size: 7pt; font-weight: 700; }
+}

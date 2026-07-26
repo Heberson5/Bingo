@@ -842,6 +842,193 @@ $('#btnSaveCard').addEventListener('click', () => {
   renderSorteio();
 });
 
+/* ---------------- CSV import ----------------
+   One card per line: card number, name (both optional), then the 25
+   grid values in a fixed column order — B1-B5, I1-I5, N1-N5, G1-G5,
+   O1-O5 (reading each letter's column top-to-bottom) — matching the
+   downloadable template. N3 is the free-center cell and is ignored
+   when the card has a free center. */
+
+const CSV_GRID_START_COL = 2;
+
+function splitCsvLine(line, delimiter) {
+  const cells = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; } else inQuotes = false;
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === delimiter) {
+      cells.push(cur);
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  cells.push(cur);
+  return cells.map((c) => c.trim());
+}
+
+function parseCsvText(text) {
+  const stripped = text.replace(/^﻿/, ''); // Excel BOM
+  const lines = stripped.split(/\r\n|\n|\r/).filter((l) => l.trim() !== '');
+  if (lines.length === 0) return [];
+  // Excel in pt-BR locales exports CSV with ";" (since "," is the decimal
+  // separator there) — pick whichever delimiter actually shows up more.
+  const semicolons = (lines[0].match(/;/g) || []).length;
+  const commas = (lines[0].match(/,/g) || []).length;
+  const delimiter = semicolons > commas ? ';' : ',';
+  return lines.map((line) => splitCsvLine(line, delimiter));
+}
+
+function rowLooksLikeHeader(cells) {
+  const first = (cells[0] || '').trim().toLowerCase();
+  return ['numero', 'número', 'card', 'cartela', 'id'].includes(first);
+}
+
+function buildGridFromCsvRow(cells) {
+  const grid = createEmptyGrid(Store.config.freeCenter);
+  for (let colIdx = 0; colIdx < 5; colIdx++) {
+    for (let rowIdx = 0; rowIdx < 5; rowIdx++) {
+      const cell = grid[rowIdx][colIdx];
+      if (cell.free) continue;
+      const raw = (cells[CSV_GRID_START_COL + colIdx * 5 + rowIdx] || '').trim();
+      cell.value = raw;
+    }
+  }
+  return grid;
+}
+
+function importCardsFromCsvText(text) {
+  const rows = parseCsvText(text);
+  const hasHeader = rows.length > 0 && rowLooksLikeHeader(rows[0]);
+  const dataRows = hasHeader ? rows.slice(1) : rows;
+
+  const result = { imported: 0, duplicates: 0, invalidRows: [] };
+
+  dataRows.forEach((cells, i) => {
+    if (cells.every((c) => c === '')) return; // blank line
+    const lineNumber = i + (hasHeader ? 2 : 1);
+
+    const cardNumber = (cells[0] || '').trim();
+    const name = (cells[1] || '').trim();
+    const grid = buildGridFromCsvRow(cells);
+
+    const flatCells = grid.flat().filter((c) => !c.free);
+    const hasEmpty = flatCells.some((c) => c.value === '' || Number.isNaN(Number(c.value)));
+    if (hasEmpty) {
+      result.invalidRows.push(`linha ${lineNumber}: números incompletos ou inválidos`);
+      return;
+    }
+
+    const invalid = invalidCellsInPlainGrid(grid);
+    if (invalid.length > 0) {
+      const first = invalid[0];
+      result.invalidRows.push(`linha ${lineNumber}: número ${first.value} fora da faixa da coluna ${first.letter} (${first.min}–${first.max})`);
+      return;
+    }
+
+    const numericGrid = grid.map((row) => row.map((cell) => ({
+      ...cell,
+      value: cell.free ? null : Number(cell.value),
+    })));
+
+    // Cards imported earlier in this same file are already in Store.cards
+    // by this point, so this also catches duplicates within the batch.
+    const dup = findDuplicateCard(numericGrid, cardNumber);
+    if (dup) { result.duplicates++; return; }
+
+    addCard(name, numericGrid, cardNumber);
+    result.imported++;
+  });
+
+  return result;
+}
+
+$('#btnImportCsv').addEventListener('click', () => $('#csvFileInput').click());
+
+$('#csvFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  e.target.value = ''; // allow picking the same file again later
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const result = importCardsFromCsvText(reader.result);
+    const parts = [`${result.imported} cartela(s) importada(s)`];
+    if (result.duplicates) parts.push(`${result.duplicates} ignorada(s) por já estarem cadastradas`);
+    if (result.invalidRows.length) parts.push(`${result.invalidRows.length} linha(s) inválida(s)`);
+    let statusText = parts.join(' · ');
+    if (result.invalidRows.length) statusText += ': ' + result.invalidRows.slice(0, 5).join('; ');
+    $('#csvImportStatus').textContent = statusText;
+    renderCartelas();
+    renderSorteio();
+    showToast(`${result.imported} cartela(s) importada(s) para o estoque.`);
+  };
+  reader.readAsText(file, 'UTF-8');
+});
+
+$('#btnDownloadCsvTemplate').addEventListener('click', () => {
+  const header = 'numero,nome,B1,B2,B3,B4,B5,I1,I2,I3,I4,I5,N1,N2,N3,N4,N5,G1,G2,G3,G4,G5,O1,O2,O3,O4,O5';
+  const example = Store.config.freeCenter
+    ? '0001,,1,2,3,4,5,16,17,18,19,20,31,32,,34,35,46,47,48,49,50,61,62,63,64,65'
+    : '0001,,1,2,3,4,5,16,17,18,19,20,31,32,33,34,35,46,47,48,49,50,61,62,63,64,65';
+  const csv = header + '\n' + example + '\n';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'modelo-cartelas.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+/* ---------------- Print cards (A4, 2/4/6 per page) ---------------- */
+
+function buildPrintableCardHtml(card) {
+  const cellsHtml = card.grid.flat()
+    .map((cell) => cell.free
+      ? '<div class="print-card__cell print-card__cell--free">LIVRE</div>'
+      : `<div class="print-card__cell">${cell.value}</div>`)
+    .join('');
+  const meta = [card.cardNumber ? `Nº ${escapeHtml(card.cardNumber)}` : null, card.name ? escapeHtml(card.name) : 'Sem participante']
+    .filter(Boolean)
+    .join(' · ');
+  return `
+    <div class="print-card">
+      <div class="print-card__header">${meta}</div>
+      <div class="print-card__letters">${LETTERS.map((l) => `<span>${l}</span>`).join('')}</div>
+      <div class="print-card__grid">${cellsHtml}</div>
+    </div>`;
+}
+
+function printCards(perPage) {
+  const cards = Store.cards.filter((c) => c.status !== 'used');
+  if (cards.length === 0) {
+    showToast('Não há cartelas para imprimir.');
+    return;
+  }
+
+  const pages = [];
+  for (let i = 0; i < cards.length; i += perPage) pages.push(cards.slice(i, i + perPage));
+
+  $('#printArea').innerHTML = pages
+    .map((pageCards) => `<div class="print-page print-page--${perPage}">${pageCards.map(buildPrintableCardHtml).join('')}</div>`)
+    .join('');
+
+  window.print();
+}
+
+$$('[data-print-cards]').forEach((btn) => btn.addEventListener('click', () => printCards(Number(btn.dataset.printCards))));
+
 /* ================================================================
    CONFIGURAÇÕES
 ================================================================ */
