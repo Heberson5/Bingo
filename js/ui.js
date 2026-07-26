@@ -330,7 +330,10 @@ $('#toggleHistorico').addEventListener('click', () => {
 /* ---------------- Card modal (scan / manual) ---------------- */
 
 function buildLettersRow() {
-  $('#lettersRow').innerHTML = LETTERS.map((l) => `<div>${l}</div>`).join('');
+  const ranges = getColumnRanges(Store.config.min, Store.config.max);
+  $('#lettersRow').innerHTML = LETTERS
+    .map((l, i) => `<div>${l}<br><small>${ranges[i][0]}–${ranges[i][1]}</small></div>`)
+    .join('');
 }
 
 function buildCardGridInputs() {
@@ -375,6 +378,48 @@ function fillGridFromCells(recognizedGrid) {
   }
   return count;
 }
+
+/**
+ * Every column has a fixed valid range (B 1-15, I 16-30, N 31-45, G
+ * 46-60, O 61-75, or the equivalent split for a custom configured
+ * range) — a recognized or typed number that falls outside its own
+ * column's range is definitely wrong and must never be silently
+ * accepted, since OCR misreads (and typos) are common.
+ */
+function invalidCellsInGrid() {
+  const ranges = getColumnRanges(Store.config.min, Store.config.max);
+  const invalid = [];
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const cell = cardGridCells[r][c];
+      if (cell.isFree) continue;
+      const raw = cell.el.value.trim();
+      if (raw === '') continue;
+      const value = Number(raw);
+      if (Number.isNaN(value)) continue;
+      const [min, max] = ranges[c];
+      if (value < min || value > max) {
+        invalid.push({ r, c, value, letter: LETTERS[c], min, max });
+      }
+    }
+  }
+  return invalid;
+}
+
+function highlightInvalidCells() {
+  const invalid = invalidCellsInGrid();
+  const invalidSet = new Set(invalid.map((i) => `${i.r}-${i.c}`));
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const cell = cardGridCells[r][c];
+      if (cell.isFree) continue;
+      cell.el.classList.toggle('is-invalid', invalidSet.has(`${r}-${c}`));
+    }
+  }
+  return invalid;
+}
+
+$('#cardGridInputs').addEventListener('input', () => highlightInvalidCells());
 
 function readGridFromInputs() {
   const grid = [];
@@ -560,8 +605,11 @@ $('#btnRecognize').addEventListener('click', async () => {
     });
     const count = fillGridFromCells(recognizedGrid);
     const total = Store.config.freeCenter ? 24 : 25;
+    const invalid = highlightInvalidCells();
     if (count === 0) {
       $('#ocrStatus').textContent = 'Não foi possível reconhecer os números automaticamente. Preencha manualmente abaixo, ou gire a foto e tente de novo.';
+    } else if (invalid.length > 0) {
+      $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos, mas ${invalid.length} ficaram fora da faixa da coluna (em vermelho) — corrija antes de salvar.`;
     } else {
       $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos. Confira e corrija antes de salvar — dá pra tocar em qualquer casa e ajustar.`;
     }
@@ -578,6 +626,13 @@ $('#btnSaveCard').addEventListener('click', () => {
   const flatCells = grid.flat().filter((c) => !c.free);
   const hasEmpty = flatCells.some((c) => c.value === '' || Number.isNaN(Number(c.value)));
   if (hasEmpty) { showToast('Preencha todos os números da cartela.'); return; }
+
+  const invalid = highlightInvalidCells();
+  if (invalid.length > 0) {
+    const first = invalid[0];
+    showToast(`O número ${first.value} não pertence à coluna ${first.letter} (${first.min}–${first.max}). Corrija os campos em vermelho.`);
+    return;
+  }
 
   const numericGrid = grid.map((row) => row.map((cell) => ({
     ...cell,

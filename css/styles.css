@@ -357,6 +357,7 @@ h1, h2, h3, p { margin: 0; }
   font-weight: 800;
   color: var(--color-accent);
 }
+.letters-row small { display: block; font-weight: 600; font-size: 10px; color: var(--color-text-dim); }
 .card-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -373,6 +374,11 @@ h1, h2, h3, p { margin: 0; }
   font-size: 15px;
   font-weight: 700;
   padding: 0;
+}
+.card-grid input.is-invalid {
+  border-color: var(--color-danger);
+  border-width: 2px;
+  background: rgba(239, 68, 68, .18);
 }
 .card-grid .free-cell {
   display: flex;
