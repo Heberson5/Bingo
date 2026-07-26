@@ -22,14 +22,46 @@ function showToast(msg) {
 /* ---------------- Navigation ---------------- */
 function switchView(name) {
   $$('.view').forEach((v) => { v.hidden = v.dataset.view !== name; });
-  $$('.bottom-nav__item').forEach((b) => b.classList.toggle('is-active', b.dataset.nav === name));
+  $$('.bottom-nav__item, .side-nav__item').forEach((b) => b.classList.toggle('is-active', b.dataset.nav === name));
   if (name === 'sorteio') renderSorteio();
   if (name === 'cartelas') renderCartelas();
   if (name === 'config') renderConfigForm();
 }
 
-$$('.bottom-nav__item').forEach((btn) => {
+$$('.bottom-nav__item, .side-nav__item').forEach((btn) => {
   btn.addEventListener('click', () => switchView(btn.dataset.nav));
+});
+
+/* ---------------- Desktop sidebar (collapse/expand) ---------------- */
+const SIDEBAR_COLLAPSED_KEY = 'bingo_sidebar_collapsed_v1';
+
+function applySidebarState() {
+  const collapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1';
+  $('#sideNav').classList.toggle('is-collapsed', collapsed);
+  $('#sideNavToggle').textContent = collapsed ? '›' : '‹';
+}
+
+$('#sideNavToggle').addEventListener('click', () => {
+  const collapsed = $('#sideNav').classList.toggle('is-collapsed');
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? '1' : '0');
+  $('#sideNavToggle').textContent = collapsed ? '›' : '‹';
+});
+
+applySidebarState();
+
+/* ---------------- Fullscreen draw display (separate window/tab) ----------------
+   On the real deployed site this just opens the sibling display.html file.
+   The single-file Artifact bundle has no second file to link to, so its
+   build embeds the same page's markup as window.BINGO_DISPLAY_HTML and
+   this opens it from a Blob URL instead — same shared code either way. */
+$('#btnOpenDisplay').addEventListener('click', () => {
+  if (window.BINGO_DISPLAY_HTML) {
+    const blob = new Blob([window.BINGO_DISPLAY_HTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank', 'noopener');
+  } else {
+    window.open('display.html', '_blank', 'noopener');
+  }
 });
 
 /* ---------------- Confirm dialog ---------------- */
@@ -82,7 +114,7 @@ function renderNearMisses() {
       <div class="card-item">
         <div>
           <div class="card-item__name">${escapeHtml(m.card.name)}</div>
-          <div class="card-item__meta">${escapeHtml(m.label)} · falta o <strong>${m.neededNumber}</strong> (${letterForNumber(m.neededNumber)})</div>
+          <div class="card-item__meta">Concorrendo: ${escapeHtml(m.label)} · falta o <strong>${m.neededNumber}</strong> (${letterForNumber(m.neededNumber)})</div>
         </div>
       </div>`)
     .join('');
@@ -90,16 +122,32 @@ function renderNearMisses() {
 
 function renderPendingPrizes() {
   const pending = pendingAchievements();
+  const expired = expiredAchievements();
+
+  $('#pendingPrizesCard').hidden = pending.length === 0 && expired.length === 0;
+
+  $('#pendingPrizesWrap').hidden = pending.length === 0;
   $('#pendingPrizesCount').textContent = pending.length;
-  $('#pendingPrizesCard').hidden = pending.length === 0;
   $('#pendingPrizesList').innerHTML = pending
     .map((p) => `
       <div class="card-item is-winner">
         <div>
           <div class="card-item__name">${escapeHtml(p.card.name)}</div>
-          <div class="card-item__meta">${escapeHtml(p.label)} · bola nº ${p.drawIndex} (${p.drawnNumber})</div>
+          <div class="card-item__meta">Concorrendo: ${escapeHtml(p.label)} · completou com a bola nº ${p.drawIndex} (${p.drawnNumber})</div>
         </div>
         <button class="btn btn--secondary btn--small" data-confirm-prize data-card-id="${p.card.id}" data-key="${p.key}">Confirmar prêmio</button>
+      </div>`)
+    .join('');
+
+  $('#expiredPrizesWrap').hidden = expired.length === 0;
+  $('#expiredPrizesCount').textContent = expired.length;
+  $('#expiredPrizesList').innerHTML = expired
+    .map((p) => `
+      <div class="card-item card-item--expired">
+        <div>
+          <div class="card-item__name">${escapeHtml(p.card.name)}</div>
+          <div class="card-item__meta">${escapeHtml(p.label)} · bola nº ${p.drawIndex} (${p.drawnNumber}) · passou batido, não vale mais</div>
+        </div>
       </div>`)
     .join('');
 }
@@ -153,6 +201,10 @@ function renderDrawBoard() {
 $('#drawBoard').addEventListener('click', (e) => {
   const el = e.target.closest('[data-num]');
   if (!el) return;
+  if (!manualModeActive) {
+    showToast('Ative o modo Manual para marcar números diretamente no painel.');
+    return;
+  }
   const num = Number(el.dataset.num);
   if (Store.game.drawnNumbers.includes(num)) {
     showToast('Esse número já foi sorteado.');
@@ -163,7 +215,7 @@ $('#drawBoard').addEventListener('click', (e) => {
 });
 
 function achievementSummary(achievements) {
-  return achievements.map((a) => `${a.confirmed ? '✅' : '⏳'} ${a.label}`).join(', ');
+  return achievements.map((a) => `${a.confirmed ? '✅' : a.expired ? '❌' : '⏳'} ${a.label}`).join(', ');
 }
 
 function renderActiveCardsSummary() {
@@ -214,32 +266,29 @@ function afterNumberDrawn() {
 }
 
 $('#btnSortear').addEventListener('click', () => {
+  if (manualModeActive) setManualMode(false);
   const num = drawNumber();
   if (num === null) { showToast('Todos os números já foram sorteados.'); return; }
   afterNumberDrawn();
 });
 
+/**
+ * The "Manual" button doesn't open a dialog — it just toggles a mode
+ * that lets the operator mark numbers by tapping them directly on the
+ * "Painel de números" below, for when a physical bingo globe/cage is
+ * calling the numbers instead of the app's own random draw.
+ */
+let manualModeActive = false;
+function setManualMode(active) {
+  manualModeActive = active;
+  $('#btnMarcarManual').classList.toggle('is-active', active);
+  $('#btnMarcarManual').textContent = active ? 'Manual ✓' : 'Manual';
+  $('#manualModeHint').hidden = !active;
+  $('#drawBoard').closest('.card').classList.toggle('is-manual-target', active);
+}
+
 $('#btnMarcarManual').addEventListener('click', () => {
-  $('#manualNumberInput').value = '';
-  $('#manualNumberModal').hidden = false;
-  setTimeout(() => $('#manualNumberInput').focus(), 50);
-});
-
-$$('[data-close-manual-modal]').forEach((el) => el.addEventListener('click', () => {
-  $('#manualNumberModal').hidden = true;
-}));
-
-$('#manualNumberConfirm').addEventListener('click', () => {
-  const num = parseInt($('#manualNumberInput').value, 10);
-  if (Number.isNaN(num)) { showToast('Informe um número válido.'); return; }
-  if (Store.game.drawnNumbers.includes(num)) { showToast('Esse número já foi sorteado nesta partida.'); return; }
-  if (num < Store.config.min || num > Store.config.max) {
-    showToast(`Informe um número entre ${Store.config.min} e ${Store.config.max}.`);
-    return;
-  }
-  markNumberManually(num);
-  $('#manualNumberModal').hidden = true;
-  afterNumberDrawn();
+  setManualMode(!manualModeActive);
 });
 
 function showNextWinner() {
@@ -672,6 +721,49 @@ $('#btnSaveCard').addEventListener('click', () => {
    CONFIGURAÇÕES
 ================================================================ */
 
+/**
+ * Board/ball sizing and boldness are exposed as CSS custom properties
+ * on the document root, so the same slider values drive both the live
+ * game screen and (once saved) whatever the operator sees next time —
+ * no per-element style rewrites needed.
+ */
+function applyDisplaySettings(cfg) {
+  const d = cfg.display;
+  const root = document.documentElement.style;
+  root.setProperty('--board-cell-size', d.boardCellSize + 'px');
+  root.setProperty('--board-font-size', d.boardFontSize + 'px');
+  root.setProperty('--board-font-weight', d.boardBold ? '800' : '500');
+  root.setProperty('--ball-letter-size', d.ballLetterSize + 'px');
+  root.setProperty('--ball-number-size', d.ballNumberSize + 'px');
+  root.setProperty('--ball-font-weight', d.ballBold ? '800' : '600');
+}
+
+function readDisplayForm() {
+  return {
+    boardCellSize: Number($('#cfgBoardCellSize').value),
+    boardFontSize: Number($('#cfgBoardFontSize').value),
+    boardBold: $('#cfgBoardBold').checked,
+    ballLetterSize: Number($('#cfgBallLetterSize').value),
+    ballNumberSize: Number($('#cfgBallNumberSize').value),
+    ballBold: $('#cfgBallBold').checked,
+  };
+}
+
+function updateDisplayOutputs() {
+  $('#outBoardFontSize').textContent = $('#cfgBoardFontSize').value + 'px';
+  $('#outBoardCellSize').textContent = $('#cfgBoardCellSize').value + 'px';
+  $('#outBallLetterSize').textContent = $('#cfgBallLetterSize').value + 'px';
+  $('#outBallNumberSize').textContent = $('#cfgBallNumberSize').value + 'px';
+}
+
+function previewDisplaySettings() {
+  updateDisplayOutputs();
+  applyDisplaySettings({ display: readDisplayForm() });
+}
+
+$$('#cfgBoardFontSize, #cfgBoardCellSize, #cfgBallLetterSize, #cfgBallNumberSize, #cfgBoardBold, #cfgBallBold')
+  .forEach((el) => el.addEventListener('input', previewDisplaySettings));
+
 function renderConfigForm() {
   const cfg = Store.config;
   $('#cfgMin').value = cfg.min;
@@ -684,6 +776,16 @@ function renderConfigForm() {
   $('#cfgQuina').checked = cfg.criteria.quina;
   $('#cfgQuinaTipo').value = cfg.quinaTipo;
   $('#quinaTipoWrap').style.display = cfg.criteria.quina ? '' : 'none';
+
+  const d = cfg.display;
+  $('#cfgBoardFontSize').value = d.boardFontSize;
+  $('#cfgBoardCellSize').value = d.boardCellSize;
+  $('#cfgBoardBold').checked = d.boardBold;
+  $('#cfgBallLetterSize').value = d.ballLetterSize;
+  $('#cfgBallNumberSize').value = d.ballNumberSize;
+  $('#cfgBallBold').checked = d.ballBold;
+  updateDisplayOutputs();
+
   $('#configSaveHint').hidden = true;
 }
 
@@ -716,7 +818,9 @@ $('#formConfig').addEventListener('submit', (e) => {
     Store.config.criteria.quinaPrimeiraLetra = $('#cfgQuinaPrimeiraLetra').checked;
     Store.config.criteria.quina = $('#cfgQuina').checked;
     Store.config.quinaTipo = $('#cfgQuinaTipo').value;
+    Store.config.display = readDisplayForm();
     Store.saveConfig();
+    applyDisplaySettings(Store.config);
 
     $('#configSaveHint').hidden = false;
     showToast('Configurações salvas.');
@@ -739,4 +843,5 @@ $('#formConfig').addEventListener('submit', (e) => {
    INIT
 ================================================================ */
 
+applyDisplaySettings(Store.config);
 switchView('sorteio');

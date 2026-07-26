@@ -30,6 +30,28 @@ body { padding-bottom: calc(72px + var(--safe-bottom)); }
 
 h1, h2, h3, p { margin: 0; }
 
+.app-shell { display: flex; }
+.app-content { flex: 1; min-width: 0; }
+
+/* ---------- Desktop sidebar nav ---------- */
+.side-nav { display: none; }
+
+.app-header__actions { display: flex; align-items: center; gap: 10px; }
+.app-header__icon-btn {
+  background: rgba(255,255,255,.18);
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-header__icon-btn:active { transform: scale(.92); }
+
 .app-header {
   position: sticky;
   top: 0;
@@ -72,6 +94,7 @@ h1, h2, h3, p { margin: 0; }
   gap: 12px;
 }
 .card[hidden] { display: none; }
+.card.is-manual-target { border-color: var(--color-accent); box-shadow: 0 0 0 1px var(--color-accent) inset; }
 .card__header { display: flex; align-items: center; justify-content: space-between; }
 .card__header h2 { font-size: 15px; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .04em; }
 .card__header.collapsible { cursor: pointer; }
@@ -116,10 +139,19 @@ h1, h2, h3, p { margin: 0; }
   60% { transform: scale(1.08) rotate(3deg); }
   100% { transform: scale(1) rotate(0); }
 }
-.draw-ball__letter { font-size: 20px; font-weight: 800; letter-spacing: .05em; }
-.draw-ball__number { font-size: 42px; font-weight: 800; line-height: 1; }
+.draw-ball__letter {
+  font-size: var(--ball-letter-size, 20px);
+  font-weight: var(--ball-font-weight, 800);
+  letter-spacing: .05em;
+}
+.draw-ball__number {
+  font-size: var(--ball-number-size, 42px);
+  font-weight: var(--ball-font-weight, 800);
+  line-height: 1;
+}
 
 .draw-stats { color: var(--color-text-dim); font-size: 14px; }
+.hint--manual { color: var(--color-accent); font-weight: 600; text-align: center; }
 
 .btn {
   border: none;
@@ -141,6 +173,7 @@ h1, h2, h3, p { margin: 0; }
 .btn--danger { background: transparent; border: 1.5px solid var(--color-danger); color: var(--color-danger); }
 .btn--ghost { background: transparent; border: 1.5px solid var(--color-border); color: var(--color-text); }
 .btn--manual { color: var(--color-text); }
+.btn--manual.is-active { background: var(--color-accent); color: #3a2504; border-color: var(--color-accent); }
 .btn-group { display: flex; flex-direction: column; gap: 10px; }
 .btn-group[hidden] { display: none; }
 .btn-row { display: flex; gap: 10px; width: 100%; }
@@ -187,14 +220,15 @@ h1, h2, h3, p { margin: 0; }
   background: var(--color-surface);
 }
 .board-num {
-  aspect-ratio: 1;
+  height: var(--board-cell-size, 56px);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
-  font-size: 12px;
+  font-size: var(--board-font-size, 14px);
+  font-weight: var(--board-font-weight, 500);
   color: var(--color-text-dim);
   cursor: pointer;
   user-select: none;
@@ -207,6 +241,13 @@ h1, h2, h3, p { margin: 0; }
   font-weight: 700;
   cursor: default;
 }
+
+/* On mobile the aside (winners/near-miss) simply sits above the rest of
+   the Sorteio content, in document order. On desktop it moves to a
+   sticky right column via `order`, without touching the DOM. */
+.sorteio-grid { display: flex; flex-direction: column; gap: 16px; }
+.sorteio-aside { display: flex; flex-direction: column; gap: 16px; }
+.sorteio-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 
 .cards-summary { display: flex; flex-direction: column; gap: 8px; }
 .card-item {
@@ -222,6 +263,8 @@ h1, h2, h3, p { margin: 0; }
 .card-item__meta { font-size: 12px; color: var(--color-text-dim); }
 .card-item.is-winner { border-color: var(--color-success); box-shadow: 0 0 0 1px var(--color-success) inset; }
 .card-item.is-used { opacity: .55; }
+.card-item--expired { opacity: .6; border-style: dashed; }
+.card-item--expired .card-item__name { text-decoration: line-through; }
 .card-item__delete {
   background: none;
   border: none;
@@ -250,6 +293,8 @@ h1, h2, h3, p { margin: 0; }
 .field--check { flex-direction: row; align-items: center; gap: 10px; }
 .field--check input { width: 20px; height: 20px; accent-color: var(--color-primary); flex-shrink: 0; }
 .field--check span { color: var(--color-text); font-size: 15px; }
+.field input[type="range"] { width: 100%; accent-color: var(--color-primary); }
+.field output { font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; min-width: 0; }
 .hint { color: var(--color-text-dim); font-size: 13px; }
@@ -439,7 +484,6 @@ h1, h2, h3, p { margin: 0; }
   .bottom-nav__inner { gap: 14px; }
   .bottom-nav__item { flex: 0 0 auto; min-width: 96px; }
   .draw-ball { width: 180px; height: 180px; }
-  .draw-ball__number { font-size: 50px; }
   .draw-board { max-height: 380px; }
   .modal__sheet:not(.modal__sheet--center) {
     align-items: center;
@@ -453,6 +497,62 @@ h1, h2, h3, p { margin: 0; }
 }
 
 @media (min-width: 1024px) {
-  :root { --content-width: 880px; }
+  :root { --content-width: 1040px; }
   .draw-board { max-height: 440px; }
+
+  body { padding-bottom: 0; }
+  .bottom-nav { display: none; }
+
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    padding: 16px 12px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    transition: width .18s ease;
+  }
+  .side-nav.is-collapsed { width: 72px; }
+  .side-nav__toggle {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    color: var(--color-text-dim);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .side-nav__brand { display: flex; align-items: center; gap: 8px; padding: 8px; margin-bottom: 8px; }
+  .side-nav__logo { font-size: 22px; }
+  .side-nav__title { font-weight: 800; font-size: 16px; }
+  .side-nav.is-collapsed .side-nav__brand { justify-content: center; }
+  .side-nav.is-collapsed .side-nav__title,
+  .side-nav.is-collapsed .side-nav__label { display: none; }
+  .side-nav__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    color: var(--color-text-dim);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+  }
+  .side-nav.is-collapsed .side-nav__item { justify-content: center; padding: 10px; }
+  .side-nav__icon { font-size: 18px; }
+  .side-nav__item.is-active { background: var(--color-surface-2); color: var(--color-text); }
+
+  .sorteio-grid { flex-direction: row; align-items: flex-start; gap: 20px; }
+  .sorteio-main { flex: 1; order: 1; }
+  .sorteio-aside { width: 300px; flex-shrink: 0; order: 2; position: sticky; top: 16px; }
 }

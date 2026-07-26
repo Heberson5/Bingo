@@ -24,6 +24,14 @@ const DEFAULT_CONFIG = {
     quina: true,
   },
   quinaTipo: 'todos', // horizontal | transversal | diagonal | todos
+  display: {
+    boardCellSize: 56,
+    boardFontSize: 14,
+    boardBold: false,
+    ballLetterSize: 22,
+    ballNumberSize: 48,
+    ballBold: true,
+  },
 };
 
 function loadJSON(key, fallback) {
@@ -181,11 +189,32 @@ function availableNumbers() {
 }
 
 /**
+ * A win only really counts if it's called out before the next ball
+ * comes out — that's what "vale o último número" means in practice.
+ * So the moment a new number is drawn, any achievement still awaiting
+ * confirmation from an earlier draw is stale: the card "passou batido"
+ * and that particular claim no longer counts, even though the game
+ * keeps going and the criterion could still be won again by another
+ * card's next completed line.
+ */
+function expireStalePending() {
+  let changed = false;
+  for (const card of activeCards()) {
+    for (const a of card.achievements) {
+      if (!a.confirmed && !a.expired) { a.expired = true; changed = true; }
+    }
+  }
+  if (changed) Store.saveCards();
+}
+
+/**
  * Records `num` as drawn (whether it came from the app's random draw or
  * was typed in manually because the operator is calling numbers from a
  * physical globe/cage) and marks it on every active card.
  */
 function commitDrawnNumber(num) {
+  expireStalePending();
+
   Store.game.drawnNumbers.push(num);
   if (Store.game.firstNumber === null) Store.game.firstNumber = num;
   Store.saveGame();
@@ -309,7 +338,7 @@ function evaluateCard(card) {
   const drawnNumber = Store.game.drawnNumbers[drawIndex - 1] ?? null;
 
   for (const f of newOnes) {
-    card.achievements.push({ key: f.key, label: f.label, drawIndex, drawnNumber, confirmed: false });
+    card.achievements.push({ key: f.key, label: f.label, drawIndex, drawnNumber, confirmed: false, expired: false });
   }
 
   return newOnes.map((f) => ({ key: f.key, label: f.label, drawIndex, drawnNumber }));
@@ -341,14 +370,37 @@ function confirmAchievement(cardId, key) {
   Store.saveCards();
 }
 
+/**
+ * Achievements still within their window to be confirmed — completed
+ * on the number that was JUST drawn, not yet superseded by a later
+ * draw. Sorted so the earliest completion (the fairest winner, if more
+ * than one card ties) shows first.
+ */
 function pendingAchievements() {
   const list = [];
   for (const card of activeCards()) {
     for (const a of card.achievements) {
-      if (!a.confirmed) list.push({ card, ...a });
+      if (!a.confirmed && !a.expired) list.push({ card, ...a });
     }
   }
   list.sort((a, b) => a.drawIndex - b.drawIndex);
+  return list;
+}
+
+/**
+ * Achievements that were never confirmed before another number was
+ * drawn — the card "passou batido" for that criterion and it no longer
+ * counts. Kept as a visible log (most recent first) so the operator can
+ * see who missed their moment.
+ */
+function expiredAchievements() {
+  const list = [];
+  for (const card of activeCards()) {
+    for (const a of card.achievements) {
+      if (!a.confirmed && a.expired) list.push({ card, ...a });
+    }
+  }
+  list.sort((a, b) => b.drawIndex - a.drawIndex);
   return list;
 }
 

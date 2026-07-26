@@ -11,13 +11,37 @@
 </head>
 <body>
 
+<div class="app-shell">
+
+<nav class="side-nav" id="sideNav">
+  <button class="side-nav__toggle" id="sideNavToggle" aria-label="Recolher menu">‹</button>
+  <div class="side-nav__brand">
+    <span class="side-nav__logo" aria-hidden="true">🎱</span>
+    <span class="side-nav__title">Bingo</span>
+  </div>
+  <button class="side-nav__item is-active" data-nav="sorteio">
+    <span class="side-nav__icon">🎯</span><span class="side-nav__label">Sorteio</span>
+  </button>
+  <button class="side-nav__item" data-nav="cartelas">
+    <span class="side-nav__icon">🗂️</span><span class="side-nav__label">Cartelas</span>
+  </button>
+  <button class="side-nav__item" data-nav="config">
+    <span class="side-nav__icon">⚙️</span><span class="side-nav__label">Config</span>
+  </button>
+</nav>
+
+<div class="app-content">
+
 <header class="app-header">
   <div class="app-header__inner">
     <div class="app-header__brand">
       <span class="app-header__logo" aria-hidden="true">🎱</span>
       <span class="app-header__title">Bingo</span>
     </div>
-    <span class="app-header__game" id="gameLabel">Jogo #1</span>
+    <div class="app-header__actions">
+      <button class="app-header__icon-btn" id="btnOpenDisplay" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio">🖥️</button>
+      <span class="app-header__game" id="gameLabel">Jogo #1</span>
+    </div>
   </div>
 </header>
 
@@ -35,48 +59,63 @@
         <button class="btn btn--secondary btn--xl btn--manual" id="btnMarcarManual">Manual</button>
       </div>
       <p class="draw-stats" id="drawStats">0 de 0 números sorteados</p>
+      <p class="hint hint--manual" id="manualModeHint" hidden>Modo manual ativo — toque no número sorteado no Painel de números abaixo.</p>
     </div>
 
-    <div class="card" id="pendingPrizesCard" hidden>
-      <div class="card__header">
-        <h2>Prêmios pendentes <span class="badge badge--prize" id="pendingPrizesCount">0</span></h2>
-      </div>
-      <div id="pendingPrizesList" class="cards-summary"></div>
-    </div>
+    <div class="sorteio-grid">
+      <aside class="sorteio-aside">
+        <div class="card" id="pendingPrizesCard" hidden>
+          <div id="pendingPrizesWrap" hidden>
+            <div class="card__header">
+              <h2>Ganhadores <span class="badge badge--prize" id="pendingPrizesCount">0</span></h2>
+            </div>
+            <div id="pendingPrizesList" class="cards-summary"></div>
+          </div>
+          <div id="expiredPrizesWrap" hidden>
+            <div class="card__header">
+              <h2>Passou batido <span class="badge" id="expiredPrizesCount">0</span></h2>
+            </div>
+            <div id="expiredPrizesList" class="cards-summary"></div>
+          </div>
+        </div>
 
-    <div class="card" id="nearMissCard" hidden>
-      <div class="card__header">
-        <h2>Faltando 1 número <span class="badge" id="nearMissCount">0</span></h2>
-      </div>
-      <div id="nearMissList" class="cards-summary"></div>
-    </div>
+        <div class="card" id="nearMissCard" hidden>
+          <div class="card__header">
+            <h2>Faltando 1 número <span class="badge" id="nearMissCount">0</span></h2>
+          </div>
+          <div id="nearMissList" class="cards-summary"></div>
+        </div>
+      </aside>
 
-    <div class="card">
-      <div class="card__header">
-        <h2>Últimas bolas sorteadas</h2>
-      </div>
-      <div class="chip-row" id="lastBallsRow">
-        <span class="empty-hint">Nenhum número sorteado ainda.</span>
+      <div class="sorteio-main">
+        <div class="card">
+          <div class="card__header">
+            <h2>Últimas bolas sorteadas</h2>
+          </div>
+          <div class="chip-row" id="lastBallsRow">
+            <span class="empty-hint">Nenhum número sorteado ainda.</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header">
+            <h2>Painel de números</h2>
+          </div>
+          <div class="draw-board" id="drawBoard"></div>
+        </div>
+
+        <div class="card">
+          <div class="card__header">
+            <h2>Cartelas na partida <span class="badge" id="activeCardsCount">0</span></h2>
+          </div>
+          <div id="activeCardsSummary" class="cards-summary">
+            <span class="empty-hint">Nenhuma cartela cadastrada para este jogo. Vá em "Cartelas" para escanear.</span>
+          </div>
+        </div>
+
+        <button class="btn btn--danger btn--block" id="btnEncerrar">Encerrar jogo</button>
       </div>
     </div>
-
-    <div class="card">
-      <div class="card__header">
-        <h2>Painel de números</h2>
-      </div>
-      <div class="draw-board" id="drawBoard"></div>
-    </div>
-
-    <div class="card">
-      <div class="card__header">
-        <h2>Cartelas na partida <span class="badge" id="activeCardsCount">0</span></h2>
-      </div>
-      <div id="activeCardsSummary" class="cards-summary">
-        <span class="empty-hint">Nenhuma cartela cadastrada para este jogo. Vá em "Cartelas" para escanear.</span>
-      </div>
-    </div>
-
-    <button class="btn btn--danger btn--block" id="btnEncerrar">Encerrar jogo</button>
   </section>
 
   <!-- ===================== CARTELAS ===================== -->
@@ -165,6 +204,34 @@
         <span>Cartelas possuem espaço livre no centro</span>
       </label>
 
+      <div class="card__header"><h2>Aparência do painel de números</h2></div>
+      <label class="field">
+        <span>Tamanho do número <output id="outBoardFontSize">14px</output></span>
+        <input type="range" id="cfgBoardFontSize" min="10" max="22" step="1">
+      </label>
+      <label class="field">
+        <span>Tamanho do card <output id="outBoardCellSize">56px</output></span>
+        <input type="range" id="cfgBoardCellSize" min="36" max="90" step="2">
+      </label>
+      <label class="field field--check">
+        <input type="checkbox" id="cfgBoardBold">
+        <span>Número em negrito</span>
+      </label>
+
+      <div class="card__header"><h2>Aparência da bola sorteada</h2></div>
+      <label class="field">
+        <span>Tamanho da letra <output id="outBallLetterSize">22px</output></span>
+        <input type="range" id="cfgBallLetterSize" min="14" max="34" step="1">
+      </label>
+      <label class="field">
+        <span>Tamanho do número <output id="outBallNumberSize">48px</output></span>
+        <input type="range" id="cfgBallNumberSize" min="30" max="90" step="2">
+      </label>
+      <label class="field field--check">
+        <input type="checkbox" id="cfgBallBold">
+        <span>Negrito</span>
+      </label>
+
       <button type="submit" class="btn btn--primary btn--block">Salvar configurações</button>
       <p class="save-hint" id="configSaveHint" hidden>Configurações salvas ✓</p>
     </form>
@@ -185,6 +252,9 @@
     </button>
   </div>
 </nav>
+
+</div><!-- /.app-content -->
+</div><!-- /.app-shell -->
 
 <!-- ===== Modal: Scan / Manual card ===== -->
 <div class="modal" id="cardModal" hidden>
@@ -262,23 +332,6 @@
     <div class="btn-group">
       <button class="btn btn--ghost btn--block" id="confirmCancel">Cancelar</button>
       <button class="btn btn--danger btn--block" id="confirmOk">Confirmar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== Modal: Manual number entry ===== -->
-<div class="modal" id="manualNumberModal" hidden>
-  <div class="modal__backdrop" data-close-manual-modal></div>
-  <div class="modal__sheet modal__sheet--center">
-    <h2>Marcar número manual</h2>
-    <p class="hint">Use quando os números saírem de um globo físico, fora do app.</p>
-    <label class="field">
-      <span>Número sorteado</span>
-      <input type="number" id="manualNumberInput" inputmode="numeric">
-    </label>
-    <div class="btn-group">
-      <button class="btn btn--ghost btn--block" data-close-manual-modal>Cancelar</button>
-      <button class="btn btn--primary btn--block" id="manualNumberConfirm">Confirmar</button>
     </div>
   </div>
 </div>

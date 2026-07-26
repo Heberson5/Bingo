@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bingo — Tela do sorteio</title>
+<meta name="theme-color" content="#0f1220">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎱</text></svg>">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #0f1220;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #f1f2f8;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4vmin;
+    width: 100%;
+    height: 100%;
+    padding: 4vmin;
+  }
+  .ball {
+    width: min(70vw, 70vh);
+    height: min(70vw, 70vh);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff7e6, #f59e0b 55%, #b8790a 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #3a2504;
+    box-shadow: 0 10px 60px rgba(245, 158, 11, .35), inset 0 -6px 30px rgba(0,0,0,.15);
+    transition: transform .15s ease;
+  }
+  .ball[hidden] { display: none; }
+  .ball.is-bouncing { animation: bounce .4s ease; }
+  @keyframes bounce {
+    0% { transform: scale(.85) rotate(-4deg); }
+    60% { transform: scale(1.08) rotate(3deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  .ball__letter { font-size: min(9vw, 9vh); font-weight: 800; letter-spacing: .05em; }
+  .ball__number { font-size: min(26vw, 26vh); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stats { font-size: min(3vw, 3vh); color: #a6acc7; }
+  .empty { font-size: min(4vw, 4vh); color: #a6acc7; text-align: center; padding: 0 20px; }
+  .empty[hidden] { display: none; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="ball" id="ball" hidden>
+      <span class="ball__letter" id="letter">-</span>
+      <span class="ball__number" id="number">--</span>
+    </div>
+    <p class="empty" id="emptyHint">Aguardando o início do sorteio…</p>
+    <p class="stats" id="stats"></p>
+  </div>
+
+<script>
+  var GAME_KEY = 'bingo_game_v1';
+  var CONFIG_KEY = 'bingo_config_v1';
+  var LETTERS = ['B', 'I', 'N', 'G', 'O'];
+  var lastRenderedCount = -1;
+
+  function getColumnRanges(min, max) {
+    var total = max - min + 1;
+    var size = Math.floor(total / 5);
+    var ranges = [];
+    var start = min;
+    for (var i = 0; i < 5; i++) {
+      var end = i === 4 ? max : start + size - 1;
+      ranges.push([start, end]);
+      start = end + 1;
+    }
+    return ranges;
+  }
+
+  function letterForNumber(num, min, max) {
+    var ranges = getColumnRanges(min, max);
+    for (var i = 0; i < ranges.length; i++) {
+      if (num >= ranges[i][0] && num <= ranges[i][1]) return LETTERS[i];
+    }
+    return '';
+  }
+
+  function readJSON(key) {
+    try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; }
+  }
+
+  function render() {
+    var game = readJSON(GAME_KEY);
+    var config = readJSON(CONFIG_KEY);
+    var min = config.min != null ? config.min : 1;
+    var max = config.max != null ? config.max : 75;
+    var drawn = game.drawnNumbers || [];
+
+    var ball = document.getElementById('ball');
+    var emptyHint = document.getElementById('emptyHint');
+    var stats = document.getElementById('stats');
+
+    if (drawn.length === 0) {
+      ball.hidden = true;
+      emptyHint.hidden = false;
+      stats.textContent = '';
+      lastRenderedCount = 0;
+      return;
+    }
+
+    ball.hidden = false;
+    emptyHint.hidden = true;
+    var last = drawn[drawn.length - 1];
+    document.getElementById('letter').textContent = letterForNumber(last, min, max);
+    document.getElementById('number').textContent = last;
+    var total = max - min + 1;
+    stats.textContent = drawn.length + ' de ' + total + ' números sorteados';
+
+    if (drawn.length !== lastRenderedCount) {
+      ball.classList.remove('is-bouncing');
+      void ball.offsetWidth;
+      ball.classList.add('is-bouncing');
+    }
+    lastRenderedCount = drawn.length;
+  }
+
+  // `storage` fires in this tab whenever ANOTHER tab/window changes
+  // localStorage — exactly the case where the main app (in the other
+  // tab) just drew a new number.
+  window.addEventListener('storage', function (e) {
+    if (!e.key || e.key === GAME_KEY || e.key === CONFIG_KEY) render();
+  });
+
+  // Fallback poll, in case a browser doesn't fire the storage event
+  // reliably for this pair of tabs.
+  setInterval(render, 1500);
+  render();
+</script>
+</body>
+</html>
