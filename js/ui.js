@@ -176,6 +176,13 @@ function renderLastBalls() {
     .join('');
 }
 
+/**
+ * Each letter is rendered as its own row/column group (label + that
+ * letter's numbers) rather than one flat grid, so CSS alone can reflow
+ * the same markup into the classic side-by-side "bingo card" columns
+ * on mobile, or into wide horizontal rows (one per letter) on desktop
+ * — no JS branching needed for the different screen shapes.
+ */
 function renderDrawBoard() {
   const board = $('#drawBoard');
   const { min, max } = Store.config;
@@ -183,17 +190,18 @@ function renderDrawBoard() {
   const drawnSet = new Set(Store.game.drawnNumbers);
 
   let html = '';
-  LETTERS.forEach((l) => { html += `<div class="board-col-label">${l}</div>`; });
-
-  const maxRows = Math.max(...ranges.map(([s, e]) => e - s + 1));
-  for (let row = 0; row < maxRows; row++) {
-    for (let col = 0; col < 5; col++) {
-      const [s, e] = ranges[col];
-      const num = s + row;
-      if (num > e) { html += '<div></div>'; continue; }
+  for (let col = 0; col < 5; col++) {
+    const [s, e] = ranges[col];
+    let numsHtml = '';
+    for (let num = s; num <= e; num++) {
       const drawn = drawnSet.has(num);
-      html += `<div class="board-num ${drawn ? 'is-drawn' : ''}" data-num="${num}">${num}</div>`;
+      numsHtml += `<div class="board-num ${drawn ? 'is-drawn' : ''}" data-num="${num}">${num}</div>`;
     }
+    html += `
+      <div class="board-row">
+        <div class="board-row__label">${LETTERS[col]}</div>
+        <div class="board-row__nums">${numsHtml}</div>
+      </div>`;
   }
   board.innerHTML = html;
 }
@@ -608,7 +616,7 @@ function openCardModal(mode) {
   $('#cardModal').hidden = false;
 
   if (mode === 'scan') {
-    Ocr.startCamera($('#cameraVideo')).catch((err) => {
+    Ocr.startCamera($('#cameraVideo'), Store.config.cameraDeviceId).catch((err) => {
       $('#ocrStatus').textContent = 'Câmera indisponível (' + err.message + '). Use "Escolher da galeria" ou cadastre manualmente.';
       $('#btnCapture').hidden = true;
     });
@@ -653,7 +661,7 @@ $('#btnRotate').addEventListener('click', async () => {
 
 $('#btnRetake').addEventListener('click', () => {
   showCapturePhase();
-  Ocr.startCamera($('#cameraVideo')).catch((err) => {
+  Ocr.startCamera($('#cameraVideo'), Store.config.cameraDeviceId).catch((err) => {
     $('#ocrStatus').textContent = 'Câmera indisponível (' + err.message + ').';
   });
 });
@@ -764,8 +772,31 @@ function previewDisplaySettings() {
 $$('#cfgBoardFontSize, #cfgBoardCellSize, #cfgBallLetterSize, #cfgBallNumberSize, #cfgBoardBold, #cfgBallBold')
   .forEach((el) => el.addEventListener('input', previewDisplaySettings));
 
+/**
+ * Fills the "Selecionar câmera" dropdown with whatever video input
+ * devices the browser can see — mainly useful on a computer, where
+ * several webcams may be available and there's no "front/back"
+ * facingMode to rely on like there is on a phone. Device labels only
+ * show up once camera permission has been granted at least once.
+ */
+async function populateCameraOptions() {
+  const select = $('#cfgCamera');
+  const current = Store.config.cameraDeviceId;
+  try {
+    const cameras = await Ocr.listCameras();
+    select.innerHTML = '<option value="">Automática</option>' + cameras
+      .map((cam, i) => `<option value="${cam.deviceId}">${escapeHtml(cam.label || `Câmera ${i + 1}`)}</option>`)
+      .join('');
+    select.value = current;
+    if (select.value !== current) select.value = ''; // saved device no longer exists
+  } catch (err) {
+    select.innerHTML = '<option value="">Automática</option>';
+  }
+}
+
 function renderConfigForm() {
   const cfg = Store.config;
+  populateCameraOptions();
   $('#cfgMin').value = cfg.min;
   $('#cfgMax').value = cfg.max;
   $('#cfgLastCount').value = cfg.lastCount;
@@ -818,6 +849,7 @@ $('#formConfig').addEventListener('submit', (e) => {
     Store.config.criteria.quinaPrimeiraLetra = $('#cfgQuinaPrimeiraLetra').checked;
     Store.config.criteria.quina = $('#cfgQuina').checked;
     Store.config.quinaTipo = $('#cfgQuinaTipo').value;
+    Store.config.cameraDeviceId = $('#cfgCamera').value;
     Store.config.display = readDisplayForm();
     Store.saveConfig();
     applyDisplaySettings(Store.config);

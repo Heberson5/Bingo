@@ -16,12 +16,27 @@
 const Ocr = {
   stream: null,
 
-  async startCamera(videoEl) {
+  /**
+   * Lists the camera devices available to the browser, for the
+   * "Selecionar câmera" dropdown in Config — mainly useful on a
+   * computer, where several webcams may be plugged in and there's no
+   * meaningful "front/back" (facingMode) to fall back on like there is
+   * on a phone. Device labels are only populated once permission has
+   * been granted at least once; until then they come back blank and
+   * the caller falls back to a generic "Câmera N" label.
+   */
+  async listCameras() {
+    if (!navigator.mediaDevices?.enumerateDevices) return [];
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter((d) => d.kind === 'videoinput');
+  },
+
+  async startCamera(videoEl, deviceId) {
     this.stopCamera();
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } },
-      audio: false,
-    });
+    const video = deviceId
+      ? { deviceId: { exact: deviceId }, width: { ideal: 1280 }, height: { ideal: 960 } }
+      : { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } };
+    this.stream = await navigator.mediaDevices.getUserMedia({ video, audio: false });
     videoEl.srcObject = this.stream;
     await videoEl.play();
   },

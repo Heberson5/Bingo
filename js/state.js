@@ -24,6 +24,7 @@ const DEFAULT_CONFIG = {
     quina: true,
   },
   quinaTipo: 'todos', // horizontal | transversal | diagonal | todos
+  cameraDeviceId: '', // '' = automatic (facingMode: environment)
   display: {
     boardCellSize: 56,
     boardFontSize: 14,

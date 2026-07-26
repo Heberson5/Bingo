@@ -200,15 +200,25 @@ h1, h2, h3, p { margin: 0; }
 
 .empty-hint { color: var(--color-text-dim); font-size: 13px; }
 
-/* ---------- Draw board ---------- */
+/* ---------- Draw board ----------
+   Mobile: 5 side-by-side columns (the classic bingo-card look), each
+   with a sticky letter label on top. Desktop reflows this into 5
+   horizontal rows instead — see the >=1024px breakpoint below. */
 .draw-board {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex-direction: row;
   gap: 6px;
   max-height: 320px;
   overflow-y: auto;
 }
-.board-col-label {
+.board-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.board-row__label {
   position: sticky;
   top: 0;
   z-index: 1;
@@ -219,6 +229,7 @@ h1, h2, h3, p { margin: 0; }
   padding-bottom: 4px;
   background: var(--color-surface);
 }
+.board-row__nums { display: flex; flex-direction: column; gap: 6px; }
 .board-num {
   height: var(--board-cell-size, 56px);
   display: flex;
@@ -295,6 +306,8 @@ h1, h2, h3, p { margin: 0; }
 .field--check span { color: var(--color-text); font-size: 15px; }
 .field input[type="range"] { width: 100%; accent-color: var(--color-primary); }
 .field output { font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
+
+.desktop-only-field { display: none; }
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; min-width: 0; }
 .hint { color: var(--color-text-dim); font-size: 13px; }
@@ -498,7 +511,24 @@ h1, h2, h3, p { margin: 0; }
 
 @media (min-width: 1024px) {
   :root { --content-width: 1040px; }
-  .draw-board { max-height: 440px; }
+  .desktop-only-field { display: flex; flex-direction: column; gap: 12px; }
+
+  /* Wide screens have plenty of horizontal room, so each letter
+     becomes its own row (label + numbers running left to right)
+     instead of a tall, scrolling column — easier to scan at a glance
+     when projecting or running the draw from a computer. */
+  .draw-board { flex-direction: column; max-height: none; overflow-y: visible; gap: 10px; }
+  .board-row { flex-direction: row; align-items: center; gap: 10px; flex: none; }
+  .board-row__label {
+    position: static;
+    width: 44px;
+    flex-shrink: 0;
+    background: none;
+    padding-bottom: 0;
+    font-size: 16px;
+  }
+  .board-row__nums { flex-direction: row; flex-wrap: wrap; flex: 1; gap: 8px; }
+  .board-num { width: var(--board-cell-size, 56px); flex: 0 0 auto; }
 
   body { padding-bottom: 0; }
   .bottom-nav { display: none; }

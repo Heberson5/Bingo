@@ -51,7 +51,7 @@ O reconhecimento de números por câmera exige HTTPS (ou `localhost`) para o nav
 
 1. Nas configurações do repositório, vá em **Pages**.
 2. Em "Source", selecione a branch `main` e a pasta `/ (root)`.
-3. Salve — o site ficará disponível em `https://<usuario>.github.io/BINGO/`.
+3. Salve — o site ficará disponível em `https://heberson5.github.io/Bingo/` (o nome do repositório entra na URL exatamente como está escrito — `Bingo`, não `BINGO`).
 
 ## Estrutura do projeto
 
