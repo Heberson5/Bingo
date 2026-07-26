@@ -293,9 +293,10 @@ function readGridFromInputs() {
 
 let currentModalMode = 'manual';
 let currentPhotoDataUrl = null;
+let cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
 
 const CAPTURE_HINT = 'Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.';
-const REVIEW_HINT = 'Gire a foto até a palavra BINGO ficar na horizontal (em cima) e as colunas baterem com as linhas guia. Depois toque em "Reconhecer números".';
+const REVIEW_HINT = 'Arraste as bolinhas para o retângulo cobrir só a grade de números (sem o cabeçalho BINGO nem a borda da cartela). Gire a foto se estiver de lado. Depois toque em "Reconhecer números".';
 
 function showCapturePhase() {
   currentPhotoDataUrl = null;
@@ -314,6 +315,88 @@ function showReviewPhase() {
   $('#reviewControls').hidden = false;
   $('#scanHint').textContent = REVIEW_HINT;
   $('#capturedPreview').src = currentPhotoDataUrl;
+  cropRect = { x: 0.1, y: 0.1, w: 0.8, h: 0.8 };
+  applyCropRectStyle();
+}
+
+/* ---------------- Crop rectangle (drag to mark the number grid) ---------------- */
+
+function applyCropRectStyle() {
+  const el = $('#cropRect');
+  el.style.left = cropRect.x * 100 + '%';
+  el.style.top = cropRect.y * 100 + '%';
+  el.style.width = cropRect.w * 100 + '%';
+  el.style.height = cropRect.h * 100 + '%';
+}
+
+const MIN_CROP_SIZE = 0.15;
+
+function clampCropRect() {
+  cropRect.w = Math.min(Math.max(cropRect.w, MIN_CROP_SIZE), 1);
+  cropRect.h = Math.min(Math.max(cropRect.h, MIN_CROP_SIZE), 1);
+  cropRect.x = Math.min(Math.max(cropRect.x, 0), 1 - cropRect.w);
+  cropRect.y = Math.min(Math.max(cropRect.y, 0), 1 - cropRect.h);
+}
+
+function setupCropInteractions() {
+  const wrap = $('#capturedWrap');
+  const rectEl = $('#cropRect');
+
+  function dragFraction(startEvent, onMove) {
+    const bounds = wrap.getBoundingClientRect();
+    const start = { x: startEvent.clientX, y: startEvent.clientY };
+    const startRect = { ...cropRect };
+    const pointerId = startEvent.pointerId;
+
+    function onPointerMove(e) {
+      const dx = (e.clientX - start.x) / bounds.width;
+      const dy = (e.clientY - start.y) / bounds.height;
+      onMove(dx, dy, startRect);
+      clampCropRect();
+      applyCropRectStyle();
+    }
+    function onPointerUp() {
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    }
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    startEvent.preventDefault();
+  }
+
+  rectEl.addEventListener('pointerdown', (e) => {
+    if (e.target.classList.contains('crop-handle')) return;
+    dragFraction(e, (dx, dy, start) => {
+      cropRect.x = start.x + dx;
+      cropRect.y = start.y + dy;
+    });
+  });
+
+  $$('.crop-handle', rectEl).forEach((handle) => {
+    handle.addEventListener('pointerdown', (e) => {
+      e.stopPropagation();
+      const corner = handle.dataset.corner;
+      dragFraction(e, (dx, dy, start) => {
+        if (corner === 'se') {
+          cropRect.w = start.w + dx;
+          cropRect.h = start.h + dy;
+        } else if (corner === 'nw') {
+          cropRect.x = start.x + dx;
+          cropRect.y = start.y + dy;
+          cropRect.w = start.w - dx;
+          cropRect.h = start.h - dy;
+        } else if (corner === 'ne') {
+          cropRect.y = start.y + dy;
+          cropRect.w = start.w + dx;
+          cropRect.h = start.h - dy;
+        } else if (corner === 'sw') {
+          cropRect.x = start.x + dx;
+          cropRect.w = start.w - dx;
+          cropRect.h = start.h + dy;
+        }
+      });
+    });
+  });
 }
 
 function openCardModal(mode) {
@@ -342,6 +425,7 @@ function closeCardModal() {
 $('#btnScan').addEventListener('click', () => openCardModal('scan'));
 $('#btnManual').addEventListener('click', () => openCardModal('manual'));
 $$('[data-close-modal]').forEach((el) => el.addEventListener('click', closeCardModal));
+setupCropInteractions();
 
 $('#btnCapture').addEventListener('click', () => {
   currentPhotoDataUrl = Ocr.capture($('#cameraVideo'), $('#cameraCanvas'));
@@ -364,7 +448,7 @@ $('#btnRetake').addEventListener('click', () => {
 $('#btnRecognize').addEventListener('click', async () => {
   $('#ocrStatus').textContent = 'Reconhecendo números da cartela... 0%';
   try {
-    const recognizedGrid = await Ocr.recognizeGrid(currentPhotoDataUrl, Store.config.freeCenter, (pct) => {
+    const recognizedGrid = await Ocr.recognizeGrid(currentPhotoDataUrl, Store.config.freeCenter, cropRect, (pct) => {
       $('#ocrStatus').textContent = `Reconhecendo números da cartela... ${pct}%`;
     });
     const count = fillGridFromCells(recognizedGrid);

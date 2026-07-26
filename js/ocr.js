@@ -72,33 +72,47 @@ const Ocr = {
   },
 
   /**
-   * Crops one grid cell out of the full card photo, upscales it (OCR
-   * reads small printed digits far more reliably when enlarged) and
-   * applies grayscale + contrast boost to help separate ink from paper.
+   * Crops one grid cell out of the region the operator marked as the
+   * number grid (cropRect, in 0-1 fractions of the full photo — real
+   * photos rarely have the card filling the whole frame, and the card
+   * itself usually has a header row above the grid, so cropping from
+   * the raw photo edges would slice the wrong content into each cell).
+   * The crop shrinks a bit further inward from each cell's edges to
+   * avoid grabbing the printed grid lines or a sliver of the neighbor
+   * cell, then upscales and boosts contrast for OCR.
    */
-  _extractCell(img, row, col, freeCenter) {
-    const cellW = img.width / 5;
-    const cellH = img.height / 5;
-    const scale = 3;
+  _extractCell(img, row, col, cropRect) {
+    const originX = cropRect.x * img.width;
+    const originY = cropRect.y * img.height;
+    const regionW = cropRect.w * img.width;
+    const regionH = cropRect.h * img.height;
+    const cellW = regionW / 5;
+    const cellH = regionH / 5;
+    const inset = 0.12; // shrink 12% inward on each side to avoid grid-line bleed
+
+    const sx = originX + col * cellW + cellW * inset;
+    const sy = originY + row * cellH + cellH * inset;
+    const sw = cellW * (1 - inset * 2);
+    const sh = cellH * (1 - inset * 2);
+
+    const scale = 4;
     const canvas = document.createElement('canvas');
-    canvas.width = cellW * scale;
-    canvas.height = cellH * scale;
+    canvas.width = Math.max(1, Math.round(sw * scale));
+    canvas.height = Math.max(1, Math.round(sh * scale));
     const ctx = canvas.getContext('2d');
-    ctx.filter = 'grayscale(1) contrast(1.5) brightness(1.05)';
-    ctx.drawImage(
-      img,
-      col * cellW, row * cellH, cellW, cellH,
-      0, 0, canvas.width, canvas.height
-    );
+    ctx.filter = 'grayscale(1) contrast(1.6) brightness(1.08)';
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/png');
   },
 
   /**
-   * Runs OCR cell-by-cell over the 5x5 card grid and returns a 5x5
-   * array of recognized numbers (or null where nothing was read /
-   * the cell is the free center). Requires window.Tesseract (CDN).
+   * Runs OCR cell-by-cell over the 5x5 card grid (within cropRect, a
+   * {x,y,w,h} rectangle in 0-1 fractions of the photo that the operator
+   * positioned over just the number grid) and returns a 5x5 array of
+   * recognized numbers (or null where nothing was read / the cell is
+   * the free center). Requires window.Tesseract (CDN).
    */
-  async recognizeGrid(dataUrl, freeCenter, onProgress) {
+  async recognizeGrid(dataUrl, freeCenter, cropRect, onProgress) {
     if (typeof Tesseract === 'undefined') {
       throw new Error('Biblioteca de OCR não carregada (sem conexão com a internet?).');
     }
@@ -122,7 +136,7 @@ const Ocr = {
             row.push(null);
             continue;
           }
-          const cellDataUrl = this._extractCell(img, r, c, freeCenter);
+          const cellDataUrl = this._extractCell(img, r, c, cropRect);
           const { data } = await worker.recognize(cellDataUrl);
           const digits = (data.text || '').replace(/[^0-9]/g, '');
           row.push(digits ? parseInt(digits, 10) : null);

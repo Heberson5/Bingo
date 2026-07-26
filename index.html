@@ -183,7 +183,13 @@
         </div>
         <div class="camera-box captured-box" id="capturedWrap" hidden>
           <img id="capturedPreview" alt="Foto capturada da cartela">
-          <div class="camera-grid-overlay" aria-hidden="true"></div>
+          <div class="crop-rect" id="cropRect">
+            <div class="crop-grid" aria-hidden="true"></div>
+            <div class="crop-handle" data-corner="nw"></div>
+            <div class="crop-handle" data-corner="ne"></div>
+            <div class="crop-handle" data-corner="sw"></div>
+            <div class="crop-handle" data-corner="se"></div>
+          </div>
         </div>
         <p class="hint" id="scanHint">Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.</p>
         <div class="btn-group" id="captureControls">
