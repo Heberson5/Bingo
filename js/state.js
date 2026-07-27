@@ -25,6 +25,7 @@ const DEFAULT_CONFIG = {
   },
   quinaTipo: 'todos', // horizontal | transversal | diagonal | todos
   cameraDeviceId: '', // '' = automatic (facingMode: environment)
+  suspenseMode: false,
   display: {
     boardCellSize: 56,
     boardFontSize: 14,
@@ -60,7 +61,7 @@ function save(key, value) {
 
 const Store = {
   config: loadJSON(STORAGE_KEYS.config, DEFAULT_CONFIG),
-  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [] }),
+  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [], revealedCount: 0 }),
   cards: loadArray(STORAGE_KEYS.cards),
   history: loadArray(STORAGE_KEYS.history),
 
@@ -286,6 +287,11 @@ function commitDrawnNumber(num) {
   Store.game.drawnNumbers.push(num);
   if (Store.game.firstNumber === null) Store.game.firstNumber = num;
   if (!Store.game.startedAt) Store.game.startedAt = new Date().toISOString();
+  // With suspense mode off, the public display should update the moment
+  // the number is drawn, same as always — so it's marked "revealed"
+  // immediately. With it on, this is deliberately left lagging behind
+  // drawnNumbers; see revealPendingNumber().
+  if (!isSuspenseModeOn()) Store.game.revealedCount = Store.game.drawnNumbers.length;
   Store.saveGame();
 
   for (const card of activeCards()) {
@@ -296,6 +302,41 @@ function commitDrawnNumber(num) {
     }
   }
   Store.saveCards();
+}
+
+/* ---------------- Suspense mode (delayed reveal on the public display) ----------------
+   Drawing a number always runs the game logic immediately (marking
+   cards, evaluating winners) — suspense only holds back what the
+   separate fullscreen display (a different tab/window reading the same
+   localStorage) shows as the "current" ball, so the operator can build
+   anticipation before tapping the ball to reveal it to the audience. */
+
+function isSuspenseModeOn() {
+  return !!Store.config.suspenseMode;
+}
+
+function setSuspenseMode(on) {
+  Store.config.suspenseMode = on;
+  Store.saveConfig();
+  if (!on) {
+    // Turning it off should never leave the display stuck behind —
+    // catch it up immediately.
+    revealPendingNumber();
+  } else if ((Store.game.revealedCount || 0) < Store.game.drawnNumbers.length) {
+    // Turning it on shouldn't retroactively hide numbers the audience
+    // already saw — only draws from this point on get held back.
+    Store.game.revealedCount = Store.game.drawnNumbers.length;
+    Store.saveGame();
+  }
+}
+
+function hasUnrevealedNumber() {
+  return isSuspenseModeOn() && (Store.game.revealedCount || 0) < Store.game.drawnNumbers.length;
+}
+
+function revealPendingNumber() {
+  Store.game.revealedCount = Store.game.drawnNumbers.length;
+  Store.saveGame();
 }
 
 function drawNumber() {
@@ -662,7 +703,7 @@ function endGame() {
   });
   Store.saveHistory();
 
-  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [] };
+  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [], revealedCount: 0 };
   Store.saveGame();
 }
 

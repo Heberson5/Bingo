@@ -108,11 +108,21 @@
     var max = config.max != null ? config.max : 75;
     var drawn = game.drawnNumbers || [];
 
+    // In suspense mode the main app deliberately holds `revealedCount`
+    // behind drawnNumbers.length until the operator taps the ball there
+    // — this display only ever shows numbers up to that point, so the
+    // audience sees a ball appear exactly when the operator reveals it,
+    // never the instant it's actually drawn.
+    var revealedCount = (config.suspenseMode && typeof game.revealedCount === 'number')
+      ? Math.min(game.revealedCount, drawn.length)
+      : drawn.length;
+    var revealed = drawn.slice(0, revealedCount);
+
     var ball = document.getElementById('ball');
     var emptyHint = document.getElementById('emptyHint');
     var stats = document.getElementById('stats');
 
-    if (drawn.length === 0) {
+    if (revealed.length === 0) {
       ball.hidden = true;
       emptyHint.hidden = false;
       stats.textContent = '';
@@ -122,18 +132,18 @@
 
     ball.hidden = false;
     emptyHint.hidden = true;
-    var last = drawn[drawn.length - 1];
+    var last = revealed[revealed.length - 1];
     document.getElementById('letter').textContent = letterForNumber(last, min, max);
     document.getElementById('number').textContent = last;
     var total = max - min + 1;
-    stats.textContent = drawn.length + ' de ' + total + ' números sorteados';
+    stats.textContent = revealed.length + ' de ' + total + ' números sorteados';
 
-    if (drawn.length !== lastRenderedCount) {
+    if (revealed.length !== lastRenderedCount) {
       ball.classList.remove('is-bouncing');
       void ball.offsetWidth;
       ball.classList.add('is-bouncing');
     }
-    lastRenderedCount = drawn.length;
+    lastRenderedCount = revealed.length;
   }
 
   // `storage` fires in this tab whenever ANOTHER tab/window changes

@@ -51,6 +51,7 @@ h1, h2, h3, p { margin: 0; }
   justify-content: center;
 }
 .app-header__icon-btn:active { transform: scale(.92); }
+.app-header__icon-btn.is-active { background: var(--color-accent); color: #3a2504; }
 
 .app-header {
   position: sticky;
@@ -139,6 +140,15 @@ h1, h2, h3, p { margin: 0; }
   60% { transform: scale(1.08) rotate(3deg); }
   100% { transform: scale(1) rotate(0); }
 }
+.draw-ball.is-awaiting-reveal {
+  cursor: pointer;
+  box-shadow: 0 0 0 4px var(--color-accent), 0 10px 30px rgba(245, 158, 11, .35), inset 0 -6px 14px rgba(0,0,0,.15);
+  animation: pulse-reveal 1.4s ease-in-out infinite;
+}
+@keyframes pulse-reveal {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
 .draw-ball__letter {
   font-size: var(--ball-letter-size, 20px);
   font-weight: var(--ball-font-weight, 800);
@@ -153,6 +163,7 @@ h1, h2, h3, p { margin: 0; }
 .draw-stats { color: var(--color-text-dim); font-size: 14px; }
 .draw-stats--secondary { color: var(--color-accent); font-weight: 700; }
 .hint--manual { color: var(--color-accent); font-weight: 600; text-align: center; }
+.hint--suspense { color: var(--color-accent); font-weight: 600; text-align: center; }
 
 .btn {
   border: none;

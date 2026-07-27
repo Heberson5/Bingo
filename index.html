@@ -45,6 +45,7 @@
       <span class="app-header__title">Bingo</span>
     </div>
     <div class="app-header__actions">
+      <button class="app-header__icon-btn" id="btnToggleSuspense" title="Suspense: segurar a revelação da bola no telão até tocar nela" aria-label="Ativar/desativar suspense">🤫</button>
       <button class="app-header__icon-btn" id="btnOpenDisplay" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio">🖥️</button>
       <span class="app-header__game" id="gameLabel">Jogo #1</span>
     </div>
@@ -66,6 +67,7 @@
       </div>
       <p class="draw-stats" id="drawStats">0 de 0 números sorteados</p>
       <p class="draw-stats draw-stats--secondary" id="nearMissStat" hidden></p>
+      <p class="hint hint--suspense" id="suspenseHint" hidden>🤫 Toque na bola para revelar este número no telão.</p>
       <p class="hint hint--manual" id="manualModeHint" hidden>Modo manual ativo — toque no número sorteado no Painel de números abaixo.</p>
     </div>
 

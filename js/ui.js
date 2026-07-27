@@ -102,12 +102,45 @@ function renderSorteio() {
   renderNearMisses();
   renderPrizes();
   renderPendingPrizes();
+  renderSuspenseState();
 
   const noMore = availableNumbers().length === 0;
   $('#btnSortear').disabled = noMore;
   $('#btnSortear').textContent = noMore ? 'Todos os números já saíram' : 'Sortear número';
   $('#btnMarcarManual').disabled = noMore;
 }
+
+/**
+ * Suspense mode doesn't touch anything about the draw itself — cards
+ * still get marked and winners still get evaluated the instant a
+ * number is drawn. It only holds back what the SEPARATE fullscreen
+ * display shows, so the operator sees the number here right away (to
+ * build it up verbally) and taps the ball, whenever they're ready, to
+ * sync that same number onto the public display.
+ */
+function renderSuspenseState() {
+  const active = isSuspenseModeOn();
+  $('#btnToggleSuspense').classList.toggle('is-active', active);
+  const pending = hasUnrevealedNumber();
+  $('#currentBall').classList.toggle('is-awaiting-reveal', pending);
+  $('#suspenseHint').hidden = !pending;
+}
+
+$('#btnToggleSuspense').addEventListener('click', () => {
+  const next = !isSuspenseModeOn();
+  setSuspenseMode(next);
+  renderSorteio();
+  showToast(next
+    ? 'Suspense ativado — a bola só aparece no telão quando você tocar nela aqui.'
+    : 'Suspense desativado — a bola volta a aparecer no telão automaticamente.');
+});
+
+$('#currentBall').addEventListener('click', () => {
+  if (!hasUnrevealedNumber()) return;
+  revealPendingNumber();
+  renderSuspenseState();
+  showToast('Bola revelada no telão!');
+});
 
 /**
  * The prize list is registered ahead of time (there can be more than
