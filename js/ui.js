@@ -100,6 +100,7 @@ function renderSorteio() {
   renderActiveCardsSummary();
   renderCriteriaFlags();
   renderNearMisses();
+  renderPrizes();
   renderPendingPrizes();
 
   const noMore = availableNumbers().length === 0;
@@ -107,6 +108,62 @@ function renderSorteio() {
   $('#btnSortear').textContent = noMore ? 'Todos os números já saíram' : 'Sortear número';
   $('#btnMarcarManual').disabled = noMore;
 }
+
+/**
+ * The prize list is registered ahead of time (there can be more than
+ * one prize on the table in the same round — 1º prêmio, 2º prêmio, a
+ * raffle item) instead of being retyped at confirmation time. Clicking
+ * a chip makes it "active"; that's the prize name confirmAchievement()
+ * gets called with, whether confirming one card or several at once.
+ */
+let activePrizeName = '';
+
+function renderPrizes() {
+  const prizes = gamePrizes();
+  if (!prizes.includes(activePrizeName)) activePrizeName = prizes[0] || '';
+
+  $('#prizeList').innerHTML = prizes.length
+    ? prizes.map((p) => `
+        <div class="prize-chip ${p === activePrizeName ? 'is-active' : ''}" data-prize="${escapeHtml(p)}">
+          <button type="button" class="prize-chip__select" data-select-prize-name>${p === activePrizeName ? '✓ ' : ''}${escapeHtml(p)}</button>
+          <button type="button" class="prize-chip__remove" data-remove-prize aria-label="Remover prêmio">✕</button>
+        </div>`).join('')
+    : '<span class="empty-hint">Nenhum prêmio cadastrado ainda.</span>';
+
+  $('#prizeActiveHint').textContent = activePrizeName
+    ? `Vinculando ao prêmio selecionado: ${activePrizeName}`
+    : (prizes.length ? 'Toque em um prêmio acima para selecioná-lo.' : 'Cadastre um prêmio para vincular aos ganhadores (opcional).');
+}
+
+$('#btnAddPrize').addEventListener('click', () => {
+  const name = $('#prizeNameInput').value.trim();
+  if (!name) { showToast('Digite o nome do prêmio.'); return; }
+  if (!addPrize(name)) { showToast('Esse prêmio já está cadastrado.'); return; }
+  activePrizeName = name;
+  $('#prizeNameInput').value = '';
+  renderPrizes();
+  showToast('Prêmio adicionado.');
+});
+
+$('#prizeNameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); $('#btnAddPrize').click(); }
+});
+
+$('#prizeList').addEventListener('click', (e) => {
+  const selectBtn = e.target.closest('[data-select-prize-name]');
+  if (selectBtn) {
+    activePrizeName = selectBtn.closest('[data-prize]').dataset.prize;
+    renderPrizes();
+    return;
+  }
+  const removeBtn = e.target.closest('[data-remove-prize]');
+  if (removeBtn) {
+    const name = removeBtn.closest('[data-prize]').dataset.prize;
+    removePrize(name);
+    if (activePrizeName === name) activePrizeName = '';
+    renderPrizes();
+  }
+});
 
 /**
  * A checkbox per active winning criterion, right by the number panel,
@@ -197,8 +254,7 @@ function renderPendingPrizes() {
 $('#pendingPrizesList').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-confirm-prize]');
   if (!btn) return;
-  const prize = $('#prizeNameInput').value.trim();
-  confirmAchievement(btn.dataset.cardId, btn.dataset.key, prize);
+  confirmAchievement(btn.dataset.cardId, btn.dataset.key, activePrizeName);
   renderSorteio();
   showToast('Prêmio confirmado.');
 });
@@ -212,10 +268,9 @@ $('#pendingPrizesList').addEventListener('change', (e) => {
 $('#btnConfirmSelectedPrizes').addEventListener('click', () => {
   const checked = $$('[data-select-prize]:checked', $('#pendingPrizesList'));
   if (checked.length === 0) return;
-  const prize = $('#prizeNameInput').value.trim();
-  checked.forEach((cb) => confirmAchievement(cb.dataset.cardId, cb.dataset.key, prize));
+  checked.forEach((cb) => confirmAchievement(cb.dataset.cardId, cb.dataset.key, activePrizeName));
   renderSorteio();
-  showToast(`${checked.length} prêmio(s) confirmado(s)${prize ? ' — ' + prize : ''}.`);
+  showToast(`${checked.length} prêmio(s) confirmado(s)${activePrizeName ? ' — ' + activePrizeName : ''}.`);
 });
 
 function renderLastBalls() {

@@ -60,7 +60,7 @@ function save(key, value) {
 
 const Store = {
   config: loadJSON(STORAGE_KEYS.config, DEFAULT_CONFIG),
-  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {} }),
+  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [] }),
   cards: loadArray(STORAGE_KEYS.cards),
   history: loadArray(STORAGE_KEYS.history),
 
@@ -418,6 +418,34 @@ function setCriterionClosed(key, closed) {
 }
 
 /**
+ * A round can have more than one prize on the table at once (1º prêmio,
+ * 2º prêmio, a raffle item, ...), so prizes are registered by name into
+ * a small per-game list instead of being free text typed fresh at every
+ * confirmation — the operator adds each prize once, then picks which
+ * one is "active" in the UI before confirming whichever card(s) just
+ * won it. Resets with the rest of the round state in endGame().
+ */
+function gamePrizes() {
+  return Store.game.prizes || [];
+}
+
+function addPrize(name) {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return false;
+  if (!Store.game.prizes) Store.game.prizes = [];
+  if (Store.game.prizes.includes(trimmed)) return false;
+  Store.game.prizes.push(trimmed);
+  Store.saveGame();
+  return true;
+}
+
+function removePrize(name) {
+  if (!Store.game.prizes) return;
+  Store.game.prizes = Store.game.prizes.filter((p) => p !== name);
+  Store.saveGame();
+}
+
+/**
  * Returns the newly-achieved criteria for this card (ones not already
  * recorded in card.achievements), tagging each with which draw (index
  * + number) completed it. That record is what lets the operator later
@@ -634,7 +662,7 @@ function endGame() {
   });
   Store.saveHistory();
 
-  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {} };
+  Store.game = { id: finishedGameId + 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [] };
   Store.saveGame();
 }
 
