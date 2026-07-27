@@ -71,18 +71,22 @@
 
     <div class="sorteio-grid">
       <aside class="sorteio-aside">
+        <div class="card">
+          <div class="card__header"><h2>Prêmio</h2></div>
+          <label class="field">
+            <span>Nome do prêmio a vincular</span>
+            <input type="text" id="prizeNameInput" placeholder="Ex: 1º prêmio - Liquidificador">
+          </label>
+          <p class="hint">Preencha antes de confirmar um ganhador — o texto é vinculado à cartela confirmada. Marque mais de uma cartela na lista de ganhadores para vincular o mesmo prêmio a todas de uma vez.</p>
+        </div>
+
         <div class="card" id="pendingPrizesCard" hidden>
           <div id="pendingPrizesWrap" hidden>
             <div class="card__header">
               <h2>Ganhadores <span class="badge badge--prize" id="pendingPrizesCount">0</span></h2>
             </div>
-            <label class="field">
-              <span>Prêmio (opcional)</span>
-              <input type="text" id="prizeNameInput" placeholder="Ex: 1º prêmio - Liquidificador">
-            </label>
             <div id="pendingPrizesList" class="cards-summary"></div>
             <button class="btn btn--primary btn--small" id="btnConfirmSelectedPrizes" hidden>Confirmar selecionados com este prêmio</button>
-            <p class="hint">Marque mais de uma cartela para vincular o mesmo prêmio a todos os ganhadores selecionados.</p>
           </div>
           <div id="expiredPrizesWrap" hidden>
             <div class="card__header">
