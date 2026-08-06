@@ -1,0 +1,7 @@
+services:
+  bingo:
+    build: .
+    container_name: bingo
+    restart: unless-stopped
+    ports:
+      - "80:80"
