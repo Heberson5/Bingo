@@ -52,17 +52,21 @@ $('#sideNavToggle').addEventListener('click', () => {
 applySidebarState();
 
 /* ---------------- Fullscreen draw display (separate window/tab) ----------------
-   On the real deployed site this just opens the sibling display.html file.
-   The single-file Artifact bundle has no second file to link to, so its
-   build embeds the same page's markup as window.BINGO_DISPLAY_HTML and
-   this opens it from a Blob URL instead — same shared code either way. */
-$('#btnOpenDisplay').addEventListener('click', () => {
+   #btnOpenDisplay is a plain <a href="display.html" target="_blank"> now, not
+   a JS-only button — on the real deployed site that's a real, copyable,
+   shareable URL (e.g. https://seu-dominio/display.html) that works when
+   opened directly on a different computer, unlike a blob: URL which is
+   only valid inside the browser/tab that created it. The single-file
+   Artifact bundle has no second file for that href to resolve to, so its
+   build still embeds the page's markup as window.BINGO_DISPLAY_HTML and
+   this intercepts the click to open it from a Blob URL instead — that
+   fallback is scoped to the Artifact context only. */
+$('#btnOpenDisplay').addEventListener('click', (e) => {
   if (window.BINGO_DISPLAY_HTML) {
+    e.preventDefault();
     const blob = new Blob([window.BINGO_DISPLAY_HTML], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank', 'noopener');
-  } else {
-    window.open('display.html', '_blank', 'noopener');
   }
 });
 

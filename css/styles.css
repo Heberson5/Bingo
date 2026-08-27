@@ -49,6 +49,7 @@ h1, h2, h3, p { margin: 0; }
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none; /* this is also used on an <a> (btnOpenDisplay) */
 }
 .app-header__icon-btn:active { transform: scale(.92); }
 .app-header__icon-btn.is-active { background: var(--color-accent); color: #3a2504; }
