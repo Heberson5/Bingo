@@ -4,4 +4,4 @@ services:
     container_name: bingo
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "8082:80"
