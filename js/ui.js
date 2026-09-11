@@ -1483,3 +1483,18 @@ $('#formConfig').addEventListener('submit', (e) => {
 
 applyDisplaySettings(Store.config);
 switchView('sorteio');
+
+/**
+ * Registers the service worker that makes the app installable (desktop
+ * and mobile — "Install app" / "Adicionar à tela inicial") and keeps it
+ * working through a dropped connection mid-event. Best-effort: this is
+ * a no-op wherever there's no sw.js to register against (the Artifact
+ * bundle has no such file) or the page isn't in a secure context
+ * (plain http:// on a non-localhost host) — either way it just rejects
+ * quietly and the app runs exactly as it did before.
+ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}

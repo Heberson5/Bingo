@@ -36,6 +36,28 @@ Não há tela de login — a aplicação roda inteiramente no navegador (HTML/CS
 
 Interface mobile-first, com navegação inferior por abas (Sorteio / Cartelas / Configurações), pensada para uso em celular durante a condução do bingo, mas totalmente utilizável em telas maiores.
 
+## Instalar como aplicativo (PWA)
+
+A aplicação é um **Progressive Web App**: dá pra instalar tanto no computador quanto no celular, abrindo em sua própria janela/ícone, sem barra de endereço do navegador — 100% em formato de app, mas continua sendo a mesma aplicação responsiva, sem instalador nem loja de aplicativos. Ela também continua funcionando se a internet cair no meio de uma partida (o estado do jogo já vive todo em `localStorage`; só o carregamento inicial da página depende de rede).
+
+**Requisito:** precisa estar servida em HTTPS (ou `localhost`) — funciona automaticamente assim que o domínio (`https://bingo.sauberlich.com.br/`) estiver com certificado ativo. Por IP/HTTP puro a instalação não fica disponível, do mesmo jeito que a câmera (ver aviso na seção da VPS acima).
+
+**No computador (Windows, Mac ou Linux)** — Chrome ou Edge:
+1. Abra o site.
+2. Clique no ícone de instalação (⊕/tela com seta) que aparece do lado direito da barra de endereço — ou vá no menu (⋮) → **"Instalar Bingo..."**.
+3. O app abre numa janela própria, com ícone no menu iniciar/dock, como qualquer outro programa instalado.
+
+**No Android** — Chrome:
+1. Abra o site.
+2. Toque no menu (⋮) → **"Instalar aplicativo"** (ou no banner que o Chrome mostra automaticamente).
+3. Um ícone é adicionado à tela inicial, abrindo em tela cheia como um app nativo.
+
+**No iPhone/iPad** — Safari (é o único navegador no iOS que consegue instalar):
+1. Abra o site.
+2. Toque no ícone de compartilhar (□ com uma seta para cima).
+3. Toque em **"Adicionar à Tela de Início"**.
+4. O ícone aparece na tela inicial e abre em tela cheia, sem a interface do Safari.
+
 ## Rodando localmente
 
 Não há build nem dependências de back-end — basta servir os arquivos estáticos:
@@ -103,12 +125,15 @@ docker compose down        # parar e remover o container
 ## Estrutura do projeto
 
 ```
-index.html          Marcação das telas (Sorteio, Cartelas, Histórico, Dashboard, Configurações) e modais
-display.html         Tela cheia do sorteio, para projetar a bola sorteada em outra tela
-css/styles.css       Estilos responsivos (mobile-first)
-js/state.js          Estado do jogo, cartelas, configuração e regras de vitória
-js/ocr.js            Captura de câmera e reconhecimento de números (Tesseract.js)
-js/ui.js             Navegação, renderização das telas e eventos
+index.html            Marcação das telas (Sorteio, Cartelas, Histórico, Dashboard, Configurações) e modais
+display.html          Tela cheia do sorteio, para projetar a bola sorteada em outra tela
+manifest.webmanifest  Metadados do PWA (nome, ícones, cor, modo standalone)
+sw.js                 Service worker: cache do app shell e uso offline
+icons/                Ícones do app (normal, maskable e apple-touch) em vários tamanhos
+css/styles.css        Estilos responsivos (mobile-first)
+js/state.js           Estado do jogo, cartelas, configuração e regras de vitória
+js/ocr.js             Captura de câmera e reconhecimento de números (Tesseract.js)
+js/ui.js              Navegação, renderização das telas e eventos
 Dockerfile            Imagem Nginx servindo os arquivos estáticos
 nginx.conf            Configuração do Nginx usada dentro do container
 docker-compose.yml    Sobe o container pronto para uso em uma VPS
