@@ -1336,6 +1336,55 @@ function renderDashboard() {
 ================================================================ */
 
 /**
+ * Paletas de cores disponíveis. `primaryLight`/`primaryDark` só existem
+ * aqui (fora do CSS) para desenhar o gradiente de cada amostra e a cor
+ * da barra do navegador (meta theme-color) — a aplicação do tema em si
+ * é 100% via CSS (ver [data-theme] em css/styles.css), então adicionar
+ * uma paleta nova é: um bloco novo no CSS + uma entrada aqui.
+ */
+const PALETTES = [
+  { id: 'violeta', label: 'Violeta', primaryLight: '#9d5cf5', primaryDark: '#5b21b6' },
+  { id: 'azul', label: 'Azul', primaryLight: '#5b8def', primaryDark: '#1741a6' },
+  { id: 'verde', label: 'Verde', primaryLight: '#4ade80', primaryDark: '#0f6b31' },
+  { id: 'rosa', label: 'Rosa', primaryLight: '#f472b6', primaryDark: '#9d174d' },
+  { id: 'laranja', label: 'Laranja', primaryLight: '#fb923c', primaryDark: '#9a3412' },
+  { id: 'grafite', label: 'Grafite', primaryLight: '#94a3b8', primaryDark: '#1e293b' },
+];
+
+function applyTheme(themeId) {
+  const palette = PALETTES.find((p) => p.id === themeId) || PALETTES[0];
+  document.documentElement.setAttribute('data-theme', palette.id === 'violeta' ? '' : palette.id);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', palette.primaryDark);
+}
+
+function renderPaletteSwatches() {
+  const wrap = $('#paletteSwatches');
+  if (!wrap) return;
+  const current = Store.config.theme || 'violeta';
+  wrap.innerHTML = PALETTES.map((p) => `
+    <div class="palette-option">
+      <button type="button" class="palette-swatch${p.id === current ? ' is-active' : ''}" data-theme="${p.id}"
+        style="--sw-a:${p.primaryLight};--sw-b:${p.primaryDark};" title="${p.label}" aria-label="Tema ${p.label}">
+        <svg class="icon" aria-hidden="true"><use href="#icon-check"></use></svg>
+      </button>
+      <span class="palette-swatch__label">${p.label}</span>
+    </div>
+  `).join('');
+  $$('.palette-swatch', wrap).forEach((btn) => {
+    btn.addEventListener('click', () => setTheme(btn.dataset.theme));
+  });
+}
+
+function setTheme(themeId) {
+  Store.config.theme = themeId;
+  Store.saveConfig();
+  applyTheme(themeId);
+  renderPaletteSwatches();
+  showToast('Tema atualizado.');
+}
+
+/**
  * Board/ball sizing and boldness are exposed as CSS custom properties
  * on the document root, so the same slider values drive both the live
  * game screen and (once saved) whatever the operator sees next time —
@@ -1402,6 +1451,7 @@ async function populateCameraOptions() {
 
 function renderConfigForm() {
   const cfg = Store.config;
+  renderPaletteSwatches();
   populateCameraOptions();
   $('#cfgMin').value = cfg.min;
   $('#cfgMax').value = cfg.max;
@@ -1481,6 +1531,7 @@ $('#formConfig').addEventListener('submit', (e) => {
    INIT
 ================================================================ */
 
+applyTheme(Store.config.theme);
 applyDisplaySettings(Store.config);
 switchView('sorteio');
 

@@ -21,28 +21,116 @@
 </head>
 <body>
 
+<!-- Sprite de ícones — um único desenho por símbolo, reaproveitado em
+     toda a interface via <use>, sempre em currentColor (acompanha o
+     tema ativo automaticamente). Fica invisível: só existe para ser
+     referenciado. -->
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <symbol id="icon-ball" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"></circle>
+      <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"></circle>
+      <circle cx="9" cy="8.5" r="1" fill="#fff" stroke="none" opacity=".6"></circle>
+    </symbol>
+    <symbol id="icon-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"></circle>
+      <circle cx="12" cy="12" r="5.5"></circle>
+      <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"></circle>
+    </symbol>
+    <symbol id="icon-cards" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="8" height="8" rx="1.6"></rect>
+      <rect x="13" y="3" width="8" height="8" rx="1.6"></rect>
+      <rect x="3" y="13" width="8" height="8" rx="1.6"></rect>
+      <rect x="13" y="13" width="8" height="8" rx="1.6"></rect>
+    </symbol>
+    <symbol id="icon-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"></circle>
+      <polyline points="12,7 12,12 16,14"></polyline>
+    </symbol>
+    <symbol id="icon-dashboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="10" width="4" height="10" rx="1"></rect>
+      <rect x="10" y="5" width="4" height="15" rx="1"></rect>
+      <rect x="16" y="13" width="4" height="7" rx="1"></rect>
+    </symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6"></line>
+      <circle cx="9" cy="6" r="2" fill="currentColor"></circle>
+      <line x1="4" y1="12" x2="20" y2="12"></line>
+      <circle cx="15" cy="12" r="2" fill="currentColor"></circle>
+      <line x1="4" y1="18" x2="20" y2="18"></line>
+      <circle cx="7" cy="18" r="2" fill="currentColor"></circle>
+    </symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="12" cy="12" rx="9" ry="5.5"></ellipse>
+      <circle cx="12" cy="12" r="2.4"></circle>
+    </symbol>
+    <symbol id="icon-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="13" rx="2"></rect>
+      <line x1="8" y1="20" x2="16" y2="20"></line>
+      <line x1="12" y1="17" x2="12" y2="20"></line>
+    </symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="7" width="18" height="13" rx="2"></rect>
+      <rect x="9" y="4" width="6" height="3" rx="1"></rect>
+      <circle cx="12" cy="14" r="3.5"></circle>
+    </symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <g transform="rotate(45 12 12)">
+        <rect x="10" y="3" width="4" height="13" rx="1"></rect>
+        <polygon points="8,16 16,16 12,21" fill="currentColor" stroke="none"></polygon>
+      </g>
+    </symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="3" x2="12" y2="14"></line>
+      <polyline points="7,10 12,15 17,10"></polyline>
+      <line x1="5" y1="19" x2="19" y2="19"></line>
+    </symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="3" width="12" height="18" rx="1.5"></rect>
+      <line x1="9" y1="8" x2="15" y2="8"></line>
+      <line x1="9" y1="12" x2="15" y2="12"></line>
+      <line x1="9" y1="16" x2="13" y2="16"></line>
+    </symbol>
+    <symbol id="icon-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+      <circle cx="8.5" cy="10" r="1.5" fill="currentColor" stroke="none"></circle>
+      <polyline points="4,16 9,11 13,15 16,12 20,16"></polyline>
+    </symbol>
+    <symbol id="icon-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="7" y="4" width="10" height="7" rx="3"></rect>
+      <circle cx="6" cy="7.5" r="2.3"></circle>
+      <circle cx="18" cy="7.5" r="2.3"></circle>
+      <rect x="11" y="13" width="2" height="4"></rect>
+      <rect x="8" y="18" width="8" height="2" rx="1"></rect>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="5,13 10,18 19,7"></polyline>
+    </symbol>
+  </defs>
+</svg>
+
 <div class="app-shell">
 
 <nav class="side-nav" id="sideNav">
   <button class="side-nav__toggle" id="sideNavToggle" aria-label="Recolher menu">‹</button>
   <div class="side-nav__brand">
-    <span class="side-nav__logo" aria-hidden="true">🎱</span>
+    <span class="side-nav__logo" aria-hidden="true"><svg class="icon"><use href="#icon-ball"></use></svg></span>
     <span class="side-nav__title">Bingo</span>
   </div>
   <button class="side-nav__item is-active" data-nav="sorteio">
-    <span class="side-nav__icon">🎯</span><span class="side-nav__label">Sorteio</span>
+    <svg class="icon" aria-hidden="true"><use href="#icon-target"></use></svg><span class="side-nav__label">Sorteio</span>
   </button>
   <button class="side-nav__item" data-nav="cartelas">
-    <span class="side-nav__icon">🗂️</span><span class="side-nav__label">Cartelas</span>
+    <svg class="icon" aria-hidden="true"><use href="#icon-cards"></use></svg><span class="side-nav__label">Cartelas</span>
   </button>
   <button class="side-nav__item" data-nav="historico">
-    <span class="side-nav__icon">📜</span><span class="side-nav__label">Histórico</span>
+    <svg class="icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="side-nav__label">Histórico</span>
   </button>
   <button class="side-nav__item" data-nav="dashboard">
-    <span class="side-nav__icon">📊</span><span class="side-nav__label">Dashboard</span>
+    <svg class="icon" aria-hidden="true"><use href="#icon-dashboard"></use></svg><span class="side-nav__label">Dashboard</span>
   </button>
   <button class="side-nav__item" data-nav="config">
-    <span class="side-nav__icon">⚙️</span><span class="side-nav__label">Config</span>
+    <svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="side-nav__label">Config</span>
   </button>
 </nav>
 
@@ -51,12 +139,12 @@
 <header class="app-header">
   <div class="app-header__inner">
     <div class="app-header__brand">
-      <span class="app-header__logo" aria-hidden="true">🎱</span>
+      <span class="app-header__logo" aria-hidden="true"><svg class="icon"><use href="#icon-ball"></use></svg></span>
       <span class="app-header__title">Bingo</span>
     </div>
     <div class="app-header__actions">
-      <button class="app-header__icon-btn" id="btnToggleSuspense" title="Suspense: segurar a revelação da bola no telão até tocar nela" aria-label="Ativar/desativar suspense">🤫</button>
-      <a class="app-header__icon-btn" id="btnOpenDisplay" href="display.html" target="_blank" rel="noopener" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio">🖥️</a>
+      <button class="app-header__icon-btn" id="btnToggleSuspense" title="Suspense: segurar a revelação da bola no telão até tocar nela" aria-label="Ativar/desativar suspense"><svg class="icon" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
+      <a class="app-header__icon-btn" id="btnOpenDisplay" href="display.html" target="_blank" rel="noopener" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio"><svg class="icon" aria-hidden="true"><use href="#icon-monitor"></use></svg></a>
       <span class="app-header__game" id="gameLabel">Jogo #1</span>
     </div>
   </div>
@@ -165,8 +253,8 @@
     <div class="card">
       <div class="card__header"><h2>Nova cartela</h2></div>
       <div class="btn-group">
-        <button class="btn btn--primary btn--block" id="btnScan">📷 Escanear cartela</button>
-        <button class="btn btn--secondary btn--block" id="btnManual">✏️ Cadastrar manualmente</button>
+        <button class="btn btn--primary btn--block" id="btnScan"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-camera"></use></svg>Escanear cartela</button>
+        <button class="btn btn--secondary btn--block" id="btnManual"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-edit"></use></svg>Cadastrar manualmente</button>
       </div>
       <p class="hint">Deixe o nome em branco para guardar no estoque e atribuir o participante depois, na hora de entregar a cartela.</p>
     </div>
@@ -175,8 +263,8 @@
       <div class="card__header"><h2>Importar cartelas (CSV)</h2></div>
       <p class="hint">Planilha com uma cartela por linha: número da cartela, nome (opcional), depois os 25 números na ordem B1-B5, I1-I5, N1-N5, G1-G5, O1-O5. A casa central (N3) fica em branco se a cartela tiver espaço livre. Cartelas sem nome vão para o estoque.</p>
       <div class="btn-group">
-        <button class="btn btn--secondary btn--block" id="btnDownloadCsvTemplate">⬇️ Baixar modelo CSV</button>
-        <button class="btn btn--primary btn--block" id="btnImportCsv">📄 Escolher arquivo CSV</button>
+        <button class="btn btn--secondary btn--block" id="btnDownloadCsvTemplate"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-download"></use></svg>Baixar modelo CSV</button>
+        <button class="btn btn--primary btn--block" id="btnImportCsv"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-file"></use></svg>Escolher arquivo CSV</button>
       </div>
       <input type="file" accept=".csv,text/csv" id="csvFileInput" hidden>
       <p class="ocr-status" id="csvImportStatus"></p>
@@ -292,6 +380,12 @@
 
   <!-- ===================== CONFIGURAÇÕES ===================== -->
   <section class="view" id="view-config" data-view="config" hidden>
+    <div class="card">
+      <div class="card__header"><h2>Tema</h2></div>
+      <p class="hint">Escolha a paleta de cores da plataforma. A troca é aplicada na hora, em todas as telas.</p>
+      <div class="palette-swatches" id="paletteSwatches"></div>
+    </div>
+
     <form class="card" id="formConfig">
       <div class="card__header"><h2>Intervalo do sorteio</h2></div>
       <div class="field-row">
@@ -396,19 +490,19 @@
 <nav class="bottom-nav">
   <div class="bottom-nav__inner">
     <button class="bottom-nav__item is-active" data-nav="sorteio">
-      <span class="bottom-nav__icon">🎯</span><span>Sorteio</span>
+      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-target"></use></svg></span><span>Sorteio</span>
     </button>
     <button class="bottom-nav__item" data-nav="cartelas">
-      <span class="bottom-nav__icon">🗂️</span><span>Cartelas</span>
+      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-cards"></use></svg></span><span>Cartelas</span>
     </button>
     <button class="bottom-nav__item" data-nav="historico">
-      <span class="bottom-nav__icon">📜</span><span>Histórico</span>
+      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-history"></use></svg></span><span>Histórico</span>
     </button>
     <button class="bottom-nav__item" data-nav="dashboard">
-      <span class="bottom-nav__icon">📊</span><span>Dashboard</span>
+      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-dashboard"></use></svg></span><span>Dashboard</span>
     </button>
     <button class="bottom-nav__item" data-nav="config">
-      <span class="bottom-nav__icon">⚙️</span><span>Config</span>
+      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg></span><span>Config</span>
     </button>
   </div>
 </nav>
@@ -446,7 +540,7 @@
         <p class="hint" id="scanHint">Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.</p>
         <div class="btn-group" id="captureControls">
           <button class="btn btn--primary btn--block" id="btnCapture">Capturar foto</button>
-          <button class="btn btn--secondary btn--block" id="btnGallery">🖼️ Escolher da galeria</button>
+          <button class="btn btn--secondary btn--block" id="btnGallery"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-image"></use></svg>Escolher da galeria</button>
         </div>
         <input type="file" accept="image/*" id="galleryInput" hidden>
         <div class="btn-group" id="reviewControls" hidden>
@@ -480,7 +574,7 @@
 <div class="modal modal--winner" id="winnerModal" hidden>
   <div class="modal__backdrop"></div>
   <div class="modal__sheet modal__sheet--center">
-    <div class="winner-emoji">🏆</div>
+    <div class="winner-badge"><svg class="icon" aria-hidden="true"><use href="#icon-trophy"></use></svg></div>
     <h2>BINGO!</h2>
     <p class="winner-name" id="winnerName"></p>
     <p class="winner-reason" id="winnerReason"></p>

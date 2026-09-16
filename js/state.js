@@ -17,6 +17,7 @@ const DEFAULT_CONFIG = {
   max: 75,
   lastCount: 15,
   freeCenter: true,
+  theme: 'violeta',
   criteria: {
     cheia: true,
     quatroPontas: false,
