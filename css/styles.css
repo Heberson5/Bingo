@@ -358,7 +358,7 @@ h1, h2, h3, p { margin: 0; }
   line-height: 1;
   box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 4px 10px -3px rgba(0,0,0,.4);
 }
-.chip small { font-size: 8px; color: var(--color-text-dim); font-weight: 600; }
+.chip small { font-size: 8px; color: inherit; font-weight: 600; opacity: .75; }
 .chip--latest { background: linear-gradient(160deg, var(--color-accent), var(--color-accent-dark)); color: var(--color-on-accent); border-color: transparent; box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 4px 12px -3px var(--glow-accent); }
 
 .empty-hint { color: var(--color-text-dim); font-size: 13px; }
@@ -793,23 +793,6 @@ h1, h2, h3, p { margin: 0; }
   :root { --content-width: 1040px; }
   .desktop-only-field { display: flex; flex-direction: column; gap: 12px; }
 
-  /* Wide screens have plenty of horizontal room, so each letter
-     becomes its own row (label + numbers running left to right)
-     instead of a tall, scrolling column — easier to scan at a glance
-     when projecting or running the draw from a computer. */
-  .draw-board { flex-direction: column; max-height: none; overflow-y: visible; gap: 10px; }
-  .board-row { flex-direction: row; align-items: center; gap: 10px; flex: none; }
-  .board-row__label {
-    position: static;
-    width: 44px;
-    flex-shrink: 0;
-    background: none;
-    padding-bottom: 0;
-    font-size: 16px;
-  }
-  .board-row__nums { flex-direction: row; flex-wrap: wrap; flex: 1; gap: 8px; }
-  .board-num { width: var(--board-cell-size, 56px); flex: 0 0 auto; }
-
   body { padding-bottom: 0; }
   .bottom-nav { display: none; }
 
@@ -871,6 +854,38 @@ h1, h2, h3, p { margin: 0; }
   .sorteio-grid { flex-direction: row; align-items: flex-start; gap: 20px; }
   .sorteio-main { flex: 1; order: 1; }
   .sorteio-aside { width: 300px; flex-shrink: 0; order: 2; position: sticky; top: 16px; }
+}
+
+/* Only once the window is genuinely wide (a maximized desktop monitor,
+   not a laptop split-screen) is there room to lay out every number of
+   a letter on one single horizontal line. Below this, the board keeps
+   the exact same side-by-side "bingo card" columns used on mobile —
+   set by the base rules and the >=720px tweaks above — instead of the
+   old in-between layout that tried to go row-per-letter too early and
+   ended up wrapping into a second, harder-to-scan line. */
+@media (min-width: 1280px) {
+  :root { --content-width: 1280px; }
+
+  .draw-board { flex-direction: column; max-height: none; overflow-y: visible; gap: 10px; }
+  .board-row { flex-direction: row; align-items: center; gap: 10px; flex: none; }
+  .board-row__label {
+    position: static;
+    width: 44px;
+    flex-shrink: 0;
+    background: none;
+    padding-bottom: 0;
+    font-size: 16px;
+  }
+  /* `--cols-count` is set inline per row (js/ui.js) to that letter's
+     actual number count, so every number fits on one line regardless
+     of the configured min/max range — not just the default 15. */
+  .board-row__nums {
+    display: grid;
+    grid-template-columns: repeat(var(--cols-count, 15), minmax(0, 1fr));
+    gap: 8px;
+    flex: 1;
+  }
+  .board-num { width: auto; }
 }
 
 /* ---------- Print (2/4/6 cartelas por página A4) ----------

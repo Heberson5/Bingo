@@ -350,7 +350,7 @@ function renderDrawBoard() {
     html += `
       <div class="board-row">
         <div class="board-row__label">${LETTERS[col]}</div>
-        <div class="board-row__nums">${numsHtml}</div>
+        <div class="board-row__nums" style="--cols-count:${e - s + 1}">${numsHtml}</div>
       </div>`;
   }
   board.innerHTML = html;
