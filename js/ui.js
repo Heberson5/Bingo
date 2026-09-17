@@ -1444,8 +1444,20 @@ function applyBranding() {
   document.title = name;
   $$('.app-header__title, .side-nav__title').forEach((el) => { el.textContent = name; });
 
-  const faviconLink = $('#faviconLink');
-  if (faviconLink) faviconLink.href = b.favicon || DEFAULT_FAVICON_HREF;
+  // Just mutating the existing <link>'s href is enough on mobile/PWA
+  // (the manifest icons below are what actually drive that), but
+  // desktop Chrome/Edge often keep showing the OLD tab icon after an
+  // href swap on the same element — swapping in a brand new <link>
+  // node forces every desktop browser to re-fetch and redraw it too.
+  const oldFavicon = $('#faviconLink');
+  if (oldFavicon) {
+    const newFavicon = document.createElement('link');
+    newFavicon.id = 'faviconLink';
+    newFavicon.rel = 'icon';
+    newFavicon.type = mimeFromDataUrl(b.favicon || 'data:image/png');
+    newFavicon.href = b.favicon || DEFAULT_FAVICON_HREF;
+    oldFavicon.replaceWith(newFavicon);
+  }
 
   const appleTouchLink = $('#appleTouchIconLink');
   if (appleTouchLink) appleTouchLink.href = b.appIcon || DEFAULT_APPLE_TOUCH_HREF;
