@@ -1834,7 +1834,34 @@ function renderPermissionsPanel() {
       <span>${escapeHtml(label)}</span>
     </label>`).join('');
   $('#permissionsSaveHint').hidden = true;
+
+  // O Master é sempre "tudo marcado, travado" — não existe um valor
+  // salvo pra ele (não há o que configurar), isto é só a vitrine dessa
+  // regra fixa, pro pedido de "separação" entre os dois papéis.
+  const menusWrapMaster = $('#permMenusListMaster');
+  const settingsWrapMaster = $('#permSettingsListMaster');
+  if (menusWrapMaster && settingsWrapMaster) {
+    menusWrapMaster.innerHTML = Object.values(PERMISSION_MENU_LABELS).map((label) => `
+      <label class="field field--check">
+        <input type="checkbox" checked disabled>
+        <span>${escapeHtml(label)}</span>
+      </label>`).join('');
+    settingsWrapMaster.innerHTML = Object.values(PERMISSION_SETTING_LABELS).map((label) => `
+      <label class="field field--check">
+        <input type="checkbox" checked disabled>
+        <span>${escapeHtml(label)}</span>
+      </label>`).join('');
+  }
 }
+
+$$('#permRoleTabs .role-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    $$('#permRoleTabs .role-tab').forEach((t) => t.classList.toggle('is-active', t === tab));
+    const role = tab.dataset.permRole;
+    $('#permPanel-master').hidden = role !== 'master';
+    $('#permPanel-user').hidden = role !== 'user';
+  });
+});
 
 $('#btnSavePermissions').addEventListener('click', async () => {
   const next = { menus: {}, settings: {} };
@@ -1884,10 +1911,12 @@ function renderUsersList() {
           <div class="card-item__meta">${u.name ? `${escapeHtml(u.email)} • ` : ''}${u.active ? 'Ativo' : 'Inativo'}${u.mustChangePassword ? ' • aguardando troca de senha' : ''}</div>
         </div>
       </div>
-      ${u.role !== 'master' ? `
+      ${u.id !== Session.user.id ? `
         <div class="card-item__actions">
+          <button type="button" class="btn btn--ghost btn--small" data-edit-user="${u.id}">Editar</button>
           <button type="button" class="btn btn--ghost btn--small" data-reset-password="${u.id}">Redefinir senha</button>
           <button type="button" class="btn btn--${u.active ? 'danger' : 'secondary'} btn--small" data-toggle-active="${u.id}" data-next-active="${!u.active}">${u.active ? 'Desativar' : 'Reativar'}</button>
+          <button type="button" class="btn btn--danger btn--small" data-delete-user="${u.id}">Excluir</button>
         </div>` : ''}
     </div>`).join('');
 
@@ -1919,7 +1948,71 @@ function renderUsersList() {
       }
     );
   }));
+  $$('[data-edit-user]', wrap).forEach((btn) => btn.addEventListener('click', () => {
+    openEditUserModal(btn.dataset.editUser);
+  }));
+  $$('[data-delete-user]', wrap).forEach((btn) => btn.addEventListener('click', () => {
+    const u = cachedUsers.find((x) => x.id === btn.dataset.deleteUser);
+    openConfirm(
+      'Excluir usuário?',
+      `Isso remove "${u ? (u.name || u.email) : 'este usuário'}" e todo o histórico salvo dele permanentemente. Essa ação não pode ser desfeita.`,
+      async () => {
+        try {
+          const deletedId = btn.dataset.deleteUser;
+          await Api.deleteUser(deletedId);
+          showToast('Usuário excluído.');
+          // Se o Master estava observando justamente quem acabou de
+          // excluir, volta a visualização pra ele mesmo antes de
+          // atualizar a lista — senão o filtro do topo fica apontando
+          // pra um usuário que não existe mais.
+          if (Session.viewingUserId === deletedId) await switchViewedUser(Session.user.id);
+          refreshUsersList();
+        } catch (e) {
+          showToast('Falha ao excluir o usuário.');
+        }
+      }
+    );
+  }));
 }
+
+/* ---------------- Editar usuário (Master) ---------------- */
+let editingUserId = null;
+
+function openEditUserModal(userId) {
+  const u = cachedUsers.find((x) => x.id === userId);
+  if (!u) return;
+  editingUserId = userId;
+  $('#editUserName').value = u.name || '';
+  $('#editUserEmail').value = u.email;
+  $('#editUserRole').value = u.role;
+  $('#editUserModal').hidden = false;
+}
+
+function closeEditUserModal() {
+  $('#editUserModal').hidden = true;
+  editingUserId = null;
+}
+
+$$('[data-close-edit-user-modal]').forEach((el) => el.addEventListener('click', closeEditUserModal));
+
+$('#editUserConfirm').addEventListener('click', async () => {
+  if (!editingUserId) return;
+  const name = $('#editUserName').value.trim();
+  const email = $('#editUserEmail').value.trim();
+  const role = $('#editUserRole').value;
+  if (!name || !email) {
+    showToast('Informe o nome e o e-mail do usuário.');
+    return;
+  }
+  try {
+    await Api.updateUser(editingUserId, { name, email, role });
+    showToast('Usuário atualizado.');
+    closeEditUserModal();
+    refreshUsersList();
+  } catch (e) {
+    showToast(e.message === 'email_taken' ? 'Esse e-mail já está em uso por outro usuário.' : 'Falha ao atualizar o usuário.');
+  }
+});
 
 $('#btnCreateUser').addEventListener('click', async () => {
   const name = $('#newUserName').value.trim();

@@ -39,14 +39,31 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   if (req.params.id === req.user.id) return res.status(400).json({ error: 'cannot_modify_self' });
-  const { active } = req.body || {};
+  const { active, name, email, role } = req.body || {};
   const data = {};
   if (typeof active === 'boolean') data.active = active;
+  if (typeof name === 'string' && name.trim()) data.name = name.trim();
+  if (role === 'user' || role === 'master') data.role = role;
+  if (typeof email === 'string' && email.trim()) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existing && existing.id !== req.params.id) return res.status(409).json({ error: 'email_taken' });
+    data.email = normalizedEmail;
+  }
   if (Object.keys(data).length === 0) return res.status(400).json({ error: 'invalid_request' });
 
   const user = await prisma.user.update({ where: { id: req.params.id }, data }).catch(() => null);
   if (!user) return res.status(404).json({ error: 'not_found' });
   res.json({ user: publicUser(user) });
+});
+
+router.delete('/:id', async (req, res) => {
+  if (req.params.id === req.user.id) return res.status(400).json({ error: 'cannot_modify_self' });
+  // onDelete: Cascade em UserState (ver schema.prisma) — apaga junto o
+  // config/game/cards/history desse usuário, sem deixar lixo órfão.
+  const user = await prisma.user.delete({ where: { id: req.params.id } }).catch(() => null);
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  res.json({ ok: true });
 });
 
 router.patch('/:id/password', async (req, res) => {

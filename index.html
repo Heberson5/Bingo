@@ -656,17 +656,38 @@
   <section class="view" id="view-permissoes" data-view="permissoes" hidden>
     <div class="card" id="masterPermissionsCard">
       <div class="card__header"><h2>Permissões</h2></div>
-      <p class="hint">Escolha quais menus e seções de Configurações os usuários comuns podem ver. O Master sempre enxerga tudo, independente destas opções.</p>
-      <div class="permissions-group">
-        <h3 class="permissions-group__title">Menus</h3>
-        <div id="permMenusList" class="permissions-grid"></div>
+      <p class="hint">Cada papel tem seu próprio conjunto de acessos. Escolha um papel abaixo para ver ou editar o que ele enxerga.</p>
+
+      <div class="role-tabs" id="permRoleTabs">
+        <button type="button" class="role-tab" data-perm-role="master">Master</button>
+        <button type="button" class="role-tab is-active" data-perm-role="user">Usuário</button>
       </div>
-      <div class="permissions-group">
-        <h3 class="permissions-group__title">Configurações</h3>
-        <div id="permSettingsList" class="permissions-grid"></div>
+
+      <div id="permPanel-master" hidden>
+        <p class="hint">O Master tem acesso completo a todos os menus e a todas as seções de Configurações — isto não pode ser alterado.</p>
+        <div class="permissions-group">
+          <h3 class="permissions-group__title">Menus</h3>
+          <div id="permMenusListMaster" class="permissions-grid"></div>
+        </div>
+        <div class="permissions-group">
+          <h3 class="permissions-group__title">Configurações</h3>
+          <div id="permSettingsListMaster" class="permissions-grid"></div>
+        </div>
       </div>
-      <button type="button" class="btn btn--primary btn--block" id="btnSavePermissions">Salvar permissões</button>
-      <p class="save-hint" id="permissionsSaveHint" hidden>Permissões salvas ✓</p>
+
+      <div id="permPanel-user">
+        <p class="hint">Escolha quais menus e seções de Configurações os usuários comuns podem ver.</p>
+        <div class="permissions-group">
+          <h3 class="permissions-group__title">Menus</h3>
+          <div id="permMenusList" class="permissions-grid"></div>
+        </div>
+        <div class="permissions-group">
+          <h3 class="permissions-group__title">Configurações</h3>
+          <div id="permSettingsList" class="permissions-grid"></div>
+        </div>
+        <button type="button" class="btn btn--primary btn--block" id="btnSavePermissions">Salvar permissões</button>
+        <p class="save-hint" id="permissionsSaveHint" hidden>Permissões salvas ✓</p>
+      </div>
     </div>
   </section>
 
@@ -799,6 +820,33 @@
     <div class="btn-group">
       <button class="btn btn--ghost btn--block" data-close-assign-modal>Cancelar</button>
       <button class="btn btn--primary btn--block" id="assignNameConfirm">Confirmar entrega</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Editar usuário (Master) ===== -->
+<div class="modal" id="editUserModal" hidden>
+  <div class="modal__backdrop" data-close-edit-user-modal></div>
+  <div class="modal__sheet modal__sheet--center">
+    <h2>Editar usuário</h2>
+    <label class="field">
+      <span>Nome</span>
+      <input type="text" id="editUserName">
+    </label>
+    <label class="field">
+      <span>E-mail</span>
+      <input type="email" id="editUserEmail">
+    </label>
+    <label class="field">
+      <span>Papel</span>
+      <select id="editUserRole">
+        <option value="user">Usuário</option>
+        <option value="master">Master</option>
+      </select>
+    </label>
+    <div class="btn-group">
+      <button class="btn btn--ghost btn--block" data-close-edit-user-modal>Cancelar</button>
+      <button class="btn btn--primary btn--block" id="editUserConfirm">Salvar alterações</button>
     </div>
   </div>
 </div>

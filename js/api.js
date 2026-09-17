@@ -174,6 +174,18 @@ const Api = {
     if (!res.ok) throw new Error('error');
   },
 
+  async updateUser(id, { name, email, role }) {
+    const res = await this.request(`/users/${id}`, { method: 'PATCH', body: JSON.stringify({ name, email, role }) });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || 'error');
+    return body.user;
+  },
+
+  async deleteUser(id) {
+    const res = await this.request(`/users/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('error');
+  },
+
   async resetUserPassword(id, newPassword) {
     const res = await this.request(`/users/${id}/password`, {
       method: 'PATCH',

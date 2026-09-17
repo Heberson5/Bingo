@@ -550,6 +550,28 @@ h1, h2, h3, p { margin: 0; }
 .permissions-group { margin-bottom: 14px; }
 .permissions-group__title { font-size: 13px; font-weight: 700; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .03em; margin: 0 0 10px; }
 .permissions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 14px; }
+.permissions-grid .field--check input:disabled { opacity: .6; cursor: not-allowed; }
+.permissions-grid .field--check input:disabled ~ span { color: var(--color-text-dim); }
+
+.role-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.role-tab {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text-dim);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.role-tab.is-active {
+  background: linear-gradient(160deg, var(--color-primary-light), var(--color-primary) 55%, var(--color-primary-dark));
+  border-color: transparent;
+  color: var(--color-text);
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 6px 16px -4px var(--glow-primary);
+}
 .field-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .field-row .field { flex: 1 1 140px; min-width: 0; }
 .hint { color: var(--color-text-dim); font-size: 13px; }
