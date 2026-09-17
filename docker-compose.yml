@@ -1,7 +1,43 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bingo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bingo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: bingo
+    volumes:
+      - bingo-postgres-data:/var/lib/postgresql/data
+
+  api:
+    build: ./api
+    container_name: bingo-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://bingo:${POSTGRES_PASSWORD}@postgres:5432/bingo?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      SEED_MASTER_EMAIL: ${SEED_MASTER_EMAIL}
+      SEED_MASTER_PASSWORD: ${SEED_MASTER_PASSWORD}
+      SEED_MASTER_FORCE_RESET: ${SEED_MASTER_FORCE_RESET:-false}
+      PORT: 4000
+    depends_on:
+      - postgres
+
   bingo:
     build: .
     container_name: bingo
     restart: unless-stopped
     ports:
       - "8082:80"
+      - "80:80"
+    volumes:
+      # Onde o Certbot grava o desafio ACME (ver nginx.conf) para
+      # emitir/renovar o certificado de bingo.sauberlich.com.br.
+      - ./certbot-webroot:/var/www/certbot:ro
+    depends_on:
+      - api
+
+volumes:
+  bingo-postgres-data:

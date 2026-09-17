@@ -1,16 +1,11 @@
 /* ===================================================================
    BINGO — camada de estado e regras do jogo
-   Tudo é persistido em localStorage. Não há backend nem login.
+   Persistido via API (js/api.js), por usuário logado. As 4 "gavetas"
+   abaixo (config/game/cards/history) são as mesmas de quando tudo
+   vivia só no localStorage — só troca onde ficam guardadas.
 =================================================================== */
 
 const LETTERS = ['B', 'I', 'N', 'G', 'O'];
-
-const STORAGE_KEYS = {
-  config: 'bingo_config_v1',
-  game: 'bingo_game_v1',
-  cards: 'bingo_cards_v1',
-  history: 'bingo_history_v1',
-};
 
 const DEFAULT_CONFIG = {
   min: 1,
@@ -43,39 +38,44 @@ const DEFAULT_CONFIG = {
   },
 };
 
-function loadJSON(key, fallback) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return structuredClone(fallback);
-    return { ...structuredClone(fallback), ...JSON.parse(raw) };
-  } catch (e) {
-    return structuredClone(fallback);
-  }
-}
+const DEFAULT_GAME = { id: 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [], revealedCount: 0 };
 
-function loadArray(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function save(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+function mergeWithDefault(fallback, value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return structuredClone(fallback);
+  return { ...structuredClone(fallback), ...value };
 }
 
 const Store = {
-  config: loadJSON(STORAGE_KEYS.config, DEFAULT_CONFIG),
-  game: loadJSON(STORAGE_KEYS.game, { id: 1, drawnNumbers: [], firstNumber: null, startedAt: null, closedCriteria: {}, prizes: [], revealedCount: 0 }),
-  cards: loadArray(STORAGE_KEYS.cards),
-  history: loadArray(STORAGE_KEYS.history),
+  // Populados de verdade só depois do login, por hydrate() — até lá
+  // ficam nos valores padrão, então nada quebra se algo ler Store.x
+  // cedo demais.
+  config: structuredClone(DEFAULT_CONFIG),
+  game: structuredClone(DEFAULT_GAME),
+  cards: [],
+  history: [],
 
-  saveConfig() { save(STORAGE_KEYS.config, this.config); },
-  saveGame() { save(STORAGE_KEYS.game, this.game); },
-  saveCards() { save(STORAGE_KEYS.cards, this.cards); },
-  saveHistory() { save(STORAGE_KEYS.history, this.history); },
+  saveConfig() { Api.saveState('config', this.config); },
+  saveGame() { Api.saveState('game', this.game); },
+  saveCards() { Api.saveState('cards', this.cards); },
+  saveHistory() { Api.saveState('history', this.history); },
+
+  /**
+   * Busca as 4 gavetas do usuário logado (ou, se o Master estiver
+   * observando outro usuário, as dele — ver Session.isObserving() em
+   * js/api.js) e substitui o conteúdo atual por elas.
+   */
+  async hydrate() {
+    const [config, game, cards, history] = await Promise.all([
+      Api.fetchState('config'),
+      Api.fetchState('game'),
+      Api.fetchState('cards'),
+      Api.fetchState('history'),
+    ]);
+    this.config = mergeWithDefault(DEFAULT_CONFIG, config);
+    this.game = mergeWithDefault(DEFAULT_GAME, game);
+    this.cards = Array.isArray(cards) ? cards : [];
+    this.history = Array.isArray(history) ? history : [];
+  },
 };
 
 /* ---------------- Column ranges (B I N G O) ---------------- */

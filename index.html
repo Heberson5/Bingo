@@ -108,10 +108,69 @@
     <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="5,13 10,18 19,7"></polyline>
     </symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3" width="10" height="18" rx="1.5"></rect>
+      <line x1="10" y1="12" x2="21" y2="12"></line>
+      <polyline points="16,8 21,12 16,16"></polyline>
+    </symbol>
+    <symbol id="icon-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+      <polyline points="3,7 12,13 21,7"></polyline>
+    </symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="11" width="14" height="10" rx="2"></rect>
+      <path d="M8 11V7a4 4 0 018 0v4"></path>
+    </symbol>
   </defs>
 </svg>
 
-<div class="app-shell">
+<!-- ===== Tela de login (cobre tudo ate autenticar; ver js/api.js e o
+     final de js/ui.js) ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-screen__backdrop" aria-hidden="true">
+    <div class="login-blob login-blob--1"></div>
+    <div class="login-blob login-blob--2"></div>
+    <div class="login-blob login-blob--3"></div>
+  </div>
+
+  <div class="login-card" id="loginCard">
+    <div class="draw-ball login-card__ball" aria-hidden="true">
+      <span class="draw-ball__letter">B</span>
+      <span class="draw-ball__number">75</span>
+    </div>
+    <h1 class="login-card__title">Bingo</h1>
+    <p class="login-card__subtitle">Entre para continuar</p>
+
+    <form id="loginForm" class="login-form">
+      <label class="field">
+        <span><svg class="icon icon--sm icon--inline" aria-hidden="true"><use href="#icon-mail"></use></svg>E-mail</span>
+        <input type="email" id="loginEmail" autocomplete="username" required placeholder="voce@exemplo.com">
+      </label>
+      <label class="field">
+        <span><svg class="icon icon--sm icon--inline" aria-hidden="true"><use href="#icon-lock"></use></svg>Senha</span>
+        <input type="password" id="loginPassword" autocomplete="current-password" required placeholder="••••••••">
+      </label>
+      <button type="submit" class="btn btn--primary btn--block btn--xl" id="loginSubmit">Entrar</button>
+      <p class="login-form__error" id="loginError" hidden></p>
+    </form>
+
+    <form id="forceChangeForm" class="login-form" hidden>
+      <p class="hint">Essa é uma senha provisória. Defina uma nova senha para continuar.</p>
+      <label class="field">
+        <span>Nova senha</span>
+        <input type="password" id="forceNewPassword" autocomplete="new-password" required minlength="6" placeholder="Mínimo 6 caracteres">
+      </label>
+      <label class="field">
+        <span>Confirmar nova senha</span>
+        <input type="password" id="forceNewPassword2" autocomplete="new-password" required minlength="6">
+      </label>
+      <button type="submit" class="btn btn--primary btn--block btn--xl">Definir senha e entrar</button>
+      <p class="login-form__error" id="forceChangeError" hidden></p>
+    </form>
+  </div>
+</div>
+
+<div class="app-shell" id="appShell" hidden>
 
 <nav class="side-nav" id="sideNav">
   <button class="side-nav__toggle" id="sideNavToggle" aria-label="Recolher menu">‹</button>
@@ -145,12 +204,18 @@
       <span class="app-header__title">Bingo</span>
     </div>
     <div class="app-header__actions">
+      <select class="master-filter" id="masterUserFilter" hidden aria-label="Visualizar dados de"></select>
       <button class="app-header__icon-btn" id="btnToggleSuspense" title="Suspense: segurar a revelação da bola no telão até tocar nela" aria-label="Ativar/desativar suspense"><svg class="icon" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
       <a class="app-header__icon-btn" id="btnOpenDisplay" href="display.html" target="_blank" rel="noopener" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio"><svg class="icon" aria-hidden="true"><use href="#icon-monitor"></use></svg></a>
       <span class="app-header__game" id="gameLabel">Jogo #1</span>
     </div>
   </div>
 </header>
+
+<div class="observing-banner" id="observingBanner" hidden>
+  <svg class="icon icon--sm icon--inline" aria-hidden="true"><use href="#icon-eye"></use></svg>
+  Visualizando como <strong id="observingUserEmail"></strong> — somente leitura
+</div>
 
 <main class="app-main">
 
@@ -382,6 +447,29 @@
 
   <!-- ===================== CONFIGURAÇÕES ===================== -->
   <section class="view" id="view-config" data-view="config" hidden>
+    <div class="card">
+      <div class="card__header"><h2>Conta</h2></div>
+      <p class="hint">Você está logado como <strong id="accountEmail"></strong><span id="accountRoleBadge"></span>.</p>
+      <button type="button" class="btn btn--ghost btn--block" id="btnLogout"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-logout"></use></svg>Sair</button>
+    </div>
+
+    <div class="card" id="masterUsersCard" hidden>
+      <div class="card__header"><h2>Usuários (Master)</h2></div>
+      <p class="hint">Crie um login para cada operador. Cada um só vê o próprio histórico; use o filtro no topo da tela para visualizar o de qualquer um deles.</p>
+      <div class="field-row">
+        <label class="field" style="flex:1;">
+          <span>E-mail do novo usuário</span>
+          <input type="email" id="newUserEmail" placeholder="nome@exemplo.com">
+        </label>
+        <label class="field" style="flex:1;">
+          <span>Senha provisória</span>
+          <input type="text" id="newUserPassword" placeholder="Mínimo 6 caracteres">
+        </label>
+      </div>
+      <button type="button" class="btn btn--primary btn--block" id="btnCreateUser">Criar usuário</button>
+      <div id="usersList" class="cards-summary"></div>
+    </div>
+
     <div class="card">
       <div class="card__header"><h2>Aplicativo</h2></div>
       <p class="hint">Instale o Bingo como aplicativo, no celular ou no computador, para abrir direto da tela inicial sem precisar do navegador.</p>
@@ -637,6 +725,7 @@
 <div id="printArea"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="js/api.js"></script>
 <script src="js/state.js"></script>
 <script src="js/ocr.js"></script>
 <script src="js/ui.js"></script>

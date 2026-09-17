@@ -1,0 +1,15 @@
+# Segredos reais de ambiente — nunca committar (ver .env.example para
+# a lista do que precisa existir no .env de verdade, só na VPS).
+.env
+.env.*
+!.env.example
+
+# Dependências instaladas — reinstaladas via package.json/lock em cada
+# build da imagem da API.
+api/node_modules/
+
+# Pasta usada pelo Certbot para o desafio ACME (ver nginx.conf) — fica
+# vazia no repositório, só recebe arquivos temporários em tempo de
+# execução na VPS.
+certbot-webroot/*
+!certbot-webroot/.gitkeep

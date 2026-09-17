@@ -1636,6 +1636,7 @@ async function populateCameraOptions() {
 
 function renderConfigForm() {
   const cfg = Store.config;
+  renderAccountSection();
   renderPaletteSwatches();
   $('#brandName').value = (cfg.branding && cfg.branding.appName) || '';
   renderBrandFields();
@@ -1715,13 +1716,231 @@ $('#formConfig').addEventListener('submit', (e) => {
 });
 
 /* ================================================================
+   CONTA e PAINEL DO MASTER
+================================================================ */
+
+function renderAccountSection() {
+  $('#accountEmail').textContent = Session.user ? Session.user.email : '';
+  $('#accountRoleBadge').innerHTML = Session.isMaster() ? ' <span class="badge">Master</span>' : '';
+  $('#masterUsersCard').hidden = !Session.isMaster();
+  if (Session.isMaster()) refreshUsersList();
+}
+
+let cachedUsers = [];
+
+async function refreshUsersList() {
+  cachedUsers = await Api.listUsers();
+  renderUsersList();
+  renderMasterHeaderFilter();
+}
+
+function renderUsersList() {
+  const wrap = $('#usersList');
+  if (!wrap) return;
+  if (cachedUsers.length === 0) {
+    wrap.innerHTML = '<span class="empty-hint">Nenhum usuário cadastrado ainda.</span>';
+    return;
+  }
+  wrap.innerHTML = cachedUsers.map((u) => `
+    <div class="card-item">
+      <div class="card-item__main">
+        <div>
+          <div class="card-item__name">${escapeHtml(u.email)}${u.role === 'master' ? ' <span class="badge">Master</span>' : ''}</div>
+          <div class="card-item__meta">${u.active ? 'Ativo' : 'Inativo'}${u.mustChangePassword ? ' • aguardando troca de senha' : ''}</div>
+        </div>
+      </div>
+      ${u.role !== 'master' ? `
+        <div class="card-item__actions">
+          <button type="button" class="btn btn--ghost btn--small" data-reset-password="${u.id}">Redefinir senha</button>
+          <button type="button" class="btn btn--${u.active ? 'danger' : 'secondary'} btn--small" data-toggle-active="${u.id}" data-next-active="${!u.active}">${u.active ? 'Desativar' : 'Reativar'}</button>
+        </div>` : ''}
+    </div>`).join('');
+
+  $$('[data-reset-password]', wrap).forEach((btn) => btn.addEventListener('click', async () => {
+    const pw = prompt('Nova senha provisória para este usuário (mínimo 6 caracteres):');
+    if (!pw) return;
+    if (pw.length < 6) { showToast('Senha muito curta.'); return; }
+    try {
+      await Api.resetUserPassword(btn.dataset.resetPassword, pw);
+      showToast('Senha redefinida — o usuário vai precisar trocá-la no próximo login.');
+      refreshUsersList();
+    } catch (e) {
+      showToast('Falha ao redefinir a senha.');
+    }
+  }));
+  $$('[data-toggle-active]', wrap).forEach((btn) => btn.addEventListener('click', () => {
+    const next = btn.dataset.nextActive === 'true';
+    openConfirm(
+      next ? 'Reativar usuário?' : 'Desativar usuário?',
+      next ? 'O usuário volta a poder fazer login normalmente.' : 'O usuário não vai conseguir mais fazer login. Os dados dele continuam salvos.',
+      async () => {
+        try {
+          await Api.setUserActive(btn.dataset.toggleActive, next);
+          showToast(next ? 'Usuário reativado.' : 'Usuário desativado.');
+          refreshUsersList();
+        } catch (e) {
+          showToast('Falha ao atualizar o usuário.');
+        }
+      }
+    );
+  }));
+}
+
+$('#btnCreateUser').addEventListener('click', async () => {
+  const email = $('#newUserEmail').value.trim();
+  const password = $('#newUserPassword').value;
+  if (!email || !password || password.length < 6) {
+    showToast('Informe um e-mail e uma senha de pelo menos 6 caracteres.');
+    return;
+  }
+  try {
+    await Api.createUser(email, password);
+    $('#newUserEmail').value = '';
+    $('#newUserPassword').value = '';
+    showToast('Usuário criado.');
+    refreshUsersList();
+  } catch (e) {
+    showToast(e.message === 'email_taken' ? 'Esse e-mail já está cadastrado.' : 'Falha ao criar usuário.');
+  }
+});
+
+$('#btnLogout').addEventListener('click', () => {
+  Api.logout();
+  window.location.reload();
+});
+
+/**
+ * Filtro no topo — só existe para o Master. Trocar a seleção troca de
+ * quem são os dados exibidos (com o próprio Master sempre disponível
+ * como "(você)"). Ver Session.isObserving() em js/api.js para o que
+ * isso implica em permissão de escrita.
+ */
+function renderMasterHeaderFilter() {
+  const select = $('#masterUserFilter');
+  if (!Session.isMaster()) { select.hidden = true; return; }
+  select.hidden = false;
+  select.innerHTML = cachedUsers.map((u) => `
+    <option value="${u.id}">${escapeHtml(u.email)}${u.id === Session.user.id ? ' (você)' : ''}${u.active ? '' : ' — inativo'}</option>
+  `).join('');
+  select.value = Session.viewingUserId || Session.user.id;
+}
+
+$('#masterUserFilter').addEventListener('change', async (e) => {
+  await switchViewedUser(e.target.value);
+});
+
+async function switchViewedUser(userId) {
+  Session.viewingUserId = userId;
+  await Store.hydrate();
+  applyTheme(Store.config.theme);
+  applyBranding();
+  applyDisplaySettings(Store.config);
+
+  const observing = Session.isObserving();
+  document.body.classList.toggle('is-observing', observing);
+  $('#observingBanner').hidden = !observing;
+  if (observing) {
+    const u = cachedUsers.find((x) => x.id === userId);
+    $('#observingUserEmail').textContent = u ? u.email : '';
+  }
+
+  const activeEl = $$('.view').find((v) => !v.hidden);
+  switchView(activeEl ? activeEl.dataset.view : 'sorteio');
+}
+
+/* ================================================================
+   LOGIN
+================================================================ */
+
+function showLoginStep(step) {
+  $('#loginForm').hidden = step !== 'login';
+  $('#forceChangeForm').hidden = step !== 'forceChange';
+}
+
+function shakeLoginCard() {
+  const card = $('#loginCard');
+  card.classList.remove('is-shaking');
+  void card.offsetWidth;
+  card.classList.add('is-shaking');
+}
+
+async function bootApp() {
+  await Store.hydrate();
+  applyTheme(Store.config.theme);
+  applyBranding();
+  applyDisplaySettings(Store.config);
+  document.body.classList.remove('is-observing');
+  $('#observingBanner').hidden = true;
+  if (Session.isMaster()) await refreshUsersList();
+  else $('#masterUserFilter').hidden = true;
+  switchView('sorteio');
+  $('#loginScreen').hidden = true;
+  $('#appShell').hidden = false;
+}
+
+$('#loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = $('#loginEmail').value.trim();
+  const password = $('#loginPassword').value;
+  const btn = $('#loginSubmit');
+  const errorEl = $('#loginError');
+  errorEl.hidden = true;
+  btn.disabled = true;
+  try {
+    const user = await Api.login(email, password);
+    if (user.mustChangePassword) {
+      showLoginStep('forceChange');
+    } else {
+      await bootApp();
+    }
+  } catch (err) {
+    errorEl.textContent = 'E-mail ou senha incorretos.';
+    errorEl.hidden = false;
+    shakeLoginCard();
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$('#forceChangeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const p1 = $('#forceNewPassword').value;
+  const p2 = $('#forceNewPassword2').value;
+  const errorEl = $('#forceChangeError');
+  errorEl.hidden = true;
+  if (p1.length < 6) {
+    errorEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+    errorEl.hidden = false;
+    return;
+  }
+  if (p1 !== p2) {
+    errorEl.textContent = 'As senhas não conferem.';
+    errorEl.hidden = false;
+    return;
+  }
+  try {
+    await Api.changePassword(null, p1);
+    Session.user.mustChangePassword = false;
+    await bootApp();
+  } catch (err) {
+    errorEl.textContent = 'Não foi possível definir a nova senha. Tente novamente.';
+    errorEl.hidden = false;
+  }
+});
+
+/* ================================================================
    INIT
 ================================================================ */
 
-applyTheme(Store.config.theme);
-applyBranding();
-applyDisplaySettings(Store.config);
-switchView('sorteio');
+(async function initAuthFlow() {
+  const user = await Api.trySilentLogin();
+  if (user) {
+    if (user.mustChangePassword) showLoginStep('forceChange');
+    else await bootApp();
+  }
+  // Sem sessão salva (ou expirada) — a tela de login já é o que
+  // aparece por padrão no HTML, então não há mais nada a fazer aqui.
+})();
 
 /**
  * Registers the service worker that makes the app installable (desktop

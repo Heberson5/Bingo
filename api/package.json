@@ -1,0 +1,23 @@
+{
+  "name": "bingo-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend do Bingo: login, contas por usuario e persistencia do estado do jogo (antes so em localStorage).",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^5.22.0"
+  }
+}

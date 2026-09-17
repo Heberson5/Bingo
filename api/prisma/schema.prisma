@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  master
+}
+
+/// Uma conta de login. Cada usuario comum enxerga so os proprios dados
+/// (via UserState); o "master" pode ler o estado de qualquer usuario
+/// (ver regra no backend), mas nunca escrever no lugar de outro.
+model User {
+  id                 String      @id @default(uuid())
+  email              String      @unique
+  passwordHash       String
+  role               Role        @default(user)
+  /// true logo apos o Master criar a conta ou redefinir a senha — forca
+  /// a troca no primeiro login, para a senha provisoria nao "ficar pra
+  /// sempre".
+  mustChangePassword Boolean     @default(false)
+  /// desativar em vez de apagar preserva o historico do usuario.
+  active             Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  states             UserState[]
+
+  @@map("users")
+}
+
+/// Um documento JSON por (usuario, chave). As chaves usadas pelo
+/// frontend sao exatamente as 4 que ja existiam no localStorage antes
+/// desta migracao: config, game, cards, history — ver js/state.js.
+/// Guardar como JSON generico (em vez de tabelas relacionais por
+/// entidade) evita ter que reescrever as regras do jogo, que ja vivem
+/// inteiras no frontend.
+model UserState {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@map("user_states")
+}

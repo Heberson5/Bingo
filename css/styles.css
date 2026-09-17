@@ -796,6 +796,138 @@ h1, h2, h3, p { margin: 0; }
   box-shadow: var(--elevation-2);
 }
 
+/* ---------- Tela de login ----------
+   Cobre a tela inteira até autenticar (ver #appShell[hidden] em
+   index.html). Fundo animado com "blobs" nas cores do tema + card de
+   vidro flutuante — não depende do tema salvo do usuário porque ainda
+   não sabemos quem é ele nesse ponto. */
+.login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0a0d1a;
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+.login-screen[hidden] { display: none; }
+
+.login-screen__backdrop { position: absolute; inset: 0; overflow: hidden; }
+.login-blob {
+  position: absolute;
+  width: 46vmax;
+  height: 46vmax;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: .55;
+  animation: login-drift 22s ease-in-out infinite;
+}
+.login-blob--1 { background: radial-gradient(circle, #7c3aed, transparent 70%); top: -12%; left: -12%; }
+.login-blob--2 { background: radial-gradient(circle, #2563eb, transparent 70%); bottom: -16%; right: -10%; animation-duration: 26s; animation-delay: -6s; }
+.login-blob--3 { background: radial-gradient(circle, #db2777, transparent 70%); top: 28%; right: 15%; animation-duration: 30s; animation-delay: -12s; }
+@keyframes login-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(6%, 8%) scale(1.15); }
+  66% { transform: translate(-8%, 4%) scale(.92); }
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 380px;
+  padding: 36px 28px 28px;
+  border-radius: 28px;
+  background: linear-gradient(165deg, rgba(35,41,72,.75), rgba(15,18,32,.85));
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, var(--elevation-3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  animation: login-card-in .5s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes login-card-in {
+  from { opacity: 0; transform: translateY(24px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.login-card.is-shaking { animation: login-shake .4s ease; }
+@keyframes login-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(4px); }
+}
+
+.login-card__ball { width: 92px; height: 92px; margin-bottom: 8px; animation: login-float 3.5s ease-in-out infinite; }
+@keyframes login-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.login-card__title { font-size: 26px; font-weight: 800; }
+.login-card__subtitle { color: var(--color-text-dim); font-size: 14px; margin-bottom: 16px; }
+
+.login-form { width: 100%; display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.login-form[hidden] { display: none; }
+.login-form__error { color: var(--color-danger); font-size: 13px; text-align: center; }
+.login-form__error[hidden] { display: none; }
+
+/* ---------- Filtro do Master e aviso de modo leitura ---------- */
+.master-filter {
+  background: rgba(255,255,255,.16);
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 10px;
+  border-radius: 999px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 3px 8px rgba(0,0,0,.25);
+  max-width: 40vw;
+}
+.master-filter[hidden] { display: none; }
+
+.observing-banner {
+  max-width: var(--content-width);
+  margin: 12px auto 0;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: linear-gradient(150deg, var(--color-accent), var(--color-accent-dark));
+  color: var(--color-on-accent);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 6px 16px -4px var(--glow-accent);
+}
+.observing-banner[hidden] { display: none; }
+
+/* Enquanto o Master observa outro usuário, a edição fica bloqueada na
+   tela toda (o backend já rejeita a escrita de qualquer forma — isto
+   aqui é só a pista visual disso, não a garantia de segurança). */
+body.is-observing .app-main .btn,
+body.is-observing .app-main input,
+body.is-observing .app-main select,
+body.is-observing .board-num {
+  pointer-events: none;
+  opacity: .6;
+}
+/* Gerenciar usuários (e sair) não é "editar o jogo do usuário
+   observado" — o Master continua podendo fazer isso normalmente
+   mesmo enquanto observa outra pessoa. */
+body.is-observing #masterUsersCard .btn,
+body.is-observing #masterUsersCard input,
+body.is-observing #btnLogout {
+  pointer-events: auto;
+  opacity: 1;
+}
+
 /* ---------- Larger screens ---------- */
 @media (min-width: 720px) {
   :root { --content-width: 760px; }
