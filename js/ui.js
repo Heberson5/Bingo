@@ -1716,6 +1716,136 @@ $('#formConfig').addEventListener('submit', (e) => {
 });
 
 /* ================================================================
+   PERMISSÕES (menus e seções de Configurações por papel)
+
+   Um único conjunto global (não por usuário): tudo que não é Master
+   enxerga exatamente o mesmo. "Configurações" fica de fora da lista
+   de menus de propósito — mesmo restrito, o usuário precisa sempre
+   conseguir chegar em "Conta" pra deslogar (ver firstAllowedMenu).
+================================================================ */
+
+const DEFAULT_PERMISSIONS = {
+  menus: { sorteio: true, cartelas: true, historico: true, dashboard: true },
+  settings: {
+    tema: true,
+    intervaloSorteio: true,
+    exibicao: true,
+    criteriosVitoria: true,
+    cartela: true,
+    cameraComputador: false,
+    aparenciaPainelNumeros: true,
+    aparenciaBolaSorteada: false,
+    aplicativo: false,
+    identidadeVisual: false,
+  },
+};
+
+const PERMISSION_MENU_LABELS = {
+  sorteio: 'Sorteio',
+  cartelas: 'Cartelas',
+  historico: 'Histórico',
+  dashboard: 'Dashboard',
+};
+
+const PERMISSION_SETTING_LABELS = {
+  tema: 'Tema',
+  intervaloSorteio: 'Intervalo do sorteio',
+  exibicao: 'Exibição',
+  criteriosVitoria: 'Critérios de vitória',
+  cartela: 'Cartela',
+  cameraComputador: 'Câmera (computador)',
+  aparenciaPainelNumeros: 'Aparência do painel de números',
+  aparenciaBolaSorteada: 'Aparência da bola sorteada',
+  aplicativo: 'Aplicativo (instalar)',
+  identidadeVisual: 'Identidade visual',
+};
+
+// Liga cada chave de "settings" ao elemento da tela de Configurações
+// que ela controla, pra applyPermissions() poder escondê-lo.
+const SETTINGS_SECTION_ELEMENT_IDS = {
+  tema: 'settingsCardTema',
+  identidadeVisual: 'settingsCardIdentidadeVisual',
+  aplicativo: 'settingsCardAplicativo',
+  intervaloSorteio: 'settingsSection-intervaloSorteio',
+  exibicao: 'settingsSection-exibicao',
+  criteriosVitoria: 'settingsSection-criteriosVitoria',
+  cartela: 'settingsSection-cartela',
+  cameraComputador: 'cameraSelectWrap',
+  aparenciaPainelNumeros: 'settingsSection-aparenciaPainelNumeros',
+  aparenciaBolaSorteada: 'settingsSection-aparenciaBolaSorteada',
+};
+
+let Permissions = structuredClone(DEFAULT_PERMISSIONS);
+
+async function loadPermissions() {
+  const value = await Api.fetchPermissions();
+  Permissions = value || structuredClone(DEFAULT_PERMISSIONS);
+  applyPermissions();
+}
+
+function firstAllowedMenu() {
+  const order = ['sorteio', 'cartelas', 'historico', 'dashboard'];
+  if (Session.isMaster()) return order[0];
+  return order.find((key) => Permissions.menus[key]) || 'config';
+}
+
+/** O Master nunca é restringido — isto só afeta quem tem role "user". */
+function applyPermissions() {
+  const isMaster = Session.isMaster();
+  $$('.side-nav__item, .bottom-nav__item').forEach((btn) => {
+    if (btn.dataset.nav === 'config') return; // sempre visível — ver comentário acima
+    const allowed = isMaster || Permissions.menus[btn.dataset.nav];
+    btn.classList.toggle('is-perm-hidden', !allowed);
+  });
+  Object.entries(SETTINGS_SECTION_ELEMENT_IDS).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const allowed = isMaster || Permissions.settings[key];
+    el.classList.toggle('is-perm-hidden', !allowed);
+  });
+
+  if (!isMaster) {
+    const activeEl = $$('.view').find((v) => !v.hidden);
+    const activeName = activeEl ? activeEl.dataset.view : null;
+    if (activeName && activeName !== 'config' && !Permissions.menus[activeName]) {
+      switchView(firstAllowedMenu());
+    }
+  }
+}
+
+function renderPermissionsPanel() {
+  const menusWrap = $('#permMenusList');
+  const settingsWrap = $('#permSettingsList');
+  if (!menusWrap || !settingsWrap) return;
+  menusWrap.innerHTML = Object.entries(PERMISSION_MENU_LABELS).map(([key, label]) => `
+    <label class="field field--check">
+      <input type="checkbox" data-perm-menu="${key}" ${Permissions.menus[key] ? 'checked' : ''}>
+      <span>${escapeHtml(label)}</span>
+    </label>`).join('');
+  settingsWrap.innerHTML = Object.entries(PERMISSION_SETTING_LABELS).map(([key, label]) => `
+    <label class="field field--check">
+      <input type="checkbox" data-perm-setting="${key}" ${Permissions.settings[key] ? 'checked' : ''}>
+      <span>${escapeHtml(label)}</span>
+    </label>`).join('');
+  $('#permissionsSaveHint').hidden = true;
+}
+
+$('#btnSavePermissions').addEventListener('click', async () => {
+  const next = { menus: {}, settings: {} };
+  $$('[data-perm-menu]', $('#permMenusList')).forEach((el) => { next.menus[el.dataset.permMenu] = el.checked; });
+  $$('[data-perm-setting]', $('#permSettingsList')).forEach((el) => { next.settings[el.dataset.permSetting] = el.checked; });
+  try {
+    await Api.savePermissions(next);
+    Permissions = next;
+    applyPermissions();
+    $('#permissionsSaveHint').hidden = false;
+    showToast('Permissões salvas.');
+  } catch (e) {
+    showToast('Falha ao salvar as permissões.');
+  }
+});
+
+/* ================================================================
    CONTA e PAINEL DO MASTER
 ================================================================ */
 
@@ -1723,7 +1853,11 @@ function renderAccountSection() {
   $('#accountEmail').textContent = Session.user ? Session.user.email : '';
   $('#accountRoleBadge').innerHTML = Session.isMaster() ? ' <span class="badge">Master</span>' : '';
   $('#masterUsersCard').hidden = !Session.isMaster();
-  if (Session.isMaster()) refreshUsersList();
+  $('#masterPermissionsCard').hidden = !Session.isMaster();
+  if (Session.isMaster()) {
+    refreshUsersList();
+    renderPermissionsPanel();
+  }
 }
 
 let cachedUsers = [];
@@ -1866,6 +2000,7 @@ function shakeLoginCard() {
 
 async function bootApp() {
   await Store.hydrate();
+  await loadPermissions();
   applyTheme(Store.config.theme);
   applyBranding();
   applyDisplaySettings(Store.config);
@@ -1873,7 +2008,7 @@ async function bootApp() {
   $('#observingBanner').hidden = true;
   if (Session.isMaster()) await refreshUsersList();
   else $('#masterUserFilter').hidden = true;
-  switchView('sorteio');
+  switchView(firstAllowedMenu());
   $('#loginScreen').hidden = true;
   $('#appShell').hidden = false;
 }

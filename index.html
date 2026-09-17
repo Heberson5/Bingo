@@ -142,13 +142,15 @@
     <p class="login-card__subtitle">Entre para continuar</p>
 
     <form id="loginForm" class="login-form">
-      <label class="field">
-        <span><svg class="icon icon--sm icon--inline" aria-hidden="true"><use href="#icon-mail"></use></svg>E-mail</span>
-        <input type="email" id="loginEmail" autocomplete="username" required placeholder="voce@exemplo.com">
+      <label class="field login-field">
+        <span class="sr-only">E-mail</span>
+        <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-mail"></use></svg>
+        <input type="email" id="loginEmail" autocomplete="username" required placeholder="E-mail">
       </label>
-      <label class="field">
-        <span><svg class="icon icon--sm icon--inline" aria-hidden="true"><use href="#icon-lock"></use></svg>Senha</span>
-        <input type="password" id="loginPassword" autocomplete="current-password" required placeholder="••••••••">
+      <label class="field login-field">
+        <span class="sr-only">Senha</span>
+        <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
+        <input type="password" id="loginPassword" autocomplete="current-password" required placeholder="Senha">
       </label>
       <button type="submit" class="btn btn--primary btn--block btn--xl" id="loginSubmit">Entrar</button>
       <p class="login-form__error" id="loginError" hidden></p>
@@ -156,13 +158,15 @@
 
     <form id="forceChangeForm" class="login-form" hidden>
       <p class="hint">Essa é uma senha provisória. Defina uma nova senha para continuar.</p>
-      <label class="field">
-        <span>Nova senha</span>
-        <input type="password" id="forceNewPassword" autocomplete="new-password" required minlength="6" placeholder="Mínimo 6 caracteres">
+      <label class="field login-field">
+        <span class="sr-only">Nova senha</span>
+        <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
+        <input type="password" id="forceNewPassword" autocomplete="new-password" required minlength="6" placeholder="Nova senha (mínimo 6 caracteres)">
       </label>
-      <label class="field">
-        <span>Confirmar nova senha</span>
-        <input type="password" id="forceNewPassword2" autocomplete="new-password" required minlength="6">
+      <label class="field login-field">
+        <span class="sr-only">Confirmar nova senha</span>
+        <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
+        <input type="password" id="forceNewPassword2" autocomplete="new-password" required minlength="6" placeholder="Confirmar nova senha">
       </label>
       <button type="submit" class="btn btn--primary btn--block btn--xl">Definir senha e entrar</button>
       <p class="login-form__error" id="forceChangeError" hidden></p>
@@ -470,14 +474,29 @@
       <div id="usersList" class="cards-summary"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="masterPermissionsCard" hidden>
+      <div class="card__header"><h2>Permissões (Master)</h2></div>
+      <p class="hint">Escolha quais menus e seções de Configurações os usuários comuns podem ver. O Master sempre enxerga tudo, independente destas opções.</p>
+      <div class="permissions-group">
+        <h3 class="permissions-group__title">Menus</h3>
+        <div id="permMenusList" class="permissions-grid"></div>
+      </div>
+      <div class="permissions-group">
+        <h3 class="permissions-group__title">Configurações</h3>
+        <div id="permSettingsList" class="permissions-grid"></div>
+      </div>
+      <button type="button" class="btn btn--primary btn--block" id="btnSavePermissions">Salvar permissões</button>
+      <p class="save-hint" id="permissionsSaveHint" hidden>Permissões salvas ✓</p>
+    </div>
+
+    <div class="card" id="settingsCardAplicativo">
       <div class="card__header"><h2>Aplicativo</h2></div>
       <p class="hint">Instale o Bingo como aplicativo, no celular ou no computador, para abrir direto da tela inicial sem precisar do navegador.</p>
       <button type="button" class="btn btn--primary btn--block" id="btnInstallApp" hidden><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-download"></use></svg>Baixar / instalar aplicativo</button>
       <p class="hint">Se o botão acima não aparecer, seu navegador já oferece essa opção por conta própria: no Android, toque no menu ⋮ do navegador e escolha "Instalar aplicativo" ou "Adicionar à tela inicial"; no iPhone/iPad, toque em Compartilhar e depois em "Adicionar à Tela de Início"; no computador, procure o ícone de instalação (⊕) na barra de endereço.</p>
     </div>
 
-    <div class="card">
+    <div class="card" id="settingsCardIdentidadeVisual">
       <div class="card__header"><h2>Identidade visual</h2></div>
       <p class="hint">Personalize o nome e os ícones usados pelo app. Deixe em branco / clique em "Usar padrão" para manter o visual original até você trocar.</p>
       <label class="field">
@@ -487,67 +506,75 @@
       <div id="brandFields"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="settingsCardTema">
       <div class="card__header"><h2>Tema</h2></div>
       <p class="hint">Escolha a paleta de cores da plataforma. A troca é aplicada na hora, em todas as telas.</p>
       <div class="palette-swatches" id="paletteSwatches"></div>
     </div>
 
     <form class="card" id="formConfig">
-      <div class="card__header"><h2>Intervalo do sorteio</h2></div>
-      <div class="field-row">
+      <div id="settingsSection-intervaloSorteio">
+        <div class="card__header"><h2>Intervalo do sorteio</h2></div>
+        <div class="field-row">
+          <label class="field">
+            <span>Número inicial</span>
+            <input type="number" id="cfgMin" min="1" required>
+          </label>
+          <label class="field">
+            <span>Número final</span>
+            <input type="number" id="cfgMax" min="2" required>
+          </label>
+        </div>
+      </div>
+
+      <div id="settingsSection-exibicao">
+        <div class="card__header"><h2>Exibição</h2></div>
         <label class="field">
-          <span>Número inicial</span>
-          <input type="number" id="cfgMin" min="1" required>
-        </label>
-        <label class="field">
-          <span>Número final</span>
-          <input type="number" id="cfgMax" min="2" required>
+          <span>Quantidade de últimas bolas exibidas</span>
+          <input type="number" id="cfgLastCount" min="1" max="50" required>
         </label>
       </div>
 
-      <div class="card__header"><h2>Exibição</h2></div>
-      <label class="field">
-        <span>Quantidade de últimas bolas exibidas</span>
-        <input type="number" id="cfgLastCount" min="1" max="50" required>
-      </label>
+      <div id="settingsSection-criteriosVitoria">
+        <div class="card__header"><h2>Critérios de vitória</h2></div>
 
-      <div class="card__header"><h2>Critérios de vitória</h2></div>
+        <label class="field field--check">
+          <input type="checkbox" id="cfgCheia">
+          <span>Cartela Cheia</span>
+        </label>
 
-      <label class="field field--check">
-        <input type="checkbox" id="cfgCheia">
-        <span>Cartela Cheia</span>
-      </label>
+        <label class="field field--check">
+          <input type="checkbox" id="cfgQuatroPontas">
+          <span>Quatro Pontas (cantos da cartela)</span>
+        </label>
 
-      <label class="field field--check">
-        <input type="checkbox" id="cfgQuatroPontas">
-        <span>Quatro Pontas (cantos da cartela)</span>
-      </label>
+        <label class="field field--check">
+          <input type="checkbox" id="cfgQuinaPrimeiraLetra">
+          <span>Quina da primeira letra sorteada</span>
+        </label>
 
-      <label class="field field--check">
-        <input type="checkbox" id="cfgQuinaPrimeiraLetra">
-        <span>Quina da primeira letra sorteada</span>
-      </label>
+        <label class="field field--check">
+          <input type="checkbox" id="cfgQuina">
+          <span>Quina</span>
+        </label>
+        <label class="field" id="quinaTipoWrap">
+          <span>Tipo de quina válida</span>
+          <select id="cfgQuinaTipo">
+            <option value="horizontal">Horizontal (linha)</option>
+            <option value="transversal">Transversal (coluna)</option>
+            <option value="diagonal">Diagonal</option>
+            <option value="todos">Todos (qualquer uma)</option>
+          </select>
+        </label>
+      </div>
 
-      <label class="field field--check">
-        <input type="checkbox" id="cfgQuina">
-        <span>Quina</span>
-      </label>
-      <label class="field" id="quinaTipoWrap">
-        <span>Tipo de quina válida</span>
-        <select id="cfgQuinaTipo">
-          <option value="horizontal">Horizontal (linha)</option>
-          <option value="transversal">Transversal (coluna)</option>
-          <option value="diagonal">Diagonal</option>
-          <option value="todos">Todos (qualquer uma)</option>
-        </select>
-      </label>
-
-      <div class="card__header"><h2>Cartela</h2></div>
-      <label class="field field--check">
-        <input type="checkbox" id="cfgFreeCenter">
-        <span>Cartelas possuem espaço livre no centro</span>
-      </label>
+      <div id="settingsSection-cartela">
+        <div class="card__header"><h2>Cartela</h2></div>
+        <label class="field field--check">
+          <input type="checkbox" id="cfgFreeCenter">
+          <span>Cartelas possuem espaço livre no centro</span>
+        </label>
+      </div>
 
       <div class="desktop-only-field" id="cameraSelectWrap">
         <div class="card__header"><h2>Câmera (computador)</h2></div>
@@ -559,33 +586,37 @@
         </label>
       </div>
 
-      <div class="card__header"><h2>Aparência do painel de números</h2></div>
-      <label class="field">
-        <span>Tamanho do número <output id="outBoardFontSize">14px</output></span>
-        <input type="range" id="cfgBoardFontSize" min="10" max="22" step="1">
-      </label>
-      <label class="field">
-        <span>Tamanho do card <output id="outBoardCellSize">56px</output></span>
-        <input type="range" id="cfgBoardCellSize" min="36" max="90" step="2">
-      </label>
-      <label class="field field--check">
-        <input type="checkbox" id="cfgBoardBold">
-        <span>Número em negrito</span>
-      </label>
+      <div id="settingsSection-aparenciaPainelNumeros">
+        <div class="card__header"><h2>Aparência do painel de números</h2></div>
+        <label class="field">
+          <span>Tamanho do número <output id="outBoardFontSize">14px</output></span>
+          <input type="range" id="cfgBoardFontSize" min="10" max="22" step="1">
+        </label>
+        <label class="field">
+          <span>Tamanho do card <output id="outBoardCellSize">56px</output></span>
+          <input type="range" id="cfgBoardCellSize" min="36" max="90" step="2">
+        </label>
+        <label class="field field--check">
+          <input type="checkbox" id="cfgBoardBold">
+          <span>Número em negrito</span>
+        </label>
+      </div>
 
-      <div class="card__header"><h2>Aparência da bola sorteada</h2></div>
-      <label class="field">
-        <span>Tamanho da letra <output id="outBallLetterSize">22px</output></span>
-        <input type="range" id="cfgBallLetterSize" min="14" max="34" step="1">
-      </label>
-      <label class="field">
-        <span>Tamanho do número <output id="outBallNumberSize">48px</output></span>
-        <input type="range" id="cfgBallNumberSize" min="30" max="90" step="2">
-      </label>
-      <label class="field field--check">
-        <input type="checkbox" id="cfgBallBold">
-        <span>Negrito</span>
-      </label>
+      <div id="settingsSection-aparenciaBolaSorteada">
+        <div class="card__header"><h2>Aparência da bola sorteada</h2></div>
+        <label class="field">
+          <span>Tamanho da letra <output id="outBallLetterSize">22px</output></span>
+          <input type="range" id="cfgBallLetterSize" min="14" max="34" step="1">
+        </label>
+        <label class="field">
+          <span>Tamanho do número <output id="outBallNumberSize">48px</output></span>
+          <input type="range" id="cfgBallNumberSize" min="30" max="90" step="2">
+        </label>
+        <label class="field field--check">
+          <input type="checkbox" id="cfgBallBold">
+          <span>Negrito</span>
+        </label>
+      </div>
 
       <button type="submit" class="btn btn--primary btn--block">Salvar configurações</button>
       <p class="save-hint" id="configSaveHint" hidden>Configurações salvas ✓</p>

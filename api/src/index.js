@@ -4,6 +4,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const stateRoutes = require('./routes/state');
 const usersRoutes = require('./routes/users');
+const permissionsRoutes = require('./routes/permissions');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/state', stateRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/permissions', permissionsRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'not_found' }));
 

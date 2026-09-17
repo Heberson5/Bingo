@@ -49,3 +49,15 @@ model UserState {
   @@unique([userId, key])
   @@map("user_states")
 }
+
+/// Configuracao global (nao por usuario) — hoje usada so para a chave
+/// "permissions": quais menus e secoes de Configuracoes um usuario
+/// comum enxerga. Sempre o mesmo conjunto pra todo mundo que nao e
+/// master (o master sempre ve tudo, sem checar isto).
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}

@@ -177,4 +177,16 @@ const Api = {
     });
     if (!res.ok) throw new Error('error');
   },
+
+  async fetchPermissions() {
+    const res = await this.request('/permissions');
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.value;
+  },
+
+  async savePermissions(value) {
+    const res = await this.request('/permissions', { method: 'PUT', body: JSON.stringify({ value }) });
+    if (!res.ok) throw new Error('error');
+  },
 };

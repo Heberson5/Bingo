@@ -519,7 +519,7 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---------- Forms ---------- */
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--color-text-dim); }
-.field input[type="text"], .field input[type="number"], .field select {
+.field input[type="text"], .field input[type="number"], .field input[type="email"], .field input[type="password"], .field select {
   width: 100%;
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
@@ -530,7 +530,7 @@ h1, h2, h3, p { margin: 0; }
   box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
   transition: box-shadow .15s ease, border-color .15s ease;
 }
-.field input[type="text"]:focus-visible, .field input[type="number"]:focus-visible, .field select:focus-visible {
+.field input[type="text"]:focus-visible, .field input[type="number"]:focus-visible, .field input[type="email"]:focus-visible, .field input[type="password"]:focus-visible, .field select:focus-visible {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: inset 0 1px 3px rgba(0,0,0,.35), 0 0 0 3px var(--glow-primary);
@@ -542,6 +542,14 @@ h1, h2, h3, p { margin: 0; }
 .field output { font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
 
 .desktop-only-field { display: none; }
+/* Ocultação por permissão (menus e seções de Configurações para
+   usuários comuns) — precisa vencer qualquer outra regra de display,
+   inclusive a media query de .desktop-only-field, por isso !important. */
+.is-perm-hidden { display: none !important; }
+
+.permissions-group { margin-bottom: 14px; }
+.permissions-group__title { font-size: 13px; font-weight: 700; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .03em; margin: 0 0 10px; }
+.permissions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 14px; }
 .field-row { display: flex; gap: 10px; }
 .field-row .field { flex: 1; min-width: 0; }
 .hint { color: var(--color-text-dim); font-size: 13px; }
@@ -879,6 +887,54 @@ h1, h2, h3, p { margin: 0; }
 .login-form[hidden] { display: none; }
 .login-form__error { color: var(--color-danger); font-size: 13px; text-align: center; }
 .login-form__error[hidden] { display: none; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Campo de login: ícone dentro do input, mais alto e arredondado —
+   pedido explícito de visual "super moderno" para a tela de entrada,
+   diferente do .field compacto usado no resto do app. */
+.login-field { position: relative; gap: 0; }
+.login-field__icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-dim);
+  pointer-events: none;
+  transition: color .15s ease;
+  z-index: 1;
+}
+/* #loginScreen na frente eleva a especificidade de propósito: sem
+   isso, ".field input[type=email]" (classe + atributo) bate essas
+   regras mesmo vindo antes no arquivo, porque tem mais peso que
+   ".login-field input" (classe + elemento) sozinho. */
+#loginScreen .login-field input {
+  width: 100%;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  color: var(--color-text);
+  border-radius: 16px;
+  padding: 15px 16px 15px 46px;
+  font-size: 15px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,.35);
+  transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+#loginScreen .login-field input::placeholder { color: var(--color-text-dim); opacity: .7; }
+#loginScreen .login-field input:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  background: rgba(255,255,255,.08);
+  box-shadow: inset 0 1px 4px rgba(0,0,0,.35), 0 0 0 4px var(--glow-primary);
+}
+.login-field:focus-within .login-field__icon { color: var(--color-primary-light); }
 
 /* ---------- Filtro do Master e aviso de modo leitura ---------- */
 .master-filter {
