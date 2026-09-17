@@ -1856,7 +1856,8 @@ $('#btnSavePermissions').addEventListener('click', async () => {
 ================================================================ */
 
 function renderAccountSection() {
-  $('#accountEmail').textContent = Session.user ? Session.user.email : '';
+  const u = Session.user;
+  $('#accountEmail').textContent = u ? (u.name ? `${u.name} (${u.email})` : u.email) : '';
   $('#accountRoleBadge').innerHTML = Session.isMaster() ? ' <span class="badge">Master</span>' : '';
 }
 
@@ -1879,8 +1880,8 @@ function renderUsersList() {
     <div class="card-item">
       <div class="card-item__main">
         <div>
-          <div class="card-item__name">${escapeHtml(u.email)}${u.role === 'master' ? ' <span class="badge">Master</span>' : ''}</div>
-          <div class="card-item__meta">${u.active ? 'Ativo' : 'Inativo'}${u.mustChangePassword ? ' • aguardando troca de senha' : ''}</div>
+          <div class="card-item__name">${escapeHtml(u.name || u.email)}${u.role === 'master' ? ' <span class="badge">Master</span>' : ''}</div>
+          <div class="card-item__meta">${u.name ? `${escapeHtml(u.email)} • ` : ''}${u.active ? 'Ativo' : 'Inativo'}${u.mustChangePassword ? ' • aguardando troca de senha' : ''}</div>
         </div>
       </div>
       ${u.role !== 'master' ? `
@@ -1921,15 +1922,17 @@ function renderUsersList() {
 }
 
 $('#btnCreateUser').addEventListener('click', async () => {
+  const name = $('#newUserName').value.trim();
   const email = $('#newUserEmail').value.trim();
   const password = $('#newUserPassword').value;
   const role = $('#newUserRole').value;
-  if (!email || !password || password.length < 6) {
-    showToast('Informe um e-mail e uma senha de pelo menos 6 caracteres.');
+  if (!name || !email || !password || password.length < 6) {
+    showToast('Informe nome, e-mail e uma senha de pelo menos 6 caracteres.');
     return;
   }
   try {
-    await Api.createUser(email, password, role);
+    await Api.createUser(name, email, password, role);
+    $('#newUserName').value = '';
     $('#newUserEmail').value = '';
     $('#newUserPassword').value = '';
     $('#newUserRole').value = 'user';
@@ -1941,6 +1944,7 @@ $('#btnCreateUser').addEventListener('click', async () => {
 });
 
 $('#btnLogout').addEventListener('click', () => {
+  stopInactivityWatcher();
   Api.logout();
   window.location.reload();
 });
@@ -1956,7 +1960,7 @@ function renderMasterHeaderFilter() {
   if (!Session.isMaster()) { select.hidden = true; return; }
   select.hidden = false;
   select.innerHTML = cachedUsers.map((u) => `
-    <option value="${u.id}">${escapeHtml(u.email)}${u.id === Session.user.id ? ' (você)' : ''}${u.active ? '' : ' — inativo'}</option>
+    <option value="${u.id}">${escapeHtml(u.name || u.email)}${u.id === Session.user.id ? ' (você)' : ''}${u.active ? '' : ' — inativo'}</option>
   `).join('');
   select.value = Session.viewingUserId || Session.user.id;
 }
@@ -1977,7 +1981,7 @@ async function switchViewedUser(userId) {
   $('#observingBanner').hidden = !observing;
   if (observing) {
     const u = cachedUsers.find((x) => x.id === userId);
-    $('#observingUserEmail').textContent = u ? u.email : '';
+    $('#observingUserEmail').textContent = u ? (u.name || u.email) : '';
   }
 
   const activeEl = $$('.view').find((v) => !v.hidden);
@@ -2000,6 +2004,40 @@ function shakeLoginCard() {
   card.classList.add('is-shaking');
 }
 
+/* ================================================================
+   LOGOFF AUTOMÁTICO POR INATIVIDADE
+
+   Pedido explícito: encerrar a sessão sozinha depois de 2h sem uso.
+   Fechar a aba/navegador ou desligar o computador já desloga por
+   conta própria, sem precisar de nenhum timer — ver o comentário
+   sobre sessionStorage (em vez de localStorage) em js/api.js.
+================================================================ */
+
+const INACTIVITY_LIMIT_MS = 2 * 60 * 60 * 1000; // 2h
+const INACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'wheel'];
+let inactivityTimer = null;
+
+function handleInactivityTimeout() {
+  Api.logout();
+  window.location.reload();
+}
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(handleInactivityTimeout, INACTIVITY_LIMIT_MS);
+}
+
+function startInactivityWatcher() {
+  INACTIVITY_EVENTS.forEach((evt) => document.addEventListener(evt, resetInactivityTimer, { passive: true }));
+  resetInactivityTimer();
+}
+
+function stopInactivityWatcher() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = null;
+  INACTIVITY_EVENTS.forEach((evt) => document.removeEventListener(evt, resetInactivityTimer));
+}
+
 async function bootApp() {
   await Store.hydrate();
   await loadPermissions();
@@ -2013,6 +2051,7 @@ async function bootApp() {
   switchView(firstAllowedMenu());
   $('#loginScreen').hidden = true;
   $('#appShell').hidden = false;
+  startInactivityWatcher();
 }
 
 $('#loginForm').addEventListener('submit', async (e) => {

@@ -14,8 +14,11 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { email, password, role } = req.body || {};
-  if (!email || !password || password.length < 6) return res.status(400).json({ error: 'invalid_request' });
+  const { name, email, password, role } = req.body || {};
+  const normalizedName = String(name || '').trim();
+  if (!normalizedName || !email || !password || password.length < 6) {
+    return res.status(400).json({ error: 'invalid_request' });
+  }
 
   const normalizedEmail = String(email).toLowerCase().trim();
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -29,7 +32,7 @@ router.post('/', async (req, res) => {
   // mustChangePassword: true — a senha provisoria dada pelo Master
   // precisa ser trocada no primeiro login do novo usuario.
   const user = await prisma.user.create({
-    data: { email: normalizedEmail, passwordHash, role: normalizedRole, mustChangePassword: true },
+    data: { name: normalizedName, email: normalizedEmail, passwordHash, role: normalizedRole, mustChangePassword: true },
   });
   res.status(201).json({ user: publicUser(user) });
 });

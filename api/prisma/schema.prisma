@@ -17,6 +17,9 @@ enum Role {
 /// (ver regra no backend), mas nunca escrever no lugar de outro.
 model User {
   id                 String      @id @default(uuid())
+  /// opcional só pra não quebrar o master seedado antes deste campo
+  /// existir — todo usuário criado pela tela de Usuários já exige nome.
+  name               String?
   email              String      @unique
   passwordHash       String
   role               Role        @default(user)

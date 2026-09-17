@@ -30,19 +30,23 @@ const Session = {
   },
 };
 
+// sessionStorage (não localStorage) de propósito: a sessão precisa
+// sobreviver a um F5, mas não pode sobreviver a fechar o navegador —
+// isso é o que garante o logoff automático ao fechar a aba/navegador
+// ou desligar o computador, sem precisar de nenhum timer pra isso.
 function loadStoredRefreshToken() {
   try {
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return sessionStorage.getItem(REFRESH_TOKEN_KEY);
   } catch (e) {
     return null;
   }
 }
 function storeRefreshToken(token) {
   try {
-    if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
-    else localStorage.removeItem(REFRESH_TOKEN_KEY);
+    if (token) sessionStorage.setItem(REFRESH_TOKEN_KEY, token);
+    else sessionStorage.removeItem(REFRESH_TOKEN_KEY);
   } catch (e) {
-    // localStorage indisponível (aba anônima restrita etc.) — a sessão
+    // sessionStorage indisponível (aba anônima restrita etc.) — a sessão
     // simplesmente não sobrevive a um recarregamento da página.
   }
 }
@@ -158,8 +162,8 @@ const Api = {
     return data.users;
   },
 
-  async createUser(email, password, role) {
-    const res = await this.request('/users', { method: 'POST', body: JSON.stringify({ email, password, role }) });
+  async createUser(name, email, password, role) {
+    const res = await this.request('/users', { method: 'POST', body: JSON.stringify({ name, email, password, role }) });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || 'error');
     return body.user;

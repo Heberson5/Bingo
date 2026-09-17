@@ -15,6 +15,7 @@ if (!ACCESS_SECRET || !REFRESH_SECRET) {
 function publicUser(user) {
   return {
     id: user.id,
+    name: user.name,
     email: user.email,
     role: user.role,
     mustChangePassword: user.mustChangePassword,
