@@ -30,8 +30,10 @@ services:
     container_name: bingo
     restart: unless-stopped
     ports:
+      # Só 8082 — a porta 80 da VPS já pertence a outro app (ver deploy
+      # de 2026-09-17). O domínio aponta pra 163.176.182.42:8082, então
+      # o Bingo não precisa da 80 pra ser acessado.
       - "8082:80"
-      - "80:80"
     volumes:
       # Onde o Certbot grava o desafio ACME (ver nginx.conf) para
       # emitir/renovar o certificado de bingo.sauberlich.com.br.
