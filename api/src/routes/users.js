@@ -14,18 +14,22 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password, role } = req.body || {};
   if (!email || !password || password.length < 6) return res.status(400).json({ error: 'invalid_request' });
 
   const normalizedEmail = String(email).toLowerCase().trim();
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (existing) return res.status(409).json({ error: 'email_taken' });
 
+  // Só master cria contas (ver requireMaster acima), então deixar o
+  // proprio master escolher o papel do login que ele esta criando —
+  // inclusive outro master — e seguro.
+  const normalizedRole = role === 'master' ? 'master' : 'user';
   const passwordHash = await bcrypt.hash(password, 12);
   // mustChangePassword: true — a senha provisoria dada pelo Master
   // precisa ser trocada no primeiro login do novo usuario.
   const user = await prisma.user.create({
-    data: { email: normalizedEmail, passwordHash, mustChangePassword: true },
+    data: { email: normalizedEmail, passwordHash, role: normalizedRole, mustChangePassword: true },
   });
   res.status(201).json({ user: publicUser(user) });
 });

@@ -21,6 +21,10 @@ function showToast(msg) {
 
 /* ---------------- Navigation ---------------- */
 function switchView(name) {
+  // "usuarios"/"permissoes" só existem pro Master — sem isto, alguém
+  // poderia forçar switchView('usuarios') pelo console mesmo sem o
+  // botão do menu (que fica escondido via applyPermissions).
+  if ((name === 'usuarios' || name === 'permissoes') && !Session.isMaster()) return;
   $$('.view').forEach((v) => { v.hidden = v.dataset.view !== name; });
   $$('.bottom-nav__item, .side-nav__item').forEach((b) => b.classList.toggle('is-active', b.dataset.nav === name));
   if (name === 'sorteio') renderSorteio();
@@ -28,6 +32,8 @@ function switchView(name) {
   if (name === 'historico') renderHistorico();
   if (name === 'dashboard') renderDashboard();
   if (name === 'config') renderConfigForm();
+  if (name === 'usuarios') refreshUsersList();
+  if (name === 'permissoes') renderPermissionsPanel();
 }
 
 $$('.bottom-nav__item, .side-nav__item').forEach((btn) => {
@@ -1852,12 +1858,6 @@ $('#btnSavePermissions').addEventListener('click', async () => {
 function renderAccountSection() {
   $('#accountEmail').textContent = Session.user ? Session.user.email : '';
   $('#accountRoleBadge').innerHTML = Session.isMaster() ? ' <span class="badge">Master</span>' : '';
-  $('#masterUsersCard').hidden = !Session.isMaster();
-  $('#masterPermissionsCard').hidden = !Session.isMaster();
-  if (Session.isMaster()) {
-    refreshUsersList();
-    renderPermissionsPanel();
-  }
 }
 
 let cachedUsers = [];
@@ -1923,14 +1923,16 @@ function renderUsersList() {
 $('#btnCreateUser').addEventListener('click', async () => {
   const email = $('#newUserEmail').value.trim();
   const password = $('#newUserPassword').value;
+  const role = $('#newUserRole').value;
   if (!email || !password || password.length < 6) {
     showToast('Informe um e-mail e uma senha de pelo menos 6 caracteres.');
     return;
   }
   try {
-    await Api.createUser(email, password);
+    await Api.createUser(email, password, role);
     $('#newUserEmail').value = '';
     $('#newUserPassword').value = '';
+    $('#newUserRole').value = 'user';
     showToast('Usuário criado.');
     refreshUsersList();
   } catch (e) {

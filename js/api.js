@@ -158,8 +158,8 @@ const Api = {
     return data.users;
   },
 
-  async createUser(email, password) {
-    const res = await this.request('/users', { method: 'POST', body: JSON.stringify({ email, password }) });
+  async createUser(email, password, role) {
+    const res = await this.request('/users', { method: 'POST', body: JSON.stringify({ email, password, role }) });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || 'error');
     return body.user;

@@ -121,6 +121,12 @@
       <rect x="5" y="11" width="14" height="10" rx="2"></rect>
       <path d="M8 11V7a4 4 0 018 0v4"></path>
     </symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="8" r="3"></circle>
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path>
+      <circle cx="17.5" cy="9" r="2.2"></circle>
+      <path d="M15.8 14.2c2.4.5 4.2 2.5 4.2 4.8"></path>
+    </symbol>
   </defs>
 </svg>
 
@@ -196,6 +202,12 @@
   </button>
   <button class="side-nav__item" data-nav="config">
     <svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="side-nav__label">Config</span>
+  </button>
+  <button class="side-nav__item is-perm-hidden" data-nav="usuarios">
+    <svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg><span class="side-nav__label">Usuários</span>
+  </button>
+  <button class="side-nav__item is-perm-hidden" data-nav="permissoes">
+    <svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg><span class="side-nav__label">Permissões</span>
   </button>
 </nav>
 
@@ -457,38 +469,6 @@
       <button type="button" class="btn btn--ghost btn--block" id="btnLogout"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-logout"></use></svg>Sair</button>
     </div>
 
-    <div class="card" id="masterUsersCard" hidden>
-      <div class="card__header"><h2>Usuários (Master)</h2></div>
-      <p class="hint">Crie um login para cada operador. Cada um só vê o próprio histórico; use o filtro no topo da tela para visualizar o de qualquer um deles.</p>
-      <div class="field-row">
-        <label class="field" style="flex:1;">
-          <span>E-mail do novo usuário</span>
-          <input type="email" id="newUserEmail" placeholder="nome@exemplo.com">
-        </label>
-        <label class="field" style="flex:1;">
-          <span>Senha provisória</span>
-          <input type="text" id="newUserPassword" placeholder="Mínimo 6 caracteres">
-        </label>
-      </div>
-      <button type="button" class="btn btn--primary btn--block" id="btnCreateUser">Criar usuário</button>
-      <div id="usersList" class="cards-summary"></div>
-    </div>
-
-    <div class="card" id="masterPermissionsCard" hidden>
-      <div class="card__header"><h2>Permissões (Master)</h2></div>
-      <p class="hint">Escolha quais menus e seções de Configurações os usuários comuns podem ver. O Master sempre enxerga tudo, independente destas opções.</p>
-      <div class="permissions-group">
-        <h3 class="permissions-group__title">Menus</h3>
-        <div id="permMenusList" class="permissions-grid"></div>
-      </div>
-      <div class="permissions-group">
-        <h3 class="permissions-group__title">Configurações</h3>
-        <div id="permSettingsList" class="permissions-grid"></div>
-      </div>
-      <button type="button" class="btn btn--primary btn--block" id="btnSavePermissions">Salvar permissões</button>
-      <p class="save-hint" id="permissionsSaveHint" hidden>Permissões salvas ✓</p>
-    </div>
-
     <div class="card" id="settingsCardAplicativo">
       <div class="card__header"><h2>Aplicativo</h2></div>
       <p class="hint">Instale o Bingo como aplicativo, no celular ou no computador, para abrir direto da tela inicial sem precisar do navegador.</p>
@@ -623,6 +603,51 @@
     </form>
   </section>
 
+  <!-- ===================== USUÁRIOS (MASTER) ===================== -->
+  <section class="view" id="view-usuarios" data-view="usuarios" hidden>
+    <div class="card" id="masterUsersCard">
+      <div class="card__header"><h2>Usuários</h2></div>
+      <p class="hint">Crie um login para cada operador e escolha o papel dele. Cada usuário só vê o próprio histórico; use o filtro no topo da tela para visualizar o de qualquer um deles.</p>
+      <div class="field-row">
+        <label class="field" style="flex:1;">
+          <span>E-mail do novo usuário</span>
+          <input type="email" id="newUserEmail" placeholder="nome@exemplo.com">
+        </label>
+        <label class="field" style="flex:1;">
+          <span>Senha provisória</span>
+          <input type="text" id="newUserPassword" placeholder="Mínimo 6 caracteres">
+        </label>
+        <label class="field" style="flex:1;">
+          <span>Papel</span>
+          <select id="newUserRole">
+            <option value="user">Usuário</option>
+            <option value="master">Master</option>
+          </select>
+        </label>
+      </div>
+      <button type="button" class="btn btn--primary btn--block" id="btnCreateUser">Criar usuário</button>
+      <div id="usersList" class="cards-summary"></div>
+    </div>
+  </section>
+
+  <!-- ===================== PERMISSÕES (MASTER) ===================== -->
+  <section class="view" id="view-permissoes" data-view="permissoes" hidden>
+    <div class="card" id="masterPermissionsCard">
+      <div class="card__header"><h2>Permissões</h2></div>
+      <p class="hint">Escolha quais menus e seções de Configurações os usuários comuns podem ver. O Master sempre enxerga tudo, independente destas opções.</p>
+      <div class="permissions-group">
+        <h3 class="permissions-group__title">Menus</h3>
+        <div id="permMenusList" class="permissions-grid"></div>
+      </div>
+      <div class="permissions-group">
+        <h3 class="permissions-group__title">Configurações</h3>
+        <div id="permSettingsList" class="permissions-grid"></div>
+      </div>
+      <button type="button" class="btn btn--primary btn--block" id="btnSavePermissions">Salvar permissões</button>
+      <p class="save-hint" id="permissionsSaveHint" hidden>Permissões salvas ✓</p>
+    </div>
+  </section>
+
 </main>
 
 <nav class="bottom-nav">
@@ -641,6 +666,12 @@
     </button>
     <button class="bottom-nav__item" data-nav="config">
       <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg></span><span>Config</span>
+    </button>
+    <button class="bottom-nav__item is-perm-hidden" data-nav="usuarios">
+      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg></span><span>Usuários</span>
+    </button>
+    <button class="bottom-nav__item is-perm-hidden" data-nav="permissoes">
+      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg></span><span>Permissões</span>
     </button>
   </div>
 </nav>

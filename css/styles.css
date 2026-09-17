@@ -550,8 +550,8 @@ h1, h2, h3, p { margin: 0; }
 .permissions-group { margin-bottom: 14px; }
 .permissions-group__title { font-size: 13px; font-weight: 700; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .03em; margin: 0 0 10px; }
 .permissions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 14px; }
-.field-row { display: flex; gap: 10px; }
-.field-row .field { flex: 1; min-width: 0; }
+.field-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.field-row .field { flex: 1 1 140px; min-width: 0; }
 .hint { color: var(--color-text-dim); font-size: 13px; }
 .save-hint { color: var(--color-success); text-align: center; font-size: 13px; }
 
