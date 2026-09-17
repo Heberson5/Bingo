@@ -1384,6 +1384,179 @@ function setTheme(themeId) {
   showToast('Tema atualizado.');
 }
 
+/* ================================================================
+   INSTALAÇÃO DO APP (PWA) e IDENTIDADE VISUAL
+================================================================ */
+
+/**
+ * Chrome/Edge (Android incluído) disparam este evento quando o app
+ * cumpre os requisitos de instalação (manifest + service worker) e
+ * ainda não foi instalado. Guardamos o evento para poder chamar
+ * `.prompt()` depois, a partir de um clique nosso — o navegador não
+ * deixa disparar isso sem gesto do usuário.
+ */
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = $('#btnInstallApp');
+  if (btn) btn.hidden = false;
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const btn = $('#btnInstallApp');
+  if (btn) btn.hidden = true;
+  showToast('Aplicativo instalado com sucesso.');
+});
+$('#btnInstallApp').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  $('#btnInstallApp').hidden = true;
+});
+
+const DEFAULT_APP_NAME = 'Bingo';
+const DEFAULT_FAVICON_HREF = 'icons/favicon-32.png';
+const DEFAULT_APPLE_TOUCH_HREF = 'icons/apple-touch-icon-180.png';
+const DEFAULT_LOGO_HTML = '<svg class="icon" aria-hidden="true"><use href="#icon-ball"></use></svg>';
+let manifestBlobUrl = null;
+
+function mimeFromDataUrl(dataUrl) {
+  const m = /^data:([^;,]+)/.exec(dataUrl || '');
+  return m ? m[1] : 'image/png';
+}
+
+/**
+ * Nome e ícones personalizados (Configurações > Identidade visual) são
+ * só dados em localStorage — não há servidor para regravar favicon.ico
+ * ou manifest.webmanifest de verdade. Em vez disso, cada vez que algo
+ * muda: o <link rel="icon">/"apple-touch-icon" ganha um novo href
+ * direto (data URL), e o manifest inteiro é reconstruído em memória e
+ * publicado como um Blob URL — assim "Instalar aplicativo" e o atalho
+ * da tela inicial sempre refletem a escolha mais recente, sem precisar
+ * de build nem de backend.
+ */
+function applyBranding() {
+  const b = Store.config.branding || {};
+  const name = (b.appName || '').trim() || DEFAULT_APP_NAME;
+
+  document.title = name;
+  $$('.app-header__title, .side-nav__title').forEach((el) => { el.textContent = name; });
+
+  const faviconLink = $('#faviconLink');
+  if (faviconLink) faviconLink.href = b.favicon || DEFAULT_FAVICON_HREF;
+
+  const appleTouchLink = $('#appleTouchIconLink');
+  if (appleTouchLink) appleTouchLink.href = b.appIcon || DEFAULT_APPLE_TOUCH_HREF;
+
+  const logoHtml = b.sidebarLogo
+    ? `<img src="${b.sidebarLogo}" alt="${escapeHtml(name)}">`
+    : DEFAULT_LOGO_HTML;
+  $$('.app-header__logo, .side-nav__logo').forEach((el) => { el.innerHTML = logoHtml; });
+
+  const palette = PALETTES.find((p) => p.id === (Store.config.theme || 'violeta')) || PALETTES[0];
+  const icons = b.appIcon
+    ? ['192x192', '512x512'].flatMap((sizes) => [
+        { src: b.appIcon, sizes, type: mimeFromDataUrl(b.appIcon), purpose: 'any' },
+        { src: b.appIcon, sizes, type: mimeFromDataUrl(b.appIcon), purpose: 'maskable' },
+      ])
+    : [
+        { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: 'icons/icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+        { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ];
+  const manifest = {
+    name,
+    short_name: name,
+    description: 'Sorteio de bingo com cadastro de cartelas, marcação automática e detecção de vencedor.',
+    start_url: './index.html',
+    scope: './',
+    display: 'standalone',
+    orientation: 'any',
+    background_color: '#0f1220',
+    theme_color: palette.primaryDark,
+    lang: 'pt-BR',
+    icons,
+  };
+  const manifestLink = $('#manifestLink');
+  if (manifestLink) {
+    if (manifestBlobUrl) URL.revokeObjectURL(manifestBlobUrl);
+    manifestBlobUrl = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
+    manifestLink.href = manifestBlobUrl;
+  }
+}
+
+const BRAND_FIELDS = [
+  { key: 'appIcon', label: 'Ícone do app (instalação / tela inicial)', hint: 'Imagem quadrada, de preferência 512x512px ou maior.' },
+  { key: 'favicon', label: 'Ícone da barra de navegação (aba do navegador)', hint: 'Imagem pequena e quadrada — 32x32px ou 64x64px já é suficiente.' },
+  { key: 'sidebarLogo', label: 'Logo da barra lateral de menus', hint: 'Aparece ao lado do nome, no topo do menu e no cabeçalho.' },
+];
+
+function renderBrandFields() {
+  const wrap = $('#brandFields');
+  if (!wrap) return;
+  const b = Store.config.branding || {};
+  wrap.innerHTML = BRAND_FIELDS.map((f) => `
+    <div class="brand-field">
+      <div class="brand-field__preview">${b[f.key] ? `<img src="${b[f.key]}" alt="">` : '<span class="brand-field__placeholder">Padrão</span>'}</div>
+      <div class="brand-field__body">
+        <span class="brand-field__label">${f.label}</span>
+        <p class="hint">${f.hint}</p>
+        <div class="btn-group">
+          <button type="button" class="btn btn--secondary btn--small" data-brand-upload="${f.key}">Escolher imagem</button>
+          <button type="button" class="btn btn--ghost btn--small" data-brand-reset="${f.key}"${b[f.key] ? '' : ' disabled'}>Usar padrão</button>
+        </div>
+        <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/x-icon" hidden data-brand-input="${f.key}">
+      </div>
+    </div>`).join('');
+
+  $$('[data-brand-upload]', wrap).forEach((btn) => {
+    btn.addEventListener('click', () => $(`[data-brand-input="${btn.dataset.brandUpload}"]`, wrap).click());
+  });
+  $$('[data-brand-input]', wrap).forEach((input) => {
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 900 * 1024) {
+        showToast('Imagem muito grande. Escolha um arquivo de até 900 KB.');
+        input.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        Store.config.branding = Store.config.branding || {};
+        Store.config.branding[input.dataset.brandInput] = reader.result;
+        Store.saveConfig();
+        applyBranding();
+        renderBrandFields();
+        showToast('Imagem atualizada.');
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+  $$('[data-brand-reset]', wrap).forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (btn.disabled) return;
+      Store.config.branding = Store.config.branding || {};
+      Store.config.branding[btn.dataset.brandReset] = '';
+      Store.saveConfig();
+      applyBranding();
+      renderBrandFields();
+      showToast('Padrão restaurado.');
+    });
+  });
+}
+
+$('#brandName').addEventListener('change', () => {
+  Store.config.branding = Store.config.branding || {};
+  Store.config.branding.appName = $('#brandName').value.trim();
+  Store.saveConfig();
+  applyBranding();
+  showToast('Nome atualizado.');
+});
+
 /**
  * Board/ball sizing and boldness are exposed as CSS custom properties
  * on the document root, so the same slider values drive both the live
@@ -1452,6 +1625,8 @@ async function populateCameraOptions() {
 function renderConfigForm() {
   const cfg = Store.config;
   renderPaletteSwatches();
+  $('#brandName').value = (cfg.branding && cfg.branding.appName) || '';
+  renderBrandFields();
   populateCameraOptions();
   $('#cfgMin').value = cfg.min;
   $('#cfgMax').value = cfg.max;
@@ -1532,6 +1707,7 @@ $('#formConfig').addEventListener('submit', (e) => {
 ================================================================ */
 
 applyTheme(Store.config.theme);
+applyBranding();
 applyDisplaySettings(Store.config);
 switchView('sorteio');
 

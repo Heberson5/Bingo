@@ -18,6 +18,12 @@ const DEFAULT_CONFIG = {
   lastCount: 15,
   freeCenter: true,
   theme: 'violeta',
+  branding: {
+    appName: '',    // '' = usa o padrão ("Bingo")
+    appIcon: '',    // '' = usa os ícones padrão em icons/
+    favicon: '',    // '' = usa icons/favicon-32.png
+    sidebarLogo: '', // '' = usa o ícone de bola padrão
+  },
   criteria: {
     cheia: true,
     quatroPontas: false,
