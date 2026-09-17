@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const prisma = require('../prisma');
 const { publicUser, requireAuth, requireMaster } = require('../auth');
+const { isPasswordStrong } = require('../passwordPolicy');
 
 const router = express.Router();
 
@@ -16,9 +17,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { name, email, password, role } = req.body || {};
   const normalizedName = String(name || '').trim();
-  if (!normalizedName || !email || !password || password.length < 6) {
-    return res.status(400).json({ error: 'invalid_request' });
-  }
+  if (!normalizedName || !email) return res.status(400).json({ error: 'invalid_request' });
+  if (!isPasswordStrong(password)) return res.status(400).json({ error: 'weak_password' });
 
   const normalizedEmail = String(email).toLowerCase().trim();
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -51,7 +51,7 @@ router.patch('/:id', async (req, res) => {
 
 router.patch('/:id/password', async (req, res) => {
   const { newPassword } = req.body || {};
-  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'weak_password' });
+  if (!isPasswordStrong(newPassword)) return res.status(400).json({ error: 'weak_password' });
 
   const passwordHash = await bcrypt.hash(newPassword, 12);
   const user = await prisma.user

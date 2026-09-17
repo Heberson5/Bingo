@@ -66,6 +66,11 @@
       <ellipse cx="12" cy="12" rx="9" ry="5.5"></ellipse>
       <circle cx="12" cy="12" r="2.4"></circle>
     </symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4.5 8.4C3.1 9.6 2 11 2 12c1.5 3.4 5 5.5 10 5.5 1.4 0 2.7-.16 3.9-.55M9.8 6.7c.7-.13 1.4-.2 2.2-.2 5 0 8.5 2.1 10 5.5-.6 1.36-1.5 2.5-2.7 3.5"></path>
+      <path d="M9.9 9.9a3 3 0 004.2 4.2"></path>
+      <path d="M3 3l18 18"></path>
+    </symbol>
     <symbol id="icon-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <rect x="2" y="4" width="20" height="13" rx="2"></rect>
       <line x1="8" y1="20" x2="16" y2="20"></line>
@@ -153,10 +158,13 @@
         <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-mail"></use></svg>
         <input type="email" id="loginEmail" autocomplete="username" required placeholder="E-mail">
       </label>
-      <label class="field login-field">
+      <label class="field login-field login-field--pw">
         <span class="sr-only">Senha</span>
         <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
         <input type="password" id="loginPassword" autocomplete="current-password" required placeholder="Senha">
+        <button type="button" class="login-field__toggle" data-toggle-password="loginPassword" aria-label="Mostrar senha">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+        </button>
       </label>
       <button type="submit" class="btn btn--primary btn--block btn--xl" id="loginSubmit">Entrar</button>
       <p class="login-form__error" id="loginError" hidden></p>
@@ -164,16 +172,23 @@
 
     <form id="forceChangeForm" class="login-form" hidden>
       <p class="hint">Essa é uma senha provisória. Defina uma nova senha para continuar.</p>
-      <label class="field login-field">
+      <label class="field login-field login-field--pw">
         <span class="sr-only">Nova senha</span>
         <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
-        <input type="password" id="forceNewPassword" autocomplete="new-password" required minlength="6" placeholder="Nova senha (mínimo 6 caracteres)">
+        <input type="password" id="forceNewPassword" autocomplete="new-password" required minlength="8" placeholder="Nova senha">
+        <button type="button" class="login-field__toggle" data-toggle-password="forceNewPassword" aria-label="Mostrar senha">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+        </button>
       </label>
-      <label class="field login-field">
+      <label class="field login-field login-field--pw">
         <span class="sr-only">Confirmar nova senha</span>
         <svg class="icon icon--sm login-field__icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
-        <input type="password" id="forceNewPassword2" autocomplete="new-password" required minlength="6" placeholder="Confirmar nova senha">
+        <input type="password" id="forceNewPassword2" autocomplete="new-password" required minlength="8" placeholder="Confirmar nova senha">
+        <button type="button" class="login-field__toggle" data-toggle-password="forceNewPassword2" aria-label="Mostrar senha">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+        </button>
       </label>
+      <p class="hint" id="passwordRulesHint">A senha precisa ter no mínimo 8 caracteres, com letra maiúscula, minúscula, número e caractere especial (ex: . , ; ! @).</p>
       <button type="submit" class="btn btn--primary btn--block btn--xl">Definir senha e entrar</button>
       <p class="login-form__error" id="forceChangeError" hidden></p>
     </form>
@@ -621,7 +636,7 @@
       <div class="field-row">
         <label class="field" style="flex:1;">
           <span>Senha provisória</span>
-          <input type="text" id="newUserPassword" placeholder="Mínimo 6 caracteres">
+          <input type="text" id="newUserPassword" placeholder="Mín. 8, com maiúscula, número e símbolo">
         </label>
         <label class="field" style="flex:1;">
           <span>Papel</span>
@@ -631,6 +646,7 @@
           </select>
         </label>
       </div>
+      <p class="hint">A senha precisa ter no mínimo 8 caracteres, com letra maiúscula, minúscula, número e caractere especial (ex: . , ; ! @).</p>
       <button type="button" class="btn btn--primary btn--block" id="btnCreateUser">Criar usuário</button>
       <div id="usersList" class="cards-summary"></div>
     </div>

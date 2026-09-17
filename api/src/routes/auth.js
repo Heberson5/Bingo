@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../prisma');
 const { REFRESH_SECRET, publicUser, signAccessToken, signRefreshToken, requireAuth } = require('../auth');
+const { isPasswordStrong } = require('../passwordPolicy');
 
 const router = express.Router();
 
@@ -45,7 +46,7 @@ router.get('/me', requireAuth, (req, res) => {
 
 router.post('/change-password', requireAuth, async (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
-  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'weak_password' });
+  if (!isPasswordStrong(newPassword)) return res.status(400).json({ error: 'weak_password' });
 
   // Se a troca nao foi forcada pelo Master (mustChangePassword), exige
   // a senha atual antes de aceitar a nova.

@@ -936,6 +936,31 @@ h1, h2, h3, p { margin: 0; }
 }
 .login-field:focus-within .login-field__icon { color: var(--color-primary-light); }
 
+/* Espaço extra à direita pro botão de mostrar/esconder senha. */
+#loginScreen .login-field--pw input { padding-right: 44px; }
+.login-field__toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease;
+}
+.login-field__toggle:hover, .login-field__toggle:focus-visible {
+  color: var(--color-primary-light);
+  background: rgba(255,255,255,.08);
+  outline: none;
+}
+
 /* ---------- Filtro do Master e aviso de modo leitura ---------- */
 .master-filter {
   background: rgba(255,255,255,.16);

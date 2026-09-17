@@ -1892,9 +1892,9 @@ function renderUsersList() {
     </div>`).join('');
 
   $$('[data-reset-password]', wrap).forEach((btn) => btn.addEventListener('click', async () => {
-    const pw = prompt('Nova senha provisória para este usuário (mínimo 6 caracteres):');
+    const pw = prompt(`Nova senha provisória para este usuário:\n${PASSWORD_RULES_TEXT}`);
     if (!pw) return;
-    if (pw.length < 6) { showToast('Senha muito curta.'); return; }
+    if (!isPasswordStrong(pw)) { showToast(PASSWORD_RULES_TEXT); return; }
     try {
       await Api.resetUserPassword(btn.dataset.resetPassword, pw);
       showToast('Senha redefinida — o usuário vai precisar trocá-la no próximo login.');
@@ -1926,8 +1926,12 @@ $('#btnCreateUser').addEventListener('click', async () => {
   const email = $('#newUserEmail').value.trim();
   const password = $('#newUserPassword').value;
   const role = $('#newUserRole').value;
-  if (!name || !email || !password || password.length < 6) {
-    showToast('Informe nome, e-mail e uma senha de pelo menos 6 caracteres.');
+  if (!name || !email) {
+    showToast('Informe o nome e o e-mail do usuário.');
+    return;
+  }
+  if (!isPasswordStrong(password)) {
+    showToast(PASSWORD_RULES_TEXT);
     return;
   }
   try {
@@ -2002,6 +2006,28 @@ function shakeLoginCard() {
   card.classList.remove('is-shaking');
   void card.offsetWidth;
   card.classList.add('is-shaking');
+}
+
+/* ---------------- Mostrar/esconder senha (tela de login) ---------------- */
+$$('[data-toggle-password]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.togglePassword);
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.querySelector('use').setAttribute('href', showing ? '#icon-eye' : '#icon-eye-off');
+    btn.setAttribute('aria-label', showing ? 'Mostrar senha' : 'Esconder senha');
+  });
+});
+
+/* ---------------- Regra de senha forte ----------------
+   Mín. 8 caracteres, com maiúscula, minúscula, número e um caractere
+   que não seja letra/número (pontuação, símbolo — "." "," ";" "!" etc
+   contam). Vale pra toda senha nova: criação de usuário (Master),
+   redefinição de senha (Master) e troca forçada no primeiro login. */
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}$/;
+const PASSWORD_RULES_TEXT = 'A senha precisa ter no mínimo 8 caracteres, com letra maiúscula, minúscula, número e caractere especial (ex: . , ; ! @).';
+function isPasswordStrong(pw) {
+  return PASSWORD_REGEX.test(pw || '');
 }
 
 /* ================================================================
@@ -2084,8 +2110,8 @@ $('#forceChangeForm').addEventListener('submit', async (e) => {
   const p2 = $('#forceNewPassword2').value;
   const errorEl = $('#forceChangeError');
   errorEl.hidden = true;
-  if (p1.length < 6) {
-    errorEl.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+  if (!isPasswordStrong(p1)) {
+    errorEl.textContent = PASSWORD_RULES_TEXT;
     errorEl.hidden = false;
     return;
   }
