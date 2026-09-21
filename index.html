@@ -483,6 +483,11 @@
       <p class="hint">Você está logado como <strong id="accountEmail"></strong><span id="accountRoleBadge"></span>.</p>
       <button type="button" class="btn btn--ghost btn--block" id="btnLogout"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-logout"></use></svg>Sair</button>
 
+      <div class="btn-group" id="accountAdminLinks" hidden>
+        <button type="button" class="btn btn--ghost btn--block" data-goto-view="usuarios"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-users"></use></svg>Usuários</button>
+        <button type="button" class="btn btn--ghost btn--block" data-goto-view="permissoes"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-lock"></use></svg>Permissões</button>
+      </div>
+
       <div class="card__header"><h2>Trocar senha</h2></div>
       <label class="field pw-field">
         <span>Senha atual</span>
@@ -736,12 +741,6 @@
     </button>
     <button class="bottom-nav__item" data-nav="config">
       <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg></span><span>Config</span>
-    </button>
-    <button class="bottom-nav__item is-perm-hidden" data-nav="usuarios">
-      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg></span><span>Usuários</span>
-    </button>
-    <button class="bottom-nav__item is-perm-hidden" data-nav="permissoes">
-      <span class="bottom-nav__icon"><svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg></span><span>Permissões</span>
     </button>
   </div>
 </nav>

@@ -1891,7 +1891,17 @@ function renderAccountSection() {
   $('#changePwNew2').value = '';
   $('#changePwError').hidden = true;
   $('#changePwSuccess').hidden = true;
+  // No celular, Usuários/Permissões não têm ícone próprio na barra
+  // inferior (com 7 itens ela ficava maior que a tela — ver menu
+  // lateral no computador, onde cabem numa lista vertical sem
+  // problema). Este atalho garante que o Master ainda chega lá com um
+  // toque, a partir de Config.
+  $('#accountAdminLinks').hidden = !Session.isMaster();
 }
+
+$$('[data-goto-view]').forEach((btn) => {
+  btn.addEventListener('click', () => switchView(btn.dataset.gotoView));
+});
 
 /**
  * Autoatendimento: qualquer usuário logado (Master incluso) troca a
