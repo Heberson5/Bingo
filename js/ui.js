@@ -2099,10 +2099,18 @@ $('#btnCreateUser').addEventListener('click', async () => {
   }
 });
 
-$('#btnLogout').addEventListener('click', () => {
+function performLogout() {
   stopInactivityWatcher();
   Api.logout();
   window.location.reload();
+}
+
+// Dois botões chamam o mesmo logout: um no cabeçalho (sempre visível,
+// em qualquer tela, inclusive no celular) e outro dentro de
+// Configurações > Conta (mais contexto, junto do e-mail logado).
+$('#btnLogout').addEventListener('click', performLogout);
+$('#btnLogoutHeader').addEventListener('click', () => {
+  openConfirm('Sair?', 'Você vai precisar entrar de novo com seu e-mail e senha.', performLogout);
 });
 
 /**
