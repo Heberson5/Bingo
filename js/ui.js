@@ -1886,7 +1886,56 @@ function renderAccountSection() {
   const u = Session.user;
   $('#accountEmail').textContent = u ? (u.name ? `${u.name} (${u.email})` : u.email) : '';
   $('#accountRoleBadge').innerHTML = Session.isMaster() ? ' <span class="badge">Master</span>' : '';
+  $('#changePwCurrent').value = '';
+  $('#changePwNew').value = '';
+  $('#changePwNew2').value = '';
+  $('#changePwError').hidden = true;
+  $('#changePwSuccess').hidden = true;
 }
+
+/**
+ * Autoatendimento: qualquer usuário logado (Master incluso) troca a
+ * própria senha aqui, sem precisar que o Master redefina pra ele —
+ * inclusive serve pro próprio Master trocar uma senha que já tenha
+ * sido exposta em algum lugar (chat, print, etc).
+ */
+$('#btnChangePassword').addEventListener('click', async () => {
+  const current = $('#changePwCurrent').value;
+  const p1 = $('#changePwNew').value;
+  const p2 = $('#changePwNew2').value;
+  const errorEl = $('#changePwError');
+  const successEl = $('#changePwSuccess');
+  errorEl.hidden = true;
+  successEl.hidden = true;
+
+  if (!current) {
+    errorEl.textContent = 'Informe sua senha atual.';
+    errorEl.hidden = false;
+    return;
+  }
+  if (!isPasswordStrong(p1)) {
+    errorEl.textContent = PASSWORD_RULES_TEXT;
+    errorEl.hidden = false;
+    return;
+  }
+  if (p1 !== p2) {
+    errorEl.textContent = 'As senhas não conferem.';
+    errorEl.hidden = false;
+    return;
+  }
+
+  try {
+    await Api.changePassword(current, p1);
+    $('#changePwCurrent').value = '';
+    $('#changePwNew').value = '';
+    $('#changePwNew2').value = '';
+    successEl.hidden = false;
+    showToast('Senha alterada.');
+  } catch (e) {
+    errorEl.textContent = e.message === 'invalid_credentials' ? 'Senha atual incorreta.' : 'Não foi possível trocar a senha.';
+    errorEl.hidden = false;
+  }
+});
 
 let cachedUsers = [];
 

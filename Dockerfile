@@ -3,6 +3,7 @@ FROM nginx:1.27-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY nginx-common.conf /etc/nginx/snippets/bingo-common.conf
+COPY nginx-security-headers.conf /etc/nginx/snippets/bingo-security-headers.conf
 
 COPY index.html /usr/share/nginx/html/index.html
 COPY display.html /usr/share/nginx/html/display.html

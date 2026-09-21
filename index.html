@@ -482,6 +482,33 @@
       <div class="card__header"><h2>Conta</h2></div>
       <p class="hint">Você está logado como <strong id="accountEmail"></strong><span id="accountRoleBadge"></span>.</p>
       <button type="button" class="btn btn--ghost btn--block" id="btnLogout"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-logout"></use></svg>Sair</button>
+
+      <div class="card__header"><h2>Trocar senha</h2></div>
+      <label class="field pw-field">
+        <span>Senha atual</span>
+        <input type="password" id="changePwCurrent" autocomplete="current-password" placeholder="Senha atual">
+        <button type="button" class="pw-toggle" data-toggle-password="changePwCurrent" aria-label="Mostrar senha">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+        </button>
+      </label>
+      <label class="field pw-field">
+        <span>Nova senha</span>
+        <input type="password" id="changePwNew" autocomplete="new-password" placeholder="Nova senha">
+        <button type="button" class="pw-toggle" data-toggle-password="changePwNew" aria-label="Mostrar senha">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+        </button>
+      </label>
+      <label class="field pw-field">
+        <span>Confirmar nova senha</span>
+        <input type="password" id="changePwNew2" autocomplete="new-password" placeholder="Confirmar nova senha">
+        <button type="button" class="pw-toggle" data-toggle-password="changePwNew2" aria-label="Mostrar senha">
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+        </button>
+      </label>
+      <p class="hint">A senha precisa ter no mínimo 8 caracteres, com letra maiúscula, minúscula, número e caractere especial (ex: . , ; ! @).</p>
+      <button type="button" class="btn btn--primary btn--block" id="btnChangePassword">Salvar nova senha</button>
+      <p class="login-form__error" id="changePwError" hidden></p>
+      <p class="save-hint" id="changePwSuccess" hidden>Senha alterada ✓</p>
     </div>
 
     <div class="card" id="settingsCardAplicativo">

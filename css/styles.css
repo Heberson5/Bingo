@@ -983,6 +983,33 @@ h1, h2, h3, p { margin: 0; }
   outline: none;
 }
 
+/* Mesma ideia do .login-field__toggle acima, mas pra fora da tela de
+   login — usado em "Trocar senha" (Configurações > Conta), em cima do
+   .field padrão do resto do app. */
+.pw-field { position: relative; }
+.pw-field input { padding-right: 44px; }
+.pw-toggle {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease;
+}
+.pw-toggle:hover, .pw-toggle:focus-visible {
+  color: var(--color-primary-light);
+  background: rgba(255,255,255,.08);
+  outline: none;
+}
+
 /* ---------- Filtro do Master e aviso de modo leitura ---------- */
 .master-filter {
   background: rgba(255,255,255,.16);
