@@ -29,6 +29,20 @@
   --color-border: #323a5e;
   --glow-primary: rgba(124, 58, 237, .35);
   --glow-accent: rgba(245, 158, 11, .35);
+
+  /* The drawn ball and the B-I-N-G-O column letters stay this exact
+     orange no matter which theme is active below — set once here,
+     outside any [data-theme] block, so no theme override can touch it.
+     Every other accent use (badges, hints, the FREE cell...) keeps
+     following --color-accent and does change with the theme; only the
+     ball itself is a fixed, recognizable color, since "the orange
+     ball" is the one visual constant a bingo caller can always find on
+     screen regardless of which palette the venue picked. */
+  --color-ball: #f59e0b;
+  --color-ball-dark: #b8790a;
+  --color-on-ball: #3a2504;
+  --glow-ball: rgba(245, 158, 11, .35);
+
   --radius: 14px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --content-width: 640px;
@@ -336,22 +350,26 @@ h1, h2, h3, p { margin: 0; }
   width: 160px;
   height: 160px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 28%, #fff7e6, var(--color-accent) 55%, var(--color-accent-dark) 100%);
+  background: radial-gradient(circle at 35% 28%, #fff7e6, var(--color-ball) 55%, var(--color-ball-dark) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--color-on-accent);
+  color: var(--color-on-ball);
   /* A wide, soft halo well past the tight contact-shadow ring below —
      this is the one moment every eye lands on first, so it gets the
      single biggest, most deliberate glow in the app instead of the
-     same small drop-shadow every other raised surface uses. */
+     same small drop-shadow every other raised surface uses. Fixed
+     --color-ball(-dark)/--glow-ball, not the theme's --color-accent:
+     the ball reads as "the ball" precisely because it's always this
+     same orange, whichever palette is active (see the --color-ball
+     comment at the top of the file). */
   box-shadow:
     inset 0 8px 14px rgba(255,255,255,.35),
     inset 0 -10px 20px rgba(0,0,0,.2),
     0 16px 34px -8px rgba(0,0,0,.5),
-    0 12px 30px -4px var(--glow-accent),
-    0 0 90px -12px var(--glow-accent);
+    0 12px 30px -4px var(--glow-ball),
+    0 0 90px -12px var(--glow-ball);
   transition: transform .15s ease, box-shadow .25s ease;
 }
 .draw-ball.is-bouncing { animation: bounce .4s ease; }
@@ -363,11 +381,11 @@ h1, h2, h3, p { margin: 0; }
 .draw-ball.is-awaiting-reveal {
   cursor: pointer;
   box-shadow:
-    0 0 0 4px var(--color-accent),
+    0 0 0 4px var(--color-ball),
     inset 0 8px 14px rgba(255,255,255,.35),
     inset 0 -10px 20px rgba(0,0,0,.2),
     0 16px 34px -8px rgba(0,0,0,.5),
-    0 10px 40px -6px var(--glow-accent);
+    0 10px 40px -6px var(--glow-ball);
   animation: pulse-reveal 1.4s ease-in-out infinite;
 }
 @keyframes pulse-reveal {
@@ -449,9 +467,32 @@ h1, h2, h3, p { margin: 0; }
   box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 4px 10px -3px rgba(0,0,0,.4);
 }
 .chip small { font-size: 8px; color: inherit; font-weight: 600; opacity: .75; }
-.chip--latest { background: linear-gradient(160deg, var(--color-accent), var(--color-accent-dark)); color: var(--color-on-accent); border-color: transparent; box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 4px 12px -3px var(--glow-accent); }
+/* Also fixed orange, not the theme accent — this chip is a small
+   stand-in for "the ball" (the most recently drawn one), so it stays
+   visually consistent with the big one above it. */
+.chip--latest { background: linear-gradient(160deg, var(--color-ball), var(--color-ball-dark)); color: var(--color-on-ball); border-color: transparent; box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 4px 12px -3px var(--glow-ball); }
 
-.empty-hint { color: var(--color-text-dim); font-size: 13px; }
+/* A small dashed "ghost ball" outline in front of every empty-state
+   message — one CSS-only pseudo-element, so it applies automatically
+   everywhere .empty-hint is used (including the many spots js/ui.js
+   injects it as a string), with no HTML/JS change and nothing new to
+   load. */
+.empty-hint {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--color-text-dim);
+  font-size: 13px;
+}
+.empty-hint::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px dashed var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-2) 50%, transparent);
+}
 
 /* ---------- Draw board ----------
    Mobile: 5 side-by-side columns (the classic bingo-card look), each
@@ -477,7 +518,10 @@ h1, h2, h3, p { margin: 0; }
   z-index: 1;
   text-align: center;
   font-weight: 800;
-  color: var(--color-accent);
+  /* Same fixed orange as the ball (--color-ball, not --color-accent) —
+     the B-I-N-G-O letters are the ball's own label, so they carry the
+     same theme-independent color. */
+  color: var(--color-ball);
   font-size: 13px;
   padding-bottom: 4px;
   background: var(--color-surface);
@@ -875,7 +919,7 @@ h1, h2, h3, p { margin: 0; }
   gap: 6px;
   text-align: center;
   font-weight: 800;
-  color: var(--color-accent);
+  color: var(--color-ball); /* same fixed orange as the ball, see --color-ball */
 }
 .letters-row small { display: block; font-weight: 600; font-size: 10px; color: var(--color-text-dim); }
 .card-grid {
