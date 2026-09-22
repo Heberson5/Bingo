@@ -7,6 +7,17 @@
 <meta name="theme-color" content="#0f1220">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎱</text></svg>">
 <style>
+  /* Same self-hosted font as the main app (see css/styles.css) — this
+     screen is the one moment the whole room actually looks at, so it
+     gets the app's real type voice instead of falling back to a raw
+     system-font stack. */
+  @font-face {
+    font-family: 'Outfit';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('fonts/outfit-variable.woff2') format('woff2');
+  }
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   html, body {
@@ -19,7 +30,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #f1f2f8;
     -webkit-tap-highlight-color: transparent;
   }
@@ -58,6 +69,9 @@
   .stats { font-size: min(3vw, 3vh); color: #a6acc7; }
   .empty { font-size: min(4vw, 4vh); color: #a6acc7; text-align: center; padding: 0 20px; }
   .empty[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .ball { animation-duration: .001ms !important; }
+  }
 </style>
 </head>
 <body>

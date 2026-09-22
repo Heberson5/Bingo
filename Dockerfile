@@ -12,6 +12,7 @@ COPY sw.js /usr/share/nginx/html/sw.js
 COPY css/ /usr/share/nginx/html/css/
 COPY js/ /usr/share/nginx/html/js/
 COPY icons/ /usr/share/nginx/html/icons/
+COPY fonts/ /usr/share/nginx/html/fonts/
 
 EXPOSE 80
 

@@ -1,3 +1,17 @@
+/* Outfit — self-hosted variable font (fonts/outfit-variable.woff2, OFL
+   licensed, see fonts/OFL.txt). One family covering weights 100-900 in a
+   single ~32KB file, precached by the service worker so it survives
+   offline exactly like the rest of the app shell. Replaces the plain
+   system-font stack everywhere (headings, body, the drawn-ball numbers)
+   for a distinct, consistent type voice instead of each OS's default. */
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/outfit-variable.woff2') format('woff2');
+}
+
 :root {
   --color-bg: #0f1220;
   --color-surface: #1a1e33;
@@ -110,7 +124,7 @@ html, body {
   padding: 0;
   background: var(--color-bg);
   color: var(--color-text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
 }
@@ -146,6 +160,28 @@ h1, h2, h3, p { margin: 0; }
 .icon--sm { width: 16px; height: 16px; vertical-align: -3px; }
 .icon--lg { width: 28px; height: 28px; }
 .icon--inline { width: 17px; height: 17px; vertical-align: -3px; margin-right: 3px; }
+
+/* ---------- Focus visibility (keyboard-nav quality floor) ----------
+   These controls don't define their own :focus-visible look, so without
+   this the only feedback for keyboard users is the browser default —
+   inconsistent per browser, and sometimes invisible on our dark
+   surfaces. One consistent ring, reusing the same accent already used
+   for input focus, covers every custom clickable control from one
+   place instead of touching each component rule below. Only fires for
+   keyboard focus, never for a mouse/touch click. */
+.btn:focus-visible,
+.side-nav__item:focus-visible,
+.bottom-nav__item:focus-visible,
+.chip:focus-visible,
+.role-tab:focus-visible,
+.palette-swatch:focus-visible,
+.card-item__delete:focus-visible,
+.app-header__icon-btn:focus-visible,
+.prize-chip__select:focus-visible,
+.prize-chip__remove:focus-visible {
+  outline: 2px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
 
 /* ---------- Desktop sidebar nav ---------- */
 .side-nav { display: none; }
@@ -239,7 +275,11 @@ h1, h2, h3, p { margin: 0; }
 .card[hidden] { display: none; }
 .card.is-manual-target { border-color: var(--color-accent); box-shadow: var(--elevation-1), 0 0 0 1px var(--color-accent) inset, 0 0 20px -4px var(--glow-accent); }
 .card__header { display: flex; align-items: center; justify-content: space-between; }
-.card__header h2 { font-size: 15px; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .04em; }
+/* Real headings, not tracked-out mini-labels — every card used to run
+   its title through the same tiny uppercase+letter-spacing treatment,
+   which reads as generic template chrome once it repeats on every
+   single section instead of marking anything as actually special. */
+.card__header h2 { font-size: 16px; font-weight: 700; color: var(--color-text); }
 .card__header.collapsible { cursor: pointer; }
 .chevron { transition: transform .2s ease; color: var(--color-text-dim); }
 .chevron.is-open { transform: rotate(180deg); }
@@ -311,6 +351,7 @@ h1, h2, h3, p { margin: 0; }
   font-size: var(--ball-number-size, 42px);
   font-weight: var(--ball-font-weight, 800);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 0 rgba(255,255,255,.4);
 }
 
@@ -408,6 +449,7 @@ h1, h2, h3, p { margin: 0; }
   border: 1px solid var(--color-border);
   font-size: var(--board-font-size, 14px);
   font-weight: var(--board-font-weight, 500);
+  font-variant-numeric: tabular-nums;
   color: var(--color-text-dim);
   cursor: pointer;
   user-select: none;
@@ -507,7 +549,7 @@ h1, h2, h3, p { margin: 0; }
   gap: 4px;
   box-shadow: var(--elevation-1);
 }
-.stat-tile__value { font-size: 22px; font-weight: 800; }
+.stat-tile__value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .stat-tile__label { font-size: 11px; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .03em; }
 
 .bar-list { display: flex; flex-direction: column; gap: 8px; }
@@ -515,7 +557,7 @@ h1, h2, h3, p { margin: 0; }
 .bar-row__label { width: 56px; flex-shrink: 0; color: var(--color-text-dim); text-align: right; }
 .bar-row__track { flex: 1; height: 10px; background: var(--color-surface-2); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,.4); }
 .bar-row__fill { height: 100%; background: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary-light)); border-radius: 6px; }
-.bar-row__value { width: 26px; text-align: right; font-weight: 700; flex-shrink: 0; }
+.bar-row__value { width: 26px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
 
 .history-card .card__header { align-items: flex-start; flex-wrap: wrap; gap: 4px; }
 
@@ -688,6 +730,11 @@ h1, h2, h3, p { margin: 0; }
   flex-direction: column;
   gap: 14px;
   box-shadow: var(--elevation-3);
+  animation: modal-sheet-in .22s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes modal-sheet-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .modal__sheet--center {
   max-width: 360px;
@@ -695,6 +742,11 @@ h1, h2, h3, p { margin: 0; }
   border-radius: 22px;
   align-items: center;
   text-align: center;
+  animation-name: modal-sheet-in-center;
+}
+@keyframes modal-sheet-in-center {
+  from { opacity: 0; transform: scale(.94); }
+  to { opacity: 1; transform: scale(1); }
 }
 .modal__header { display: flex; align-items: center; justify-content: space-between; }
 .modal__close { background: none; border: none; color: var(--color-text); font-size: 18px; cursor: pointer; }
@@ -1184,6 +1236,21 @@ body.is-observing #btnLogout {
     flex: 1;
   }
   .board-num { width: auto; }
+}
+
+/* ---------- Reduced motion ----------
+   The app leans on animation for feedback (ball bounce, drawn-number
+   reveal, winner modal, login blobs) — all of it decorative on top of
+   state that's already conveyed in text, so it can be safely collapsed
+   for anyone who has asked the OS for less motion, without losing any
+   information. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ---------- Print (2/4/6 cartelas por página A4) ----------

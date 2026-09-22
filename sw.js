@@ -9,7 +9,7 @@
    activate() below throws out the old precached copies.
 =================================================================== */
 
-const CACHE_NAME = 'bingo-shell-v1';
+const CACHE_NAME = 'bingo-shell-v2';
 
 const APP_SHELL = [
   './',
@@ -25,6 +25,7 @@ const APP_SHELL = [
   './icons/icon-maskable-192.png',
   './icons/icon-maskable-512.png',
   './icons/apple-touch-icon-180.png',
+  './fonts/outfit-variable.woff2',
 ];
 
 self.addEventListener('install', (event) => {
