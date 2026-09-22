@@ -130,12 +130,19 @@ html, body {
 }
 
 body {
-  padding-bottom: calc(72px + var(--safe-bottom));
-  /* Soft vignette glow behind the whole app instead of a flat fill —
-     the single biggest cheap win for a "modern, has depth" first
-     impression, and it recolors itself automatically per theme since
-     it's built from the same surface/bg variables. */
-  background: radial-gradient(ellipse 1200px 600px at 50% -10%, var(--color-surface) 0%, var(--color-bg) 55%);
+  padding-bottom: calc(96px + var(--safe-bottom));
+  /* Layered color mesh instead of one flat vignette: a wash of the
+     theme's own primary and accent, each barely-there, so the whole
+     app reads as one colored atmosphere instead of "dark grey app with
+     colored buttons on top" — and every glass surface below (cards,
+     nav, header) has something with actual hue behind it to refract.
+     Recolors itself per theme for free, same as the vignette it
+     replaces, since it's built from the same variables. */
+  background:
+    radial-gradient(900px 560px at 8% -6%, color-mix(in srgb, var(--color-primary) 32%, transparent), transparent 60%),
+    radial-gradient(760px 520px at 108% 18%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent 62%),
+    radial-gradient(1100px 700px at 50% 105%, color-mix(in srgb, var(--color-primary-dark) 26%, transparent), transparent 60%),
+    var(--color-bg);
   background-attachment: fixed;
   transition: background-color .25s ease;
 }
@@ -216,10 +223,13 @@ h1, h2, h3, p { margin: 0; }
   top: 12px;
   z-index: 20;
   margin: 12px 12px 0;
-  padding: 14px 16px;
-  border-radius: 20px;
+  padding: 14px 18px;
+  border-radius: 22px;
   background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary) 45%, var(--color-primary-dark));
-  box-shadow: 0 1px 0 rgba(255,255,255,.16) inset, var(--elevation-3);
+  /* A soft halo in the theme's own glow color, well beyond the tight
+     elevation shadow, so the header reads as a floating lit object
+     instead of a bar pinned to the top of the page. */
+  box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 20px 44px -14px var(--glow-primary), var(--elevation-3);
   transition: background .25s ease;
 }
 .app-header__inner {
@@ -246,7 +256,7 @@ h1, h2, h3, p { margin: 0; }
 }
 .app-header__logo .icon, .side-nav__logo .icon { width: 19px; height: 19px; vertical-align: 0; }
 .app-header__logo img, .side-nav__logo img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-.app-header__title { font-size: 18px; font-weight: 700; letter-spacing: .01em; }
+.app-header__title { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
 .app-header__game { font-size: 13px; background: rgba(255,255,255,.18); padding: 4px 12px; border-radius: 999px; box-shadow: 0 1px 0 rgba(255,255,255,.25) inset; }
 
 .app-main {
@@ -262,14 +272,21 @@ h1, h2, h3, p { margin: 0; }
 .view[hidden] { display: none; }
 
 .card {
-  background: linear-gradient(165deg, var(--color-surface) 0%, var(--color-surface-2) 140%);
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  padding: 16px;
+  /* Frosted glass instead of a flat gradient panel: translucent enough
+     that the colored mesh behind it (body background, above) actually
+     shows and blurs through, with a bright top edge standing in for a
+     real light source. color-mix() keeps this theme-agnostic — same
+     trick the rest of the file already uses for glow/elevation. */
+  background: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  border-radius: 22px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: var(--elevation-1);
+  box-shadow: 0 1px 0 rgba(255,255,255,.1) inset, var(--elevation-1);
   transition: box-shadow .2s ease, border-color .2s ease, background .25s ease;
 }
 .card[hidden] { display: none; }
@@ -278,8 +295,19 @@ h1, h2, h3, p { margin: 0; }
 /* Real headings, not tracked-out mini-labels — every card used to run
    its title through the same tiny uppercase+letter-spacing treatment,
    which reads as generic template chrome once it repeats on every
-   single section instead of marking anything as actually special. */
-.card__header h2 { font-size: 16px; font-weight: 700; color: var(--color-text); }
+   single section instead of marking anything as actually special. A
+   small gradient mark stands in for that lost "this is a label" cue,
+   without turning back into a text eyebrow. */
+.card__header h2 { display: flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 700; letter-spacing: -.01em; color: var(--color-text); }
+.card__header h2::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(160deg, var(--color-primary-light), var(--color-primary-dark));
+  box-shadow: 0 0 10px -1px var(--glow-primary);
+}
 .card__header.collapsible { cursor: pointer; }
 .chevron { transition: transform .2s ease; color: var(--color-text-dim); }
 .chevron.is-open { transform: rotate(180deg); }
@@ -305,8 +333,8 @@ h1, h2, h3, p { margin: 0; }
 }
 
 .draw-ball {
-  width: 150px;
-  height: 150px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 28%, #fff7e6, var(--color-accent) 55%, var(--color-accent-dark) 100%);
   display: flex;
@@ -314,11 +342,16 @@ h1, h2, h3, p { margin: 0; }
   align-items: center;
   justify-content: center;
   color: var(--color-on-accent);
+  /* A wide, soft halo well past the tight contact-shadow ring below —
+     this is the one moment every eye lands on first, so it gets the
+     single biggest, most deliberate glow in the app instead of the
+     same small drop-shadow every other raised surface uses. */
   box-shadow:
     inset 0 8px 14px rgba(255,255,255,.35),
     inset 0 -10px 20px rgba(0,0,0,.2),
     0 16px 34px -8px rgba(0,0,0,.5),
-    0 10px 40px -6px var(--glow-accent);
+    0 12px 30px -4px var(--glow-accent),
+    0 0 90px -12px var(--glow-accent);
   transition: transform .15s ease, box-shadow .25s ease;
 }
 .draw-ball.is-bouncing { animation: bounce .4s ease; }
@@ -361,11 +394,16 @@ h1, h2, h3, p { margin: 0; }
 .hint--suspense { color: var(--color-accent); font-weight: 600; text-align: center; }
 
 .btn {
+  /* One shape rule for every button in the app, replacing the old
+     per-size radius (10 / 14 / 18px): full pill, always. Paired with
+     .card at 22px and inputs at 12px, that's the whole shape scale —
+     three deliberate values instead of every component picking its
+     own roundness. */
   border: none;
-  border-radius: 14px;
+  border-radius: 999px;
   font-size: 15px;
   font-weight: 700;
-  padding: 13px 18px;
+  padding: 13px 20px;
   cursor: pointer;
   color: #fff;
   transition: transform .1s ease, box-shadow .15s ease, filter .15s ease;
@@ -374,10 +412,16 @@ h1, h2, h3, p { margin: 0; }
 .btn:active { transform: translateY(1px) scale(.98); box-shadow: 0 1px 0 rgba(255,255,255,.12) inset, 0 2px 6px -2px rgba(0,0,0,.4); }
 .btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 .btn--block { width: 100%; }
-.btn--small { padding: 8px 14px; font-size: 13px; border-radius: 10px; flex-shrink: 0; }
-.btn--xl { font-size: 18px; padding: 18px 24px; border-radius: 18px; }
-.btn--primary { background: linear-gradient(160deg, var(--color-primary-light), var(--color-primary) 55%, var(--color-primary-dark)); box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 8px 18px -6px var(--glow-primary); }
-.btn--secondary { background: linear-gradient(160deg, var(--color-surface-2), var(--color-surface)); border: 1px solid var(--color-border); box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 6px 14px -6px rgba(0,0,0,.4); }
+.btn--small { padding: 8px 16px; font-size: 13px; flex-shrink: 0; }
+.btn--xl { font-size: 18px; padding: 18px 26px; }
+.btn--primary { background: linear-gradient(155deg, var(--color-primary-light), var(--color-primary) 50%, var(--color-primary-dark)); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 10px 24px -8px var(--glow-primary); }
+.btn--secondary {
+  background: color-mix(in srgb, var(--color-surface-2) 70%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 6px 14px -6px rgba(0,0,0,.4);
+}
 .btn--danger { background: transparent; border: 1.5px solid var(--color-danger); color: var(--color-danger); box-shadow: none; }
 .btn--ghost { background: transparent; border: 1.5px solid var(--color-border); color: var(--color-text); box-shadow: none; }
 .btn--manual { color: var(--color-text); }
@@ -478,9 +522,9 @@ h1, h2, h3, p { margin: 0; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(160deg, var(--color-surface-2), var(--color-surface));
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-surface-2) 65%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 14px;
   padding: 10px 12px;
   box-shadow: var(--elevation-1);
 }
@@ -515,8 +559,8 @@ h1, h2, h3, p { margin: 0; }
   display: flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(160deg, var(--color-surface-2), var(--color-surface));
-  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-2) 65%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
   border-radius: 999px;
   padding: 4px 4px 4px 14px;
   font-size: 13px;
@@ -540,16 +584,25 @@ h1, h2, h3, p { margin: 0; }
 /* ---------- Dashboard ---------- */
 .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .stat-tile {
-  background: linear-gradient(160deg, var(--color-surface-2), var(--color-surface));
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 12px;
+  background: color-mix(in srgb, var(--color-surface-2) 65%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border-radius: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   box-shadow: var(--elevation-1);
 }
-.stat-tile__value { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat-tile__value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(160deg, var(--color-text) 30%, var(--color-primary-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .stat-tile__label { font-size: 11px; color: var(--color-text-dim); text-transform: uppercase; letter-spacing: .03em; }
 
 .bar-list { display: flex; flex-direction: column; gap: 8px; }
@@ -565,10 +618,10 @@ h1, h2, h3, p { margin: 0; }
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--color-text-dim); }
 .field input[type="text"], .field input[type="number"], .field input[type="email"], .field input[type="password"], .field select {
   width: 100%;
-  background: var(--color-surface-2);
+  background: color-mix(in srgb, var(--color-surface-2) 80%, transparent);
   border: 1px solid var(--color-border);
   color: var(--color-text);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 11px 12px;
   font-size: 15px;
   box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
@@ -672,17 +725,24 @@ h1, h2, h3, p { margin: 0; }
 .brand-field__body .btn-group { flex-direction: row; flex-wrap: wrap; margin-top: 2px; }
 .brand-field__body .btn { flex: 0 0 auto; }
 
-/* ---------- Bottom nav ---------- */
+/* ---------- Bottom nav ----------
+   A floating glass pill instead of a bar welded to the screen edge —
+   detached on all sides, blurred, rounded to match the card/button
+   language above instead of being the one squared-off, edge-to-edge
+   surface left in the app. */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-2) 100%);
-  border-top: 1px solid var(--color-border);
-  padding: 8px 6px calc(8px + var(--safe-bottom));
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + var(--safe-bottom));
+  background: color-mix(in srgb, var(--color-surface) 76%, transparent);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  border-radius: 26px;
+  padding: 8px;
   z-index: 30;
-  box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 -10px 24px rgba(0,0,0,.35);
+  box-shadow: 0 1px 0 rgba(255,255,255,.1) inset, 0 20px 40px -16px rgba(0,0,0,.55);
 }
 .bottom-nav__inner {
   max-width: var(--content-width);
@@ -720,16 +780,20 @@ h1, h2, h3, p { margin: 0; }
 .modal__backdrop { position: absolute; inset: 0; background: rgba(5,6,14,.66); backdrop-filter: blur(6px) saturate(140%); -webkit-backdrop-filter: blur(6px) saturate(140%); }
 .modal__sheet {
   position: relative;
-  background: linear-gradient(165deg, var(--color-surface) 0%, var(--color-surface-2) 150%);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  border-bottom: none;
   width: 100%;
   max-height: 88vh;
   overflow-y: auto;
-  border-radius: 22px 22px 0 0;
-  padding: 16px;
+  border-radius: 26px 26px 0 0;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: var(--elevation-3);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, var(--elevation-3);
   animation: modal-sheet-in .22s cubic-bezier(.2,.8,.2,1);
 }
 @keyframes modal-sheet-in {
@@ -739,7 +803,8 @@ h1, h2, h3, p { margin: 0; }
 .modal__sheet--center {
   max-width: 360px;
   margin: 0 16px;
-  border-radius: 22px;
+  border-radius: 26px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
   align-items: center;
   text-align: center;
   animation-name: modal-sheet-in-center;
@@ -1117,7 +1182,7 @@ body.is-observing #btnLogout {
   :root { --content-width: 760px; }
   .app-main { padding: 24px; }
   .app-header { padding: 14px 24px; margin: 20px 20px 0; top: 20px; }
-  .bottom-nav { padding: 10px 24px calc(10px + var(--safe-bottom)); }
+  .bottom-nav { left: 24px; right: 24px; bottom: calc(20px + var(--safe-bottom)); padding: 10px; }
   .bottom-nav__inner { gap: 14px; }
   .bottom-nav__item { flex: 0 0 auto; min-width: 96px; }
   .draw-ball { width: 180px; height: 180px; }
@@ -1131,7 +1196,7 @@ body.is-observing #btnLogout {
        exceeds max-height, hiding the close button entirely. */
     margin: auto;
     max-width: 480px;
-    border-radius: 22px;
+    border-radius: 26px;
     align-self: center;
   }
   .modal:not(.modal--winner) { align-items: center; justify-content: center; }
@@ -1150,9 +1215,11 @@ body.is-observing #btnLogout {
     gap: 4px;
     width: 220px;
     flex-shrink: 0;
-    background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-2) 130%);
-    border: 1px solid var(--color-border);
-    border-radius: 20px;
+    background: color-mix(in srgb, var(--color-surface) 74%, transparent);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+    border-radius: 22px;
     padding: 16px 12px;
     position: sticky;
     top: 20px;
@@ -1160,7 +1227,7 @@ body.is-observing #btnLogout {
     margin: 20px 0 20px 20px;
     overflow-y: auto;
     transition: width .18s ease;
-    box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, var(--elevation-3);
+    box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, var(--elevation-3);
   }
   .side-nav.is-collapsed { width: 72px; }
   .side-nav__toggle {
