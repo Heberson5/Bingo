@@ -114,6 +114,8 @@ docker compose up -d --build
 
 Mudanças no banco de dados (novas colunas/tabelas) são aplicadas sozinhas: o container da API roda `prisma migrate deploy` toda vez que sobe, antes de aceitar requisições — não precisa rodar nada manualmente no Postgres.
 
+Se alguém já estava com o site aberto ANTES do deploy, o navegador dela pode continuar usando `css/styles.css`/`js/*.js` antigos, cacheados, por até 1h (o build já cuida disso sozinho, revalidando a versão a cada deploy — mas se algo parecer "não atualizou" logo depois de um `docker compose up -d --build`, um F5 forçado — Ctrl+Shift+R, ou Ctrl+F5 — ou uma aba anônima resolve na hora).
+
 **Comandos úteis:**
 
 ```bash
