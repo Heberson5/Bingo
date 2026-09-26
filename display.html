@@ -58,6 +58,9 @@
   .stats { font-size: min(3vw, 3vh); color: #a6acc7; }
   .empty { font-size: min(4vw, 4vh); color: #a6acc7; text-align: center; padding: 0 20px; }
   .empty[hidden] { display: none; }
+  .inactive { font-size: min(4vw, 4vh); color: #a6acc7; text-align: center; padding: 0 20px; }
+  .inactive[hidden] { display: none; }
+  .inactive strong { display: block; color: #f1f2f8; font-size: 1.3em; margin-bottom: .3em; }
 </style>
 </head>
 <body>
@@ -66,15 +69,26 @@
       <span class="ball__letter" id="letter">-</span>
       <span class="ball__number" id="number">--</span>
     </div>
-    <p class="empty" id="emptyHint">Aguardando o início do sorteio…</p>
+    <p class="empty" id="emptyHint" hidden>Aguardando o início do sorteio…</p>
+    <p class="inactive" id="inactiveHint" hidden><strong>Sessão encerrada</strong>O operador saiu do aplicativo. Esta tela volta a funcionar assim que ele entrar de novo e iniciar um sorteio.</p>
     <p class="stats" id="stats"></p>
   </div>
 
 <script>
-  var GAME_KEY = 'bingo_game_v1';
-  var CONFIG_KEY = 'bingo_config_v1';
   var LETTERS = ['B', 'I', 'N', 'G', 'O'];
   var lastRenderedCount = -1;
+
+  // Which user's game this screen shows — set as a query param by the
+  // main app (see updateDisplayLinkHref() in js/ui.js) when it builds
+  // the "Abrir tela do sorteio" link, so this page works with no login
+  // of its own: it can be opened on any other device/browser.
+  var params = new URLSearchParams(location.search);
+  var userId = params.get('u');
+
+  var ballEl = document.getElementById('ball');
+  var emptyHintEl = document.getElementById('emptyHint');
+  var inactiveHintEl = document.getElementById('inactiveHint');
+  var statsEl = document.getElementById('stats');
 
   function getColumnRanges(min, max) {
     var total = max - min + 1;
@@ -97,66 +111,79 @@
     return '';
   }
 
-  function readJSON(key) {
-    try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; }
+  function showState(which) {
+    ballEl.hidden = which !== 'ball';
+    emptyHintEl.hidden = which !== 'empty';
+    inactiveHintEl.hidden = which !== 'inactive';
   }
 
-  function render() {
-    var game = readJSON(GAME_KEY);
-    var config = readJSON(CONFIG_KEY);
-    var min = config.min != null ? config.min : 1;
-    var max = config.max != null ? config.max : 75;
-    var drawn = game.drawnNumbers || [];
+  function applyState(data) {
+    if (!data.active) {
+      showState('inactive');
+      statsEl.textContent = '';
+      lastRenderedCount = -1;
+      return;
+    }
+
+    var min = data.min != null ? data.min : 1;
+    var max = data.max != null ? data.max : 75;
+    var drawn = data.drawnNumbers || [];
 
     // In suspense mode the main app deliberately holds `revealedCount`
     // behind drawnNumbers.length until the operator taps the ball there
     // — this display only ever shows numbers up to that point, so the
     // audience sees a ball appear exactly when the operator reveals it,
     // never the instant it's actually drawn.
-    var revealedCount = (config.suspenseMode && typeof game.revealedCount === 'number')
-      ? Math.min(game.revealedCount, drawn.length)
+    var revealedCount = data.suspenseMode
+      ? Math.min(data.revealedCount || 0, drawn.length)
       : drawn.length;
     var revealed = drawn.slice(0, revealedCount);
 
-    var ball = document.getElementById('ball');
-    var emptyHint = document.getElementById('emptyHint');
-    var stats = document.getElementById('stats');
-
     if (revealed.length === 0) {
-      ball.hidden = true;
-      emptyHint.hidden = false;
-      stats.textContent = '';
+      showState('empty');
+      statsEl.textContent = '';
       lastRenderedCount = 0;
       return;
     }
 
-    ball.hidden = false;
-    emptyHint.hidden = true;
+    showState('ball');
     var last = revealed[revealed.length - 1];
     document.getElementById('letter').textContent = letterForNumber(last, min, max);
     document.getElementById('number').textContent = last;
     var total = max - min + 1;
-    stats.textContent = revealed.length + ' de ' + total + ' números sorteados';
+    statsEl.textContent = revealed.length + ' de ' + total + ' números sorteados';
 
     if (revealed.length !== lastRenderedCount) {
-      ball.classList.remove('is-bouncing');
-      void ball.offsetWidth;
-      ball.classList.add('is-bouncing');
+      ballEl.classList.remove('is-bouncing');
+      void ballEl.offsetWidth;
+      ballEl.classList.add('is-bouncing');
     }
     lastRenderedCount = revealed.length;
   }
 
-  // `storage` fires in this tab whenever ANOTHER tab/window changes
-  // localStorage — exactly the case where the main app (in the other
-  // tab) just drew a new number.
-  window.addEventListener('storage', function (e) {
-    if (!e.key || e.key === GAME_KEY || e.key === CONFIG_KEY) render();
-  });
+  function showInvalidLink() {
+    inactiveHintEl.innerHTML = '<strong>Link inválido</strong>Abra esta tela pelo botão dentro do aplicativo (ícone de monitor, no topo da tela de Sorteio).';
+    showState('inactive');
+  }
 
-  // Fallback poll, in case a browser doesn't fire the storage event
-  // reliably for this pair of tabs.
-  setInterval(render, 1500);
-  render();
+  async function poll() {
+    try {
+      var res = await fetch('/api/public/display/' + encodeURIComponent(userId), { cache: 'no-store' });
+      if (!res.ok) throw new Error('http_' + res.status);
+      var data = await res.json();
+      applyState(data);
+    } catch (e) {
+      // Rede fora do ar / API indisponível — mantém o que já estava na
+      // tela em vez de piscar "sessão encerrada" a cada falha passageira.
+    }
+  }
+
+  if (!userId) {
+    showInvalidLink();
+  } else {
+    poll();
+    setInterval(poll, 1500);
+  }
 </script>
 </body>
 </html>

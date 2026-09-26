@@ -29,6 +29,12 @@ model User {
   mustChangePassword Boolean     @default(false)
   /// desativar em vez de apagar preserva o historico do usuario.
   active             Boolean     @default(true)
+  /// preenchido no login, limpo no logout (explícito ou por
+  /// inatividade) — é assim que a tela de acompanhamento pública (sem
+  /// login, aberta por link em outro dispositivo) sabe se ainda há
+  /// alguém logado rodando esse jogo, ou se deve avisar "sessão
+  /// encerrada" em vez de continuar mostrando a última bola.
+  activeSessionSince DateTime?
   createdAt          DateTime    @default(now())
   states             UserState[]
 

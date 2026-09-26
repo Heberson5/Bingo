@@ -19,11 +19,36 @@ router.post('/login', async (req, res) => {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
 
+  // Marca a sessão como ativa — é isto que a tela de acompanhamento
+  // pública (ver routes/public.js) usa para saber se ainda há alguém
+  // logado rodando esse jogo.
+  await prisma.user.update({ where: { id: user.id }, data: { activeSessionSince: new Date() } });
+
   res.json({
     accessToken: signAccessToken(user),
     refreshToken: signRefreshToken(user),
     user: publicUser(user),
   });
+});
+
+/**
+ * Chamado no logoff (manual ou automático por inatividade — ver
+ * stopInactivityWatcher/performLogout em js/ui.js). Identifica o
+ * usuário pelo refresh token em vez de exigir um access token válido,
+ * porque o access token já pode ter expirado (15min) quando o logoff
+ * acontece; o refresh token (30 dias) é o que realisticamente ainda
+ * está disponível no cliente nesse momento.
+ */
+router.post('/logout', async (req, res) => {
+  const { refreshToken } = req.body || {};
+  if (!refreshToken) return res.json({ ok: true }); // nada pra limpar
+  try {
+    const payload = jwt.verify(refreshToken, REFRESH_SECRET);
+    await prisma.user.update({ where: { id: payload.sub }, data: { activeSessionSince: null } });
+  } catch (err) {
+    // Token inválido/expirado — não há sessão pra invalidar mesmo.
+  }
+  res.json({ ok: true });
 });
 
 router.post('/refresh', async (req, res) => {

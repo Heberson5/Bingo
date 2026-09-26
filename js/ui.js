@@ -58,15 +58,25 @@ $('#sideNavToggle').addEventListener('click', () => {
 applySidebarState();
 
 /* ---------------- Fullscreen draw display (separate window/tab) ----------------
-   #btnOpenDisplay is a plain <a href="display.html" target="_blank"> now, not
-   a JS-only button — on the real deployed site that's a real, copyable,
-   shareable URL (e.g. https://seu-dominio/display.html) that works when
-   opened directly on a different computer, unlike a blob: URL which is
-   only valid inside the browser/tab that created it. The single-file
-   Artifact bundle has no second file for that href to resolve to, so its
-   build still embeds the page's markup as window.BINGO_DISPLAY_HTML and
-   this intercepts the click to open it from a Blob URL instead — that
+   #btnOpenDisplay is a plain <a href="display.html?u=..." target="_blank"> —
+   on the real deployed site that's a real, copyable, shareable URL (e.g.
+   https://seu-dominio/display.html?u=<id>) that works when opened
+   directly on a different computer, unlike a blob: URL which is only
+   valid inside the browser/tab that created it. The `u` query param is
+   what tells that OTHER device — which has no login of its own — whose
+   game to show, via the unauthenticated GET /api/public/display/:userId
+   (see display.html). It follows whichever user is currently being
+   viewed (Session.viewingUserId), so Master browsing another user's
+   data also gets the right display link. The single-file Artifact
+   bundle has no second file for that href to resolve to, so its build
+   still embeds the page's markup as window.BINGO_DISPLAY_HTML and this
+   intercepts the click to open it from a Blob URL instead — that
    fallback is scoped to the Artifact context only. */
+function updateDisplayLinkHref() {
+  const uid = Session.viewingUserId || (Session.user && Session.user.id);
+  if (uid) $('#btnOpenDisplay').href = `display.html?u=${encodeURIComponent(uid)}`;
+}
+
 $('#btnOpenDisplay').addEventListener('click', (e) => {
   if (window.BINGO_DISPLAY_HTML) {
     e.preventDefault();
@@ -1292,7 +1302,91 @@ function renderHistorico() {
             : '<span class="empty-hint">Nenhum ganhador registrado.</span>'}
         </div>`).join('')
     : '<span class="empty-hint">Nenhuma partida encerrada ainda.</span>';
+
+  if (Session.isMaster()) renderHistoricoAllUsers();
+  $('#historicoAllUsersCard').hidden = !Session.isMaster();
 }
+
+/**
+ * Master-only: every user's finished games at once (tagged by user),
+ * with a delete button per game and a "Redefinir contagem" per user —
+ * the plain list above only ever shows whichever single user is
+ * currently being viewed (Session.viewingUserId).
+ */
+async function renderHistoricoAllUsers() {
+  const container = $('#historicoAllUsersList');
+  container.innerHTML = '<span class="empty-hint">Carregando…</span>';
+  const users = await Api.fetchAllUsersHistory();
+
+  if (users.length === 0) {
+    container.innerHTML = '<span class="empty-hint">Nenhum usuário cadastrado ainda.</span>';
+    return;
+  }
+
+  // Every user shows up, even with zero games — that's the only way to
+  // reach "Redefinir contagem" for someone whose games were all just
+  // deleted (exactly when resetting back to #1 is most likely wanted).
+  container.innerHTML = users.map((u) => `
+    <div class="card history-user-card" data-user-id="${u.userId}">
+      <div class="card__header">
+        <h2>${escapeHtml(u.userName || u.userEmail)} <span class="badge">${u.games.length}</span></h2>
+        <button type="button" class="btn btn--ghost btn--small" data-reset-counter="${u.userId}">Redefinir contagem</button>
+      </div>
+      <div class="cards-summary">
+        ${u.games.length === 0 ? '<span class="empty-hint">Nenhum jogo encerrado ainda.</span>' : u.games.slice().reverse().map((g) => `
+          <div class="card-item">
+            <div>
+              <div class="card-item__name">Jogo #${g.gameId}</div>
+              <div class="card-item__meta">${formatDateTime(g.endedAt)} · ${formatGameDuration(g)} · ${g.cardsCount} cartela(s)${g.winners.length ? ' · ' + g.winners.length + ' prêmio(s)' : ''}</div>
+            </div>
+            <button class="card-item__delete" data-delete-game="${u.userId}:${g.gameId}" aria-label="Excluir jogo">🗑️</button>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+$('#historicoAllUsersList').addEventListener('click', async (e) => {
+  const delBtn = e.target.closest('[data-delete-game]');
+  if (delBtn) {
+    const [userId, gameId] = delBtn.dataset.deleteGame.split(':');
+    openConfirm(
+      'Excluir jogo?',
+      `O Jogo #${gameId} será excluído permanentemente do histórico. Essa ação não pode ser desfeita.`,
+      async () => {
+        try {
+          await Api.deleteGame(userId, gameId);
+          showToast('Jogo excluído.');
+          if (Session.viewingUserId === userId) await Store.hydrate();
+          renderHistorico();
+        } catch (err) {
+          showToast('Não foi possível excluir o jogo.');
+        }
+      }
+    );
+    return;
+  }
+
+  const resetBtn = e.target.closest('[data-reset-counter]');
+  if (resetBtn) {
+    const userId = resetBtn.dataset.resetCounter;
+    const card = resetBtn.closest('[data-user-id]');
+    const userLabel = card.querySelector('.card__header h2').textContent.trim();
+    openConfirm(
+      'Redefinir contagem?',
+      `A numeração de partidas de ${userLabel} vai continuar a partir do maior "Jogo #" ainda salvo no histórico dele — sem pular nem repetir números. Isso só afeta o próximo jogo dele, não os já encerrados.`,
+      async () => {
+        try {
+          const result = await Api.resetGameCounter(userId);
+          showToast(`Contagem redefinida — o próximo jogo será #${result.nextId}.`);
+          if (Session.viewingUserId === userId) await Store.hydrate();
+          renderSorteio();
+        } catch (err) {
+          showToast('Não foi possível redefinir a contagem.');
+        }
+      }
+    );
+  }
+});
 
 /* ================================================================
    DASHBOARD
@@ -2139,6 +2233,7 @@ async function switchViewedUser(userId) {
   applyTheme(Store.config.theme);
   applyBranding();
   applyDisplaySettings(Store.config);
+  updateDisplayLinkHref();
 
   const observing = Session.isObserving();
   document.body.classList.toggle('is-observing', observing);
@@ -2232,6 +2327,7 @@ async function bootApp() {
   applyDisplaySettings(Store.config);
   document.body.classList.remove('is-observing');
   $('#observingBanner').hidden = true;
+  updateDisplayLinkHref();
   if (Session.isMaster()) await refreshUsersList();
   else $('#masterUserFilter').hidden = true;
   switchView(firstAllowedMenu());

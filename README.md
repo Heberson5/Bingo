@@ -112,6 +112,8 @@ git pull
 docker compose up -d --build
 ```
 
+Mudanças no banco de dados (novas colunas/tabelas) são aplicadas sozinhas: o container da API roda `prisma migrate deploy` toda vez que sobe, antes de aceitar requisições — não precisa rodar nada manualmente no Postgres.
+
 **Comandos úteis:**
 
 ```bash

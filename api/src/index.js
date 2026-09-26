@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const stateRoutes = require('./routes/state');
 const usersRoutes = require('./routes/users');
 const permissionsRoutes = require('./routes/permissions');
+const publicRoutes = require('./routes/public');
 
 const app = express();
 
@@ -63,6 +64,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/state', stateRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/permissions', permissionsRoutes);
+app.use('/api/public', publicRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'not_found' }));
 

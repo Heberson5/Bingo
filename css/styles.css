@@ -518,6 +518,7 @@ h1, h2, h3, p { margin: 0; }
 .bar-row__value { width: 26px; text-align: right; font-weight: 700; flex-shrink: 0; }
 
 .history-card .card__header { align-items: flex-start; flex-wrap: wrap; gap: 4px; }
+.history-user-card .card__header { flex-wrap: wrap; gap: 8px; }
 
 /* ---------- Forms ---------- */
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--color-text-dim); }

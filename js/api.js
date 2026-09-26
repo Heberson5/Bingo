@@ -69,11 +69,24 @@ const Api = {
   },
 
   logout() {
+    // Best-effort: clears the local session immediately regardless, but
+    // also tells the server this session ended — that's what flips
+    // activeSessionSince off, which is what the public display screen
+    // (display.html, opened with no login of its own) checks to show
+    // "sessão encerrada" instead of the last-known ball forever.
+    const refreshToken = Session.refreshToken;
     Session.accessToken = null;
     Session.refreshToken = null;
     Session.user = null;
     Session.viewingUserId = null;
     storeRefreshToken(null);
+    if (refreshToken) {
+      fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      }).catch(() => {});
+    }
   },
 
   /** Tenta reaproveitar a sessão salva (refresh token) ao abrir o app. */
@@ -204,5 +217,26 @@ const Api = {
   async savePermissions(value) {
     const res = await this.request('/permissions', { method: 'PUT', body: JSON.stringify({ value }) });
     if (!res.ok) throw new Error('error');
+  },
+
+  /** Master only: every user's finished-games history at once, tagged by user. */
+  async fetchAllUsersHistory() {
+    const res = await this.request('/state/history/all');
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.users;
+  },
+
+  /** Master only: deletes one finished game (by gameId) from a given user's history. */
+  async deleteGame(userId, gameId) {
+    const res = await this.request(`/state/history/${encodeURIComponent(userId)}/${encodeURIComponent(gameId)}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('error');
+  },
+
+  /** Master only: recomputes a user's live "Jogo #N" counter from their remaining history. */
+  async resetGameCounter(userId) {
+    const res = await this.request(`/state/reset-counter/${encodeURIComponent(userId)}`, { method: 'POST' });
+    if (!res.ok) throw new Error('error');
+    return res.json();
   },
 };
