@@ -251,12 +251,19 @@ function renderNearMisses() {
 
   $('#nearMissCount').textContent = cardCount;
   $('#nearMissCard').hidden = misses.length === 0;
-  $('#nearMissList').innerHTML = misses
-    .map((m) => `
-      <div class="card-item">
+  // Agrupa por cartela: uma mesma cartela pode estar a 1 número de
+  // vários critérios ao mesmo tempo — antes aparecia repetida.
+  const byCard = new Map();
+  misses.forEach((m) => {
+    if (!byCard.has(m.card.id)) byCard.set(m.card.id, { card: m.card, items: [] });
+    byCard.get(m.card.id).items.push(m);
+  });
+  $('#nearMissList').innerHTML = Array.from(byCard.values())
+    .map(({ card, items }) => `
+      <div class="card-item card-item--near">
         <div>
-          <div class="card-item__name">${escapeHtml(m.card.name)}</div>
-          <div class="card-item__meta">Concorrendo: ${escapeHtml(m.label)} · falta o <strong>${m.neededNumber}</strong> (${letterForNumber(m.neededNumber)})</div>
+          <div class="card-item__name">${escapeHtml(card.name)}</div>
+          <div class="card-item__meta">${items.map((m) => `${escapeHtml(m.label)}: falta <strong>${letterForNumber(m.neededNumber)}${m.neededNumber}</strong>`).join(' · ')}</div>
         </div>
       </div>`)
     .join('');
@@ -336,7 +343,7 @@ function renderLastBalls() {
   }
   row.innerHTML = nums
     .map((num, i) => `
-      <div class="chip ${i === 0 ? 'chip--latest' : ''}">
+      <div class="chip chip--${letterForNumber(num).toLowerCase()} ${i === 0 ? 'chip--latest' : ''}">
         <small>${letterForNumber(num)}</small>${num}
       </div>`)
     .join('');
@@ -365,7 +372,7 @@ function renderDrawBoard() {
     }
     html += `
       <div class="board-row">
-        <div class="board-row__label">${LETTERS[col]}</div>
+        <div class="board-row__label" data-letter="${LETTERS[col].toLowerCase()}">${LETTERS[col]}</div>
         <div class="board-row__nums" style="--cols-count:${e - s + 1}">${numsHtml}</div>
       </div>`;
   }
@@ -410,10 +417,11 @@ function renderActiveCardsSummary() {
       const total = c.grid.flat().length;
       const won = c.achievements.length > 0;
       return `
-        <div class="card-item ${won ? 'is-winner' : ''}">
-          <div>
+        <div class="card-item card-item--progress ${won ? 'is-winner' : ''}">
+          <div class="card-item__body">
             <div class="card-item__name">${escapeHtml(c.name)}</div>
             <div class="card-item__meta">${markedCount}/${total} marcados${cardNumberSuffix(c)}${won ? ' · ' + achievementSummary(c.achievements) : ''}</div>
+            <div class="mini-progress" aria-hidden="true"><span style="width:${Math.round(markedCount / total * 100)}%"></span></div>
           </div>
         </div>`;
     })
@@ -526,7 +534,7 @@ function renderCartelas() {
             <div class="card-item__name">${escapeHtml(c.name)}</div>
             <div class="card-item__meta">Jogo #${c.gameId}${cardNumberSuffix(c)}${c.achievements.length ? ' · ' + achievementSummary(c.achievements) : ''}</div>
           </div>
-          <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
+          <button class="card-item__delete" data-delete-card aria-label="Excluir cartela"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-trash"></use></svg></button>
         </div>`).join('')
     : '<span class="empty-hint">Nenhuma cartela ativa.</span>';
 
@@ -539,7 +547,7 @@ function renderCartelas() {
             <div class="card-item__name">${escapeHtml(c.name)}</div>
             <div class="card-item__meta">Jogo #${c.gameId}${cardNumberSuffix(c)} · ${c.achievements.length ? achievementSummary(c.achievements) : 'sem vitória'}</div>
           </div>
-          <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
+          <button class="card-item__delete" data-delete-card aria-label="Excluir cartela"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-trash"></use></svg></button>
         </div>`).join('')
     : '<span class="empty-hint">Nenhum histórico ainda.</span>';
 }
@@ -601,7 +609,7 @@ function renderEstoque() {
           </div>
           <div class="card-item__actions">
             <button class="btn btn--secondary btn--small" data-assign-card>Entregar</button>
-            <button class="card-item__delete" data-delete-card aria-label="Excluir cartela">🗑️</button>
+            <button class="card-item__delete" data-delete-card aria-label="Excluir cartela"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-trash"></use></svg></button>
           </div>
         </div>`).join('')
     : `<span class="empty-hint">${estoqueSearchQuery ? 'Nenhuma cartela encontrada para essa busca.' : 'Nenhuma cartela em estoque.'}</span>`;
@@ -1339,7 +1347,7 @@ async function renderHistoricoAllUsers() {
               <div class="card-item__name">Jogo #${g.gameId}</div>
               <div class="card-item__meta">${formatDateTime(g.endedAt)} · ${formatGameDuration(g)} · ${g.cardsCount} cartela(s)${g.winners.length ? ' · ' + g.winners.length + ' prêmio(s)' : ''}</div>
             </div>
-            <button class="card-item__delete" data-delete-game="${u.userId}:${g.gameId}" aria-label="Excluir jogo">🗑️</button>
+            <button class="card-item__delete" data-delete-game="${u.userId}:${g.gameId}" aria-label="Excluir jogo"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-trash"></use></svg></button>
           </div>`).join('')}
       </div>
     </div>`).join('');
@@ -1398,6 +1406,15 @@ function renderBarList(el, entries) {
     return;
   }
   const max = Math.max(...entries.map(([, v]) => v));
+  if (el.classList.contains('bar-list--columns')) {
+    el.innerHTML = entries.map(([label, value]) => `
+      <div class="bar-col" title="${escapeHtml(label)}: ${value}">
+        <span class="bar-col__value">${value}</span>
+        <div class="bar-col__track"><div class="bar-col__fill" style="height:${max ? (value / max * 100) : 0}%"></div></div>
+        <span class="bar-col__label">${escapeHtml(label)}</span>
+      </div>`).join('');
+    return;
+  }
   el.innerHTML = entries.map(([label, value]) => `
     <div class="bar-row">
       <span class="bar-row__label">${escapeHtml(label)}</span>
@@ -1918,12 +1935,12 @@ function renderPermissionsPanel() {
   const settingsWrap = $('#permSettingsList');
   if (!menusWrap || !settingsWrap) return;
   menusWrap.innerHTML = Object.entries(PERMISSION_MENU_LABELS).map(([key, label]) => `
-    <label class="field field--check">
+    <label class="field field--check field--switch">
       <input type="checkbox" data-perm-menu="${key}" ${Permissions.menus[key] ? 'checked' : ''}>
       <span>${escapeHtml(label)}</span>
     </label>`).join('');
   settingsWrap.innerHTML = Object.entries(PERMISSION_SETTING_LABELS).map(([key, label]) => `
-    <label class="field field--check">
+    <label class="field field--check field--switch">
       <input type="checkbox" data-perm-setting="${key}" ${Permissions.settings[key] ? 'checked' : ''}>
       <span>${escapeHtml(label)}</span>
     </label>`).join('');
@@ -1936,12 +1953,12 @@ function renderPermissionsPanel() {
   const settingsWrapMaster = $('#permSettingsListMaster');
   if (menusWrapMaster && settingsWrapMaster) {
     menusWrapMaster.innerHTML = Object.values(PERMISSION_MENU_LABELS).map((label) => `
-      <label class="field field--check">
+      <label class="field field--check field--switch">
         <input type="checkbox" checked disabled>
         <span>${escapeHtml(label)}</span>
       </label>`).join('');
     settingsWrapMaster.innerHTML = Object.values(PERMISSION_SETTING_LABELS).map((label) => `
-      <label class="field field--check">
+      <label class="field field--check field--switch">
         <input type="checkbox" checked disabled>
         <span>${escapeHtml(label)}</span>
       </label>`).join('');
@@ -2049,6 +2066,11 @@ async function refreshUsersList() {
   renderMasterHeaderFilter();
 }
 
+function initialsOf(text) {
+  const parts = String(text || '').replace(/@.*/, '').trim().split(/[\s._-]+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+
 function renderUsersList() {
   const wrap = $('#usersList');
   if (!wrap) return;
@@ -2057,11 +2079,17 @@ function renderUsersList() {
     return;
   }
   wrap.innerHTML = cachedUsers.map((u) => `
-    <div class="card-item">
+    <div class="card-item user-row ${u.active ? '' : 'is-inactive'}">
       <div class="card-item__main">
+        <span class="avatar" aria-hidden="true">${escapeHtml(initialsOf(u.name || u.email))}</span>
         <div>
-          <div class="card-item__name">${escapeHtml(u.name || u.email)}${u.role === 'master' ? ' <span class="badge">Master</span>' : ''}</div>
-          <div class="card-item__meta">${u.name ? `${escapeHtml(u.email)} • ` : ''}${u.active ? 'Ativo' : 'Inativo'}${u.mustChangePassword ? ' • aguardando troca de senha' : ''}</div>
+          <div class="card-item__name">${escapeHtml(u.name || u.email)}${u.id === Session.user.id ? ' <span class="pill">você</span>' : ''}</div>
+          <div class="card-item__meta">${escapeHtml(u.email)}</div>
+          <div class="user-row__pills">
+            <span class="pill ${u.role === 'master' ? 'pill--accent' : ''}">${u.role === 'master' ? 'Master' : 'Usuário'}</span>
+            <span class="pill ${u.active ? 'pill--success' : 'pill--muted'}">${u.active ? 'Ativo' : 'Inativo'}</span>
+            ${u.mustChangePassword ? '<span class="pill pill--warn">Aguardando troca de senha</span>' : ''}
+          </div>
         </div>
       </div>
       ${u.id !== Session.user.id ? `

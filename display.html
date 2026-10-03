@@ -7,71 +7,146 @@
 <meta name="theme-color" content="#0f1220">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎱</text></svg>">
 <style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #0f1220;
+  @font-face {
+    font-family: 'Inter Variable';
+    font-style: normal;
+    font-display: swap;
+    font-weight: 100 900;
+    src: url(fonts/inter-latin-wght-normal.woff2) format('woff2-variations');
   }
+  :root {
+    color-scheme: dark;
+    --bg: #0a0b0f;
+    --surface: #13151b;
+    --surface-2: #1b1e26;
+    --text: #eef0f5;
+    --dim: #8c93a4;
+    --l-b: #3b82f6; --l-i: #ef4444; --l-n: #a78bfa; --l-g: #22c55e; --l-o: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); }
   body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #f1f2f8;
+    font-family: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
     -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
   }
   .stage {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4vmin;
-    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    grid-template-rows: 1fr auto;
+    gap: 3vmin;
     height: 100%;
     padding: 4vmin;
+    background: radial-gradient(60vw 60vh at 20% 30%, color-mix(in srgb, var(--ball, #f59e0b) 18%, transparent), transparent 70%);
+    transition: background .6s ease;
   }
+  .hero { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3vmin; min-width: 0; }
   .ball {
-    width: min(70vw, 70vh);
-    height: min(70vw, 70vh);
+    --ball: #f59e0b;
+    width: min(38vw, 62vh);
+    height: min(38vw, 62vh);
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #fff7e6, #f59e0b 55%, #b8790a 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #3a2504;
-    box-shadow: 0 10px 60px rgba(245, 158, 11, .35), inset 0 -6px 30px rgba(0,0,0,.15);
+    color: #111318;
+    background:
+      radial-gradient(circle at 50% 50%, #fff 0 54%, rgba(0,0,0,.12) 55%, transparent 57%),
+      radial-gradient(circle at 32% 26%, color-mix(in srgb, var(--ball) 55%, #fff) 0%, var(--ball) 45%, color-mix(in srgb, var(--ball) 60%, #000) 100%);
+    box-shadow: inset 0 -2vmin 4vmin rgba(0,0,0,.25), 0 4vmin 10vmin -4vmin color-mix(in srgb, var(--ball) 70%, transparent);
     transition: transform .15s ease;
   }
   .ball[hidden] { display: none; }
-  .ball.is-bouncing { animation: bounce .4s ease; }
+  .ball.is-bouncing { animation: bounce .5s cubic-bezier(.3,1.4,.5,1); }
   @keyframes bounce {
-    0% { transform: scale(.85) rotate(-4deg); }
-    60% { transform: scale(1.08) rotate(3deg); }
+    0% { transform: scale(.6) rotate(-20deg); opacity: .2; }
+    60% { transform: scale(1.06) rotate(4deg); opacity: 1; }
     100% { transform: scale(1) rotate(0); }
   }
-  .ball__letter { font-size: min(9vw, 9vh); font-weight: 800; letter-spacing: .05em; }
-  .ball__number { font-size: min(26vw, 26vh); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-  .stats { font-size: min(3vw, 3vh); color: #a6acc7; }
-  .empty { font-size: min(4vw, 4vh); color: #a6acc7; text-align: center; padding: 0 20px; }
-  .empty[hidden] { display: none; }
-  .inactive { font-size: min(4vw, 4vh); color: #a6acc7; text-align: center; padding: 0 20px; }
-  .inactive[hidden] { display: none; }
-  .inactive strong { display: block; color: #f1f2f8; font-size: 1.3em; margin-bottom: .3em; }
+  .ball__letter { font-size: min(5vw, 8vh); font-weight: 800; line-height: 1; color: color-mix(in srgb, var(--ball) 70%, #000); }
+  .ball__number { font-size: min(15vw, 24vh); font-weight: 800; line-height: .95; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .stats { font-size: min(2.2vw, 3.2vh); color: var(--dim); margin: 0; font-weight: 500; }
+  .stats strong { color: var(--text); font-weight: 800; }
+  .side { display: flex; flex-direction: column; gap: 2.4vmin; min-width: 0; justify-content: center; }
+  .label { font-size: min(1.4vw, 2.2vh); font-weight: 600; color: var(--dim); margin: 0 0 1vmin; }
+  .recent { display: flex; gap: 1.2vmin; flex-wrap: nowrap; overflow: hidden; }
+  .recent__ball {
+    --ball: #888;
+    flex: 0 0 auto;
+    width: min(5.4vw, 8.5vh);
+    height: min(5.4vw, 8.5vh);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: min(2vw, 3.2vh);
+    font-variant-numeric: tabular-nums;
+    background: color-mix(in srgb, var(--ball) 16%, var(--surface));
+    border: .35vmin solid color-mix(in srgb, var(--ball) 60%, transparent);
+  }
+  .board { display: flex; flex-direction: column; gap: 1vmin; background: var(--surface); border: 1px solid #22252f; border-radius: 2vmin; padding: 2vmin; }
+  .board__row { display: grid; grid-template-columns: min(3.4vw, 5vh) repeat(var(--cols, 15), minmax(0, 1fr)); gap: .7vmin; align-items: center; }
+  .board__letter { font-weight: 800; font-size: min(2.4vw, 3.6vh); text-align: center; color: var(--lc); }
+  .board__num {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .9vmin;
+    background: var(--surface-2);
+    color: #4a5060;
+    font-weight: 700;
+    font-size: min(1.5vw, 2.3vh);
+    font-variant-numeric: tabular-nums;
+    transition: background .3s ease, color .3s ease;
+  }
+  .board__num.is-drawn { background: var(--lc); color: #fff; }
+  .board__num.is-last { box-shadow: 0 0 0 .4vmin var(--bg), 0 0 0 .8vmin #fff; }
+  .msg { grid-column: 1 / -1; grid-row: 1 / -1; align-self: center; justify-self: center; text-align: center; max-width: 900px; padding: 0 20px; font-size: min(3.4vw, 4vh); color: var(--dim); margin: 0; }
+  .msg[hidden] { display: none; }
+  .msg strong { display: block; color: var(--text); font-size: 1.4em; margin-bottom: .3em; letter-spacing: -.02em; }
+  .stage.is-idle .hero, .stage.is-idle .side { display: none; }
+  .footer { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; color: #4a5060; font-size: min(1.3vw, 2vh); font-weight: 600; }
+  .footer__brand { display: flex; align-items: center; gap: 1vmin; }
+  .footer__dot { width: 1vmin; height: 1vmin; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 .5vmin rgba(34,197,94,.2); }
+  @media (max-aspect-ratio: 1/1) {
+    body { overflow: auto; }
+    .stage { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; min-height: 100%; }
+    .ball { width: min(70vw, 44vh); height: min(70vw, 44vh); }
+    .ball__letter { font-size: min(9vw, 6vh); }
+    .ball__number { font-size: min(28vw, 17vh); }
+    .stats { font-size: 4vw; }
+    .label { font-size: 3.4vw; }
+    .recent__ball { width: 10vw; height: 10vw; font-size: 3.6vw; }
+    .board__row { grid-template-columns: 6vw repeat(var(--cols, 15), minmax(0, 1fr)); gap: .6vw; }
+    .board__letter { font-size: 4vw; }
+    .board__num { font-size: 2.4vw; border-radius: 1vw; }
+    .footer { font-size: 3vw; }
+  }
 </style>
 </head>
 <body>
-  <div class="stage">
-    <div class="ball" id="ball" hidden>
-      <span class="ball__letter" id="letter">-</span>
-      <span class="ball__number" id="number">--</span>
-    </div>
-    <p class="empty" id="emptyHint" hidden>Aguardando o início do sorteio…</p>
-    <p class="inactive" id="inactiveHint" hidden><strong>Sessão encerrada</strong>O operador saiu do aplicativo. Esta tela volta a funcionar assim que ele entrar de novo e iniciar um sorteio.</p>
-    <p class="stats" id="stats"></p>
+  <div class="stage is-idle" id="stage">
+    <section class="hero">
+      <div class="ball" id="ball" hidden>
+        <span class="ball__letter" id="letter">-</span>
+        <span class="ball__number" id="number">--</span>
+      </div>
+      <p class="stats" id="stats"></p>
+    </section>
+    <section class="side">
+      <div>
+        <p class="label">Últimas bolas</p>
+        <div class="recent" id="recent"></div>
+      </div>
+      <div class="board" id="board"></div>
+    </section>
+    <p class="msg" id="emptyHint" hidden><strong>Já vai começar!</strong>Aguardando a primeira bola do sorteio…</p>
+    <p class="msg" id="inactiveHint" hidden><strong>Sessão encerrada</strong>O operador saiu do aplicativo. Esta tela volta a funcionar assim que ele entrar de novo e iniciar um sorteio.</p>
+    <footer class="footer"><span class="footer__brand"><span class="footer__dot"></span>BINGO · ao vivo</span><span id="clock"></span></footer>
   </div>
 
 <script>
@@ -89,6 +164,50 @@
   var emptyHintEl = document.getElementById('emptyHint');
   var inactiveHintEl = document.getElementById('inactiveHint');
   var statsEl = document.getElementById('stats');
+  var stageEl = document.getElementById('stage');
+  var recentEl = document.getElementById('recent');
+  var boardEl = document.getElementById('board');
+  var LETTER_VARS = ['--l-b', '--l-i', '--l-n', '--l-g', '--l-o'];
+  var lastBoardKey = '';
+
+  function letterIndex(num, min, max) {
+    var ranges = getColumnRanges(min, max);
+    for (var i = 0; i < ranges.length; i++) {
+      if (num >= ranges[i][0] && num <= ranges[i][1]) return i;
+    }
+    return 0;
+  }
+
+  function renderBoard(revealed, min, max) {
+    var key = min + ':' + max + ':' + revealed.join(',');
+    if (key === lastBoardKey) return;
+    lastBoardKey = key;
+    var drawnSet = {};
+    revealed.forEach(function (n) { drawnSet[n] = true; });
+    var last = revealed[revealed.length - 1];
+    var ranges = getColumnRanges(min, max);
+    var html = '';
+    for (var c = 0; c < 5; c++) {
+      var s = ranges[c][0], e = ranges[c][1];
+      html += '<div class="board__row" style="--lc:var(' + LETTER_VARS[c] + ');--cols:' + (e - s + 1) + '"><span class="board__letter">' + LETTERS[c] + '</span>';
+      for (var n = s; n <= e; n++) {
+        html += '<span class="board__num' + (drawnSet[n] ? ' is-drawn' : '') + (n === last ? ' is-last' : '') + '">' + n + '</span>';
+      }
+      html += '</div>';
+    }
+    boardEl.innerHTML = html;
+
+    recentEl.innerHTML = revealed.slice(-9, -1).reverse().map(function (n) {
+      return '<span class="recent__ball" style="--ball:var(' + LETTER_VARS[letterIndex(n, min, max)] + ')">' + n + '</span>';
+    }).join('');
+  }
+
+  function tickClock() {
+    var d = new Date();
+    document.getElementById('clock').textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  tickClock();
+  setInterval(tickClock, 10000);
 
   function getColumnRanges(min, max) {
     var total = max - min + 1;
@@ -112,6 +231,7 @@
   }
 
   function showState(which) {
+    stageEl.classList.toggle('is-idle', which !== 'ball');
     ballEl.hidden = which !== 'ball';
     emptyHintEl.hidden = which !== 'empty';
     inactiveHintEl.hidden = which !== 'inactive';
@@ -148,10 +268,14 @@
 
     showState('ball');
     var last = revealed[revealed.length - 1];
+    var idx = letterIndex(last, min, max);
     document.getElementById('letter').textContent = letterForNumber(last, min, max);
     document.getElementById('number').textContent = last;
+    ballEl.style.setProperty('--ball', 'var(' + LETTER_VARS[idx] + ')');
+    stageEl.style.setProperty('--ball', 'var(' + LETTER_VARS[idx] + ')');
     var total = max - min + 1;
-    statsEl.textContent = revealed.length + ' de ' + total + ' números sorteados';
+    statsEl.innerHTML = '<strong>' + revealed.length + '</strong> de ' + total + ' bolas sorteadas';
+    renderBoard(revealed, min, max);
 
     if (revealed.length !== lastRenderedCount) {
       ballEl.classList.remove('is-bouncing');

@@ -20,6 +20,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/redesign.css">
 </head>
 <body>
 
@@ -132,6 +133,49 @@
       <circle cx="17.5" cy="9" r="2.2"></circle>
       <path d="M15.8 14.2c2.4.5 4.2 2.5 4.2 4.8"></path>
     </symbol>
+    <symbol id="icon-printer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 9V3h10v6"></path>
+      <rect x="3" y="9" width="18" height="8" rx="2"></rect>
+      <rect x="7" y="14" width="10" height="7" rx="1"></rect>
+    </symbol>
+    <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="15" x2="12" y2="4"></line>
+      <polyline points="7,9 12,4 17,9"></polyline>
+      <line x1="5" y1="19" x2="19" y2="19"></line>
+    </symbol>
+    <symbol id="icon-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="5" y1="21" x2="5" y2="4"></line>
+      <path d="M5 4h11l-2 4 2 4H5"></path>
+    </symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"></path>
+    </symbol>
+    <symbol id="icon-hand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 13V5.5a1.5 1.5 0 013 0V12"></path>
+      <path d="M11 11.5v-2a1.5 1.5 0 013 0V12"></path>
+      <path d="M14 11.5a1.5 1.5 0 013 0V15a6 6 0 01-6 6h-.5a6 6 0 01-4.8-2.4L3.6 15.4a1.5 1.5 0 012.3-1.9L8 15.5"></path>
+    </symbol>
+    <symbol id="icon-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6,9 12,15 18,9"></polyline>
+    </symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"></path>
+    </symbol>
+    <symbol id="icon-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3a9 9 0 100 18c1 0 1.6-.8 1.6-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 005-5c0-4-4-7.2-9-7.2z"></path>
+      <circle cx="7.5" cy="11" r="1.2" fill="currentColor"></circle>
+      <circle cx="10.5" cy="7" r="1.2" fill="currentColor"></circle>
+      <circle cx="15" cy="7.5" r="1.2" fill="currentColor"></circle>
+    </symbol>
+    <symbol id="icon-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect>
+      <line x1="11" y1="18" x2="13" y2="18"></line>
+    </symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="4,7 20,7"></polyline>
+      <path d="M9 7V4.5h6V7"></path>
+      <path d="M6 7l1 13h10l1-13"></path>
+    </symbol>
   </defs>
 </svg>
 
@@ -144,13 +188,30 @@
     <div class="login-blob login-blob--3"></div>
   </div>
 
-  <div class="login-card" id="loginCard">
-    <div class="draw-ball login-card__ball" aria-hidden="true">
-      <span class="draw-ball__letter">B</span>
-      <span class="draw-ball__number">75</span>
+  <aside class="login-brand" aria-hidden="true">
+    <div class="login-brand__logo"><svg class="icon"><use href="#icon-ball"></use></svg><span>Bingo</span></div>
+    <div class="login-brand__balls">
+      <span class="ball-chip ball-chip--b ball-chip--xl">B<b>7</b></span>
+      <span class="ball-chip ball-chip--i ball-chip--lg">I<b>23</b></span>
+      <span class="ball-chip ball-chip--n ball-chip--md">N<b>41</b></span>
+      <span class="ball-chip ball-chip--g ball-chip--lg">G<b>58</b></span>
+      <span class="ball-chip ball-chip--o ball-chip--xl">O<b>64</b></span>
     </div>
-    <h1 class="login-card__title">Bingo</h1>
-    <p class="login-card__subtitle">Entre para continuar</p>
+    <h2 class="login-brand__title">Seu bingo, do sorteio ao prêmio.</h2>
+    <ul class="login-brand__list">
+      <li><svg class="icon icon--sm"><use href="#icon-check"></use></svg>Marcação automática de todas as cartelas</li>
+      <li><svg class="icon icon--sm"><use href="#icon-check"></use></svg>Alerta de ganhador na hora, com conferência</li>
+      <li><svg class="icon icon--sm"><use href="#icon-check"></use></svg>Telão para o público em qualquer tela</li>
+    </ul>
+  </aside>
+
+  <div class="login-card" id="loginCard">
+    <div class="draw-ball login-card__ball" data-letter="b" aria-hidden="true">
+      <span class="draw-ball__letter">B</span>
+      <span class="draw-ball__number">7</span>
+    </div>
+    <h1 class="login-card__title">Bem-vindo de volta</h1>
+    <p class="login-card__subtitle">Entre com seu e-mail e senha para continuar</p>
 
     <form id="loginForm" class="login-form">
       <label class="field login-field">
@@ -203,27 +264,45 @@
     <span class="side-nav__logo" aria-hidden="true"><svg class="icon"><use href="#icon-ball"></use></svg></span>
     <span class="side-nav__title">Bingo</span>
   </div>
-  <button class="side-nav__item is-active" data-nav="sorteio">
-    <svg class="icon" aria-hidden="true"><use href="#icon-target"></use></svg><span class="side-nav__label">Sorteio</span>
-  </button>
-  <button class="side-nav__item" data-nav="cartelas">
-    <svg class="icon" aria-hidden="true"><use href="#icon-cards"></use></svg><span class="side-nav__label">Cartelas</span>
-  </button>
-  <button class="side-nav__item" data-nav="historico">
-    <svg class="icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="side-nav__label">Histórico</span>
-  </button>
-  <button class="side-nav__item" data-nav="dashboard">
-    <svg class="icon" aria-hidden="true"><use href="#icon-dashboard"></use></svg><span class="side-nav__label">Dashboard</span>
-  </button>
-  <button class="side-nav__item" data-nav="config">
-    <svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="side-nav__label">Config</span>
-  </button>
-  <button class="side-nav__item is-perm-hidden" data-nav="usuarios">
-    <svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg><span class="side-nav__label">Usuários</span>
-  </button>
-  <button class="side-nav__item is-perm-hidden" data-nav="permissoes">
-    <svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg><span class="side-nav__label">Permissões</span>
-  </button>
+  <div class="side-nav__group">
+    <span class="side-nav__section">Operação</span>
+    <button class="side-nav__item is-active" data-nav="sorteio">
+      <svg class="icon" aria-hidden="true"><use href="#icon-target"></use></svg><span class="side-nav__label">Sorteio</span>
+    </button>
+    <button class="side-nav__item" data-nav="cartelas">
+      <svg class="icon" aria-hidden="true"><use href="#icon-cards"></use></svg><span class="side-nav__label">Cartelas</span>
+    </button>
+  </div>
+  <div class="side-nav__group">
+    <span class="side-nav__section">Análise</span>
+    <button class="side-nav__item" data-nav="historico">
+      <svg class="icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="side-nav__label">Histórico</span>
+    </button>
+    <button class="side-nav__item" data-nav="dashboard">
+      <svg class="icon" aria-hidden="true"><use href="#icon-dashboard"></use></svg><span class="side-nav__label">Dashboard</span>
+    </button>
+  </div>
+  <div class="side-nav__group side-nav__group--admin">
+    <span class="side-nav__section">Administração</span>
+    <button class="side-nav__item is-perm-hidden" data-nav="usuarios">
+      <svg class="icon" aria-hidden="true"><use href="#icon-users"></use></svg><span class="side-nav__label">Usuários</span>
+    </button>
+    <button class="side-nav__item is-perm-hidden" data-nav="permissoes">
+      <svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg><span class="side-nav__label">Permissões</span>
+    </button>
+    <button class="side-nav__item" data-nav="config">
+      <svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg><span class="side-nav__label">Configurações</span>
+    </button>
+  </div>
+
+  <div class="side-nav__user">
+    <span class="avatar" id="sideUserAvatar" aria-hidden="true"></span>
+    <div class="side-nav__user-info">
+      <strong id="sideUserName"></strong>
+      <small id="sideUserRole"></small>
+    </div>
+    <button type="button" class="side-nav__logout" id="btnLogoutSide" title="Sair" aria-label="Sair"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-logout"></use></svg></button>
+  </div>
 </nav>
 
 <div class="app-content">
@@ -234,12 +313,19 @@
       <span class="app-header__logo" aria-hidden="true"><svg class="icon"><use href="#icon-ball"></use></svg></span>
       <span class="app-header__title">Bingo</span>
     </div>
+    <div class="app-header__page">
+      <h1 class="app-header__page-title" id="pageTitle">Sorteio</h1>
+      <p class="app-header__page-subtitle" id="pageSubtitle"></p>
+    </div>
     <div class="app-header__actions">
-      <select class="master-filter" id="masterUserFilter" hidden aria-label="Visualizar dados de"></select>
-      <button class="app-header__icon-btn" id="btnToggleSuspense" title="Suspense: segurar a revelação da bola no telão até tocar nela" aria-label="Ativar/desativar suspense"><svg class="icon" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
-      <a class="app-header__icon-btn" id="btnOpenDisplay" href="display.html" target="_blank" rel="noopener" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio"><svg class="icon" aria-hidden="true"><use href="#icon-monitor"></use></svg></a>
-      <button type="button" class="app-header__icon-btn" id="btnLogoutHeader" title="Sair" aria-label="Sair"><svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg></button>
+      <label class="master-filter-wrap" id="masterFilterWrap">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+        <select class="master-filter" id="masterUserFilter" hidden aria-label="Visualizar dados de"></select>
+      </label>
       <span class="app-header__game" id="gameLabel">Jogo #1</span>
+      <button class="app-header__icon-btn" id="btnToggleSuspense" title="Suspense: segurar a revelação da bola no telão até tocar nela" aria-label="Ativar/desativar suspense"><svg class="icon" aria-hidden="true"><use href="#icon-spark"></use></svg><span class="app-header__btn-label">Suspense</span></button>
+      <a class="app-header__icon-btn app-header__icon-btn--primary" id="btnOpenDisplay" href="display.html" target="_blank" rel="noopener" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio"><svg class="icon" aria-hidden="true"><use href="#icon-monitor"></use></svg><span class="app-header__btn-label">Abrir telão</span></a>
+      <button type="button" class="app-header__icon-btn app-header__icon-btn--logout" id="btnLogoutHeader" title="Sair" aria-label="Sair"><svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg></button>
     </div>
   </div>
 </header>
@@ -253,49 +339,51 @@
 
   <!-- ===================== SORTEIO ===================== -->
   <section class="view" id="view-sorteio" data-view="sorteio">
-    <div class="draw-stage">
-      <div class="draw-ball" id="currentBall">
-        <span class="draw-ball__letter" id="currentBallLetter">-</span>
-        <span class="draw-ball__number" id="currentBallNumber">--</span>
+    <div class="draw-stage hero">
+      <div class="hero__ball">
+        <div class="draw-ball" id="currentBall">
+          <span class="draw-ball__letter" id="currentBallLetter">-</span>
+          <span class="draw-ball__number" id="currentBallNumber">--</span>
+        </div>
       </div>
-      <div class="btn-row">
+
+      <div class="hero__info">
+        <div class="hero__eyebrow"><span class="live-dot" aria-hidden="true"></span><span id="heroStatus">Partida em andamento</span></div>
+        <div class="hero__count"><strong id="heroDrawn">0</strong><span>de <span id="heroTotal">75</span> bolas sorteadas</span></div>
+        <div class="progress" aria-hidden="true"><span class="progress__fill" id="heroProgress"></span></div>
+        <p class="draw-stats sr-only" id="drawStats">0 de 0 números sorteados</p>
+        <div class="hero__metrics">
+          <span class="metric"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-history"></use></svg><span id="heroElapsed">—</span></span>
+          <span class="metric"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-cards"></use></svg><span id="heroCards">0 cartelas</span></span>
+          <span class="metric metric--accent draw-stats--secondary" id="nearMissStat" hidden></span>
+        </div>
+      </div>
+
+      <div class="hero__actions">
         <button class="btn btn--primary btn--xl" id="btnSortear">Sortear número</button>
-        <button class="btn btn--secondary btn--xl btn--manual" id="btnMarcarManual">Manual</button>
+        <button class="btn btn--secondary btn--xl btn--manual" id="btnMarcarManual"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-hand"></use></svg>Manual</button>
       </div>
-      <p class="draw-stats" id="drawStats">0 de 0 números sorteados</p>
-      <p class="draw-stats draw-stats--secondary" id="nearMissStat" hidden></p>
-      <p class="hint hint--suspense" id="suspenseHint" hidden>🤫 Toque na bola para revelar este número no telão.</p>
-      <p class="hint hint--manual" id="manualModeHint" hidden>Modo manual ativo — toque no número sorteado no Painel de números abaixo.</p>
+
+      <button class="hero__end" id="btnEncerrar" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-flag"></use></svg>Encerrar jogo</button>
+
+      <div class="hero__hints">
+        <p class="hint hint--suspense" id="suspenseHint" hidden>Toque na bola para revelar este número no telão.</p>
+        <p class="hint hint--manual" id="manualModeHint" hidden>Modo manual ativo — toque no número sorteado no Painel de números.</p>
+      </div>
+    </div>
+
+    <div class="segmented" id="sorteioTabs" role="tablist" aria-label="Seções do sorteio">
+      <button type="button" class="segmented__btn is-active" data-sorteio-tab="painel">Painel</button>
+      <button type="button" class="segmented__btn" data-sorteio-tab="jogo">Ganhadores <span class="segmented__badge" id="tabWinnersBadge" hidden></span></button>
+      <button type="button" class="segmented__btn" data-sorteio-tab="cartelas">Cartelas <span class="segmented__count" id="tabCardsCount"></span></button>
     </div>
 
     <div class="sorteio-grid">
-      <aside class="sorteio-aside">
-        <div class="card">
-          <div class="card__header"><h2>Prêmios</h2></div>
-          <div class="field-row">
-            <label class="field" style="flex:1;">
-              <span>Nome do prêmio</span>
-              <input type="text" id="prizeNameInput" placeholder="Ex: 1º prêmio - Liquidificador">
-            </label>
-            <button type="button" class="btn btn--primary" id="btnAddPrize" style="align-self:flex-end;">Adicionar prêmio</button>
-          </div>
-          <div id="prizeList" class="prize-list">
-            <span class="empty-hint">Nenhum prêmio cadastrado ainda.</span>
-          </div>
-          <p class="hint" id="prizeActiveHint"></p>
-        </div>
-
-        <div class="card" id="criteriaFlagsCard" hidden>
-          <div class="card__header">
-            <h2>Critérios em jogo</h2>
-          </div>
-          <div id="criteriaFlagsList" class="cards-summary"></div>
-        </div>
-
-        <div class="card" id="pendingPrizesCard" hidden>
+      <aside class="sorteio-aside" data-sorteio-pane="jogo">
+        <div class="card card--alert" id="pendingPrizesCard" hidden>
           <div id="pendingPrizesWrap" hidden>
             <div class="card__header">
-              <h2>Ganhadores <span class="badge badge--prize" id="pendingPrizesCount">0</span></h2>
+              <h2><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-trophy"></use></svg>Ganhadores <span class="badge badge--prize" id="pendingPrizesCount">0</span></h2>
             </div>
             <div id="pendingPrizesList" class="cards-summary"></div>
             <button class="btn btn--primary btn--small" id="btnConfirmSelectedPrizes" hidden>Confirmar selecionados com este prêmio</button>
@@ -308,74 +396,113 @@
           </div>
         </div>
 
+        <div class="card">
+          <div class="card__header"><h2>Prêmios</h2></div>
+          <div class="input-action">
+            <label class="field">
+              <span class="sr-only">Nome do prêmio</span>
+              <input type="text" id="prizeNameInput" placeholder="Nome do prêmio (ex: TV 43&quot;)">
+            </label>
+            <button type="button" class="btn btn--primary" id="btnAddPrize">Adicionar</button>
+          </div>
+          <div id="prizeList" class="prize-list">
+            <span class="empty-hint">Nenhum prêmio cadastrado ainda.</span>
+          </div>
+          <p class="hint" id="prizeActiveHint"></p>
+        </div>
+
         <div class="card" id="nearMissCard" hidden>
           <div class="card__header">
-            <h2>Faltando 1 número <span class="badge" id="nearMissCount">0</span></h2>
+            <h2>Faltando 1 número <span class="badge badge--soft" id="nearMissCount">0</span></h2>
           </div>
           <div id="nearMissList" class="cards-summary"></div>
+        </div>
+
+        <div class="card" id="criteriaFlagsCard" hidden>
+          <div class="card__header">
+            <h2>Critérios em jogo</h2>
+          </div>
+          <p class="hint">Desligue um critério quando o prêmio dele já tiver saído.</p>
+          <div id="criteriaFlagsList" class="cards-summary"></div>
         </div>
       </aside>
 
       <div class="sorteio-main">
-        <div class="card">
+        <div class="card" data-sorteio-pane="painel">
           <div class="card__header">
-            <h2>Últimas bolas sorteadas</h2>
+            <h2>Últimas bolas</h2>
           </div>
           <div class="chip-row" id="lastBallsRow">
             <span class="empty-hint">Nenhum número sorteado ainda.</span>
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" data-sorteio-pane="painel">
           <div class="card__header">
             <h2>Painel de números</h2>
+            <span class="card__header-hint">Toque em "Manual" para marcar direto aqui</span>
           </div>
           <div class="draw-board" id="drawBoard"></div>
         </div>
 
-        <div class="card">
+        <div class="card" data-sorteio-pane="cartelas">
           <div class="card__header">
-            <h2>Cartelas na partida <span class="badge" id="activeCardsCount">0</span></h2>
+            <h2>Cartelas na partida <span class="badge badge--soft" id="activeCardsCount">0</span></h2>
           </div>
-          <div id="activeCardsSummary" class="cards-summary">
+          <div id="activeCardsSummary" class="cards-summary cards-grid">
             <span class="empty-hint">Nenhuma cartela cadastrada para este jogo. Vá em "Cartelas" para escanear.</span>
           </div>
         </div>
-
-        <button class="btn btn--danger btn--block" id="btnEncerrar">Encerrar jogo</button>
       </div>
     </div>
   </section>
 
   <!-- ===================== CARTELAS ===================== -->
   <section class="view" id="view-cartelas" data-view="cartelas" hidden>
-    <div class="card">
-      <div class="card__header"><h2>Nova cartela</h2></div>
-      <div class="btn-group">
-        <button class="btn btn--primary btn--block" id="btnScan"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-camera"></use></svg>Escanear cartela</button>
-        <button class="btn btn--secondary btn--block" id="btnManual"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-edit"></use></svg>Cadastrar manualmente</button>
+    <div class="card page-toolbar">
+      <div class="page-toolbar__row">
+        <button class="btn btn--primary" id="btnScan"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-camera"></use></svg>Escanear cartela</button>
+        <button class="btn btn--secondary" id="btnManual"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-edit"></use></svg>Cadastrar manualmente</button>
+        <button class="btn btn--secondary" id="btnImportCsv"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-upload"></use></svg>Importar CSV</button>
+        <details class="dropdown">
+          <summary class="btn btn--secondary"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-printer"></use></svg>Imprimir<svg class="icon icon--sm dropdown__chevron" aria-hidden="true"><use href="#icon-chevron-down"></use></svg></summary>
+          <div class="dropdown__menu">
+            <span class="dropdown__label">Folha A4 com todas as cartelas (estoque e ativas)</span>
+            <button type="button" class="dropdown__item" data-print-cards="2">2 cartelas por página</button>
+            <button type="button" class="dropdown__item" data-print-cards="4">4 cartelas por página</button>
+            <button type="button" class="dropdown__item" data-print-cards="6">6 cartelas por página</button>
+          </div>
+        </details>
+        <button class="btn btn--ghost" id="btnDownloadCsvTemplate"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-download"></use></svg>Modelo CSV</button>
       </div>
-      <p class="hint">Deixe o nome em branco para guardar no estoque e atribuir o participante depois, na hora de entregar a cartela.</p>
-    </div>
-
-    <div class="card">
-      <div class="card__header"><h2>Importar cartelas (CSV)</h2></div>
-      <p class="hint">Planilha com uma cartela por linha: número da cartela, nome (opcional), depois os 25 números na ordem B1-B5, I1-I5, N1-N5, G1-G5, O1-O5. A casa central (N3) fica em branco se a cartela tiver espaço livre. Cartelas sem nome vão para o estoque.</p>
-      <div class="btn-group">
-        <button class="btn btn--secondary btn--block" id="btnDownloadCsvTemplate"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-download"></use></svg>Baixar modelo CSV</button>
-        <button class="btn btn--primary btn--block" id="btnImportCsv"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-file"></use></svg>Escolher arquivo CSV</button>
-      </div>
+      <details class="disclosure">
+        <summary>Como montar a planilha CSV</summary>
+        <p class="hint">Uma cartela por linha: número da cartela, nome (opcional), depois os 25 números na ordem B1-B5, I1-I5, N1-N5, G1-G5, O1-O5. A casa central (N3) fica em branco se a cartela tiver espaço livre. Cartelas sem nome vão para o estoque. Deixe o nome em branco também no cadastro manual/escaneado para guardar no estoque e atribuir o participante na hora da entrega.</p>
+      </details>
       <input type="file" accept=".csv,text/csv" id="csvFileInput" hidden>
       <p class="ocr-status" id="csvImportStatus"></p>
     </div>
 
-    <div class="card">
-      <div class="card__header"><h2>Estoque de cartelas <span class="badge" id="estoqueCount">0</span></h2></div>
-      <label class="field">
-        <span>Buscar por número da cartela</span>
-        <input type="text" id="estoqueSearchInput" placeholder="Ex: 0042" inputmode="numeric">
-      </label>
+    <div class="kpi-row" id="cartelasKpis">
+      <div class="kpi"><span class="kpi__label">Em estoque</span><strong class="kpi__value" id="kpiEstoque">0</strong><span class="kpi__hint">aguardando entrega</span></div>
+      <div class="kpi"><span class="kpi__label">Na partida</span><strong class="kpi__value" id="kpiAtivas">0</strong><span class="kpi__hint">com participante</span></div>
+      <div class="kpi"><span class="kpi__label">Já usadas</span><strong class="kpi__value" id="kpiUsadas">0</strong><span class="kpi__hint">em jogos encerrados</span></div>
+      <div class="kpi"><span class="kpi__label">Total cadastrado</span><strong class="kpi__value" id="kpiTotal">0</strong><span class="kpi__hint">cartelas físicas</span></div>
+    </div>
+
+    <div class="tabs" id="cartelasTabs" role="tablist">
+      <button type="button" class="tabs__btn is-active" data-cartelas-tab="estoque">Estoque <span class="tabs__count" id="tabEstoqueCount">0</span></button>
+      <button type="button" class="tabs__btn" data-cartelas-tab="ativas">Na partida <span class="tabs__count" id="tabAtivasCount">0</span></button>
+      <button type="button" class="tabs__btn" data-cartelas-tab="historico">Já usadas</button>
+    </div>
+
+    <div class="card" data-cartelas-pane="estoque">
+      <div class="card__header"><h2>Estoque de cartelas <span class="badge badge--soft" id="estoqueCount">0</span></h2></div>
       <div class="list-toolbar">
+        <label class="field search-field">
+          <span class="sr-only">Buscar por número da cartela</span>
+          <input type="text" id="estoqueSearchInput" placeholder="Buscar pelo número da cartela (ex: 0042)" inputmode="numeric">
+        </label>
         <label class="field field--check">
           <input type="checkbox" id="estoqueSelectAll">
           <span>Selecionar todas</span>
@@ -385,7 +512,7 @@
           <button class="btn btn--danger btn--small" id="btnDeleteSelectedEstoque">Excluir selecionadas</button>
         </div>
       </div>
-      <div id="estoqueList" class="card-list">
+      <div id="estoqueList" class="card-list cards-grid">
         <span class="empty-hint">Nenhuma cartela em estoque.</span>
       </div>
       <div class="pagination" id="estoquePagination" hidden>
@@ -395,337 +522,385 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="card__header"><h2>Cartelas ativas <span class="badge" id="cartelasAtivasCount">0</span></h2></div>
-      <div id="cartelasAtivasList" class="card-list">
+    <div class="card" data-cartelas-pane="ativas">
+      <div class="card__header"><h2>Cartelas na partida <span class="badge badge--soft" id="cartelasAtivasCount">0</span></h2></div>
+      <div id="cartelasAtivasList" class="card-list cards-grid">
         <span class="empty-hint">Nenhuma cartela ativa.</span>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card__header"><h2>Imprimir cartelas</h2></div>
-      <p class="hint">Gera uma folha A4 pronta para impressão com todas as cartelas cadastradas (estoque e ativas), separadas por linhas finas para recortar.</p>
-      <div class="btn-group">
-        <button class="btn btn--secondary btn--block" data-print-cards="2">2 por página</button>
-        <button class="btn btn--secondary btn--block" data-print-cards="4">4 por página</button>
-        <button class="btn btn--secondary btn--block" data-print-cards="6">6 por página</button>
-      </div>
-    </div>
-
-    <div class="card">
+    <div class="card" data-cartelas-pane="historico">
       <div class="card__header collapsible" id="toggleHistorico">
-        <h2>Histórico de cartelas</h2>
+        <h2>Cartelas já usadas</h2>
         <span class="chevron">▾</span>
       </div>
-      <div id="cartelasHistoricoList" class="card-list" hidden>
+      <div id="cartelasHistoricoList" class="card-list cards-grid" hidden>
         <span class="empty-hint">Nenhum histórico ainda.</span>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card__header"><h2>Redistribuir cartelas</h2></div>
-      <p class="hint">Libera todas as cartelas já cadastradas — mesmo as usadas em jogos anteriores — para serem entregues de novo, sem participante. Os números e o número de cada cartela continuam salvos. Use ao começar uma nova sessão reaproveitando o mesmo talão físico.</p>
-      <button class="btn btn--danger btn--block" id="btnReiniciarCartelas">Reiniciar cartelas</button>
+    <div class="card card--danger-zone">
+      <div class="danger-zone">
+        <div>
+          <h3>Redistribuir cartelas</h3>
+          <p class="hint">Libera todas as cartelas já cadastradas — mesmo as usadas em jogos anteriores — para serem entregues de novo, sem participante. Os números de cada cartela continuam salvos. Use ao começar uma nova sessão reaproveitando o mesmo talão físico.</p>
+        </div>
+        <button class="btn btn--danger" id="btnReiniciarCartelas">Reiniciar cartelas</button>
+      </div>
     </div>
   </section>
 
   <!-- ===================== HISTÓRICO DE PARTIDAS ===================== -->
   <section class="view" id="view-historico" data-view="historico" hidden>
     <div class="card">
-      <div class="card__header"><h2>Histórico de partidas <span class="badge" id="historicoCount">0</span></h2></div>
-      <p class="hint">Cada partida encerrada mostra a rodada, data, duração, ganhadores, número da cartela e o prêmio vinculado.</p>
-      <div id="historicoList" class="cards-summary">
+      <div class="card__header">
+        <h2>Partidas encerradas <span class="badge badge--soft" id="historicoCount">0</span></h2>
+        <span class="card__header-hint">Rodada, data, duração, ganhadores e prêmios</span>
+      </div>
+      <div id="historicoList" class="history-list">
         <span class="empty-hint">Nenhuma partida encerrada ainda.</span>
       </div>
     </div>
 
     <div class="card" id="historicoAllUsersCard" hidden>
-      <div class="card__header"><h2>Jogos de todos os usuários</h2></div>
-      <p class="hint">Como Master, você pode excluir um jogo específico de qualquer usuário, ou redefinir a numeração dele (o próximo jogo continua a partir do maior número ainda salvo, sem repetir nem pular).</p>
-      <div id="historicoAllUsersList"></div>
+      <div class="card__header">
+        <h2><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-shield"></use></svg>Jogos de todos os usuários</h2>
+        <span class="card__header-hint">Exclusivo do Master</span>
+      </div>
+      <p class="hint">Exclua um jogo específico de qualquer usuário, ou redefina a numeração dele (o próximo jogo continua a partir do maior número ainda salvo, sem repetir nem pular).</p>
+      <div id="historicoAllUsersList" class="history-users"></div>
     </div>
   </section>
 
   <!-- ===================== DASHBOARD ===================== -->
   <section class="view" id="view-dashboard" data-view="dashboard" hidden>
-    <div class="card">
-      <div class="card__header"><h2>Resumo</h2></div>
-      <div class="stats-grid">
-        <div class="stat-tile">
-          <span class="stat-tile__value" id="dashTotalGames">0</span>
-          <span class="stat-tile__label">Partidas encerradas</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-tile__value" id="dashAvgDuration">—</span>
-          <span class="stat-tile__label">Duração média</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-tile__value" id="dashTotalCards">0</span>
-          <span class="stat-tile__label">Cartelas em jogo (total)</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-tile__value" id="dashTotalWinners">0</span>
-          <span class="stat-tile__label">Prêmios confirmados</span>
-        </div>
+    <div class="stats-grid">
+      <div class="stat-tile">
+        <span class="stat-tile__icon"><svg class="icon" aria-hidden="true"><use href="#icon-flag"></use></svg></span>
+        <span class="stat-tile__label">Partidas encerradas</span>
+        <span class="stat-tile__value" id="dashTotalGames">0</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-tile__icon"><svg class="icon" aria-hidden="true"><use href="#icon-history"></use></svg></span>
+        <span class="stat-tile__label">Duração média</span>
+        <span class="stat-tile__value" id="dashAvgDuration">—</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-tile__icon"><svg class="icon" aria-hidden="true"><use href="#icon-cards"></use></svg></span>
+        <span class="stat-tile__label">Cartelas em jogo (total)</span>
+        <span class="stat-tile__value" id="dashTotalCards">0</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-tile__icon"><svg class="icon" aria-hidden="true"><use href="#icon-trophy"></use></svg></span>
+        <span class="stat-tile__label">Prêmios confirmados</span>
+        <span class="stat-tile__value" id="dashTotalWinners">0</span>
       </div>
     </div>
     <div class="card">
-      <div class="card__header"><h2>Partidas por dia</h2></div>
-      <div id="dashByDay" class="bar-list"></div>
+      <div class="card__header"><h2>Partidas por dia</h2><span class="card__header-hint">Últimos 14 dias com partidas</span></div>
+      <div id="dashByDay" class="bar-list bar-list--columns"></div>
     </div>
-    <div class="card">
-      <div class="card__header"><h2>Partidas por mês</h2></div>
-      <div id="dashByMonth" class="bar-list"></div>
-    </div>
-    <div class="card">
-      <div class="card__header"><h2>Partidas por ano</h2></div>
-      <div id="dashByYear" class="bar-list"></div>
+    <div class="dash-split">
+      <div class="card">
+        <div class="card__header"><h2>Partidas por mês</h2></div>
+        <div id="dashByMonth" class="bar-list"></div>
+      </div>
+      <div class="card">
+        <div class="card__header"><h2>Partidas por ano</h2></div>
+        <div id="dashByYear" class="bar-list"></div>
+      </div>
     </div>
   </section>
 
   <!-- ===================== CONFIGURAÇÕES ===================== -->
   <section class="view" id="view-config" data-view="config" hidden>
-    <div class="card">
-      <div class="card__header"><h2>Conta</h2></div>
-      <p class="hint">Você está logado como <strong id="accountEmail"></strong><span id="accountRoleBadge"></span>.</p>
-      <button type="button" class="btn btn--ghost btn--block" id="btnLogout"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-logout"></use></svg>Sair</button>
+    <div class="settings-layout">
+      <nav class="settings-nav" aria-label="Seções de configurações">
+        <a href="#cfgConta" class="settings-nav__link is-active"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-users"></use></svg>Conta</a>
+        <a href="#cfgSeguranca" class="settings-nav__link"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-lock"></use></svg>Segurança</a>
+        <a href="#settingsCardTema" class="settings-nav__link"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-palette"></use></svg>Aparência</a>
+        <a href="#cfgRegras" class="settings-nav__link"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-target"></use></svg>Regras do jogo</a>
+        <a href="#settingsCardAplicativo" class="settings-nav__link"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-phone"></use></svg>Aplicativo</a>
+      </nav>
 
-      <div class="btn-group" id="accountAdminLinks" hidden>
-        <button type="button" class="btn btn--ghost btn--block" data-goto-view="usuarios"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-users"></use></svg>Usuários</button>
-        <button type="button" class="btn btn--ghost btn--block" data-goto-view="permissoes"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-lock"></use></svg>Permissões</button>
-      </div>
+      <div class="settings-content">
+        <div class="card" id="cfgConta">
+          <div class="card__header"><h2>Conta</h2></div>
+          <div class="account-row">
+            <span class="avatar avatar--lg" id="accountAvatar" aria-hidden="true"></span>
+            <p class="account-row__text">Você está logado como <strong id="accountEmail"></strong><span id="accountRoleBadge"></span></p>
+          </div>
+          <div class="btn-inline">
+            <button type="button" class="btn btn--ghost" id="btnLogout"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-logout"></use></svg>Sair</button>
+            <div class="btn-inline" id="accountAdminLinks" hidden>
+              <button type="button" class="btn btn--ghost" data-goto-view="usuarios"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-users"></use></svg>Usuários</button>
+              <button type="button" class="btn btn--ghost" data-goto-view="permissoes"><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-lock"></use></svg>Permissões</button>
+            </div>
+          </div>
+        </div>
 
-      <div class="card__header"><h2>Trocar senha</h2></div>
-      <label class="field pw-field">
-        <span>Senha atual</span>
-        <input type="password" id="changePwCurrent" autocomplete="current-password" placeholder="Senha atual">
-        <button type="button" class="pw-toggle" data-toggle-password="changePwCurrent" aria-label="Mostrar senha">
-          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
-        </button>
-      </label>
-      <label class="field pw-field">
-        <span>Nova senha</span>
-        <input type="password" id="changePwNew" autocomplete="new-password" placeholder="Nova senha">
-        <button type="button" class="pw-toggle" data-toggle-password="changePwNew" aria-label="Mostrar senha">
-          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
-        </button>
-      </label>
-      <label class="field pw-field">
-        <span>Confirmar nova senha</span>
-        <input type="password" id="changePwNew2" autocomplete="new-password" placeholder="Confirmar nova senha">
-        <button type="button" class="pw-toggle" data-toggle-password="changePwNew2" aria-label="Mostrar senha">
-          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
-        </button>
-      </label>
-      <p class="hint">A senha precisa ter no mínimo 8 caracteres, com letra maiúscula, minúscula, número e caractere especial (ex: . , ; ! @).</p>
-      <button type="button" class="btn btn--primary btn--block" id="btnChangePassword">Salvar nova senha</button>
-      <p class="login-form__error" id="changePwError" hidden></p>
-      <p class="save-hint" id="changePwSuccess" hidden>Senha alterada ✓</p>
-    </div>
+        <div class="card" id="cfgSeguranca">
+          <div class="card__header"><h2>Trocar senha</h2></div>
+          <div class="form-grid">
+            <label class="field pw-field form-grid__full">
+              <span>Senha atual</span>
+              <input type="password" id="changePwCurrent" autocomplete="current-password" placeholder="Senha atual">
+              <button type="button" class="pw-toggle" data-toggle-password="changePwCurrent" aria-label="Mostrar senha">
+                <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+              </button>
+            </label>
+            <label class="field pw-field">
+              <span>Nova senha</span>
+              <input type="password" id="changePwNew" autocomplete="new-password" placeholder="Nova senha">
+              <button type="button" class="pw-toggle" data-toggle-password="changePwNew" aria-label="Mostrar senha">
+                <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+              </button>
+            </label>
+            <label class="field pw-field">
+              <span>Confirmar nova senha</span>
+              <input type="password" id="changePwNew2" autocomplete="new-password" placeholder="Confirmar nova senha">
+              <button type="button" class="pw-toggle" data-toggle-password="changePwNew2" aria-label="Mostrar senha">
+                <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-eye"></use></svg>
+              </button>
+            </label>
+          </div>
+          <p class="hint">Mínimo de 8 caracteres, com letra maiúscula, minúscula, número e caractere especial (ex: . , ; ! @).</p>
+          <div class="card__footer">
+            <p class="login-form__error" id="changePwError" hidden></p>
+            <p class="save-hint" id="changePwSuccess" hidden>Senha alterada ✓</p>
+            <button type="button" class="btn btn--primary" id="btnChangePassword">Salvar nova senha</button>
+          </div>
+        </div>
 
-    <div class="card" id="settingsCardAplicativo">
-      <div class="card__header"><h2>Aplicativo</h2></div>
-      <p class="hint">Instale o Bingo como aplicativo, no celular ou no computador, para abrir direto da tela inicial sem precisar do navegador.</p>
-      <button type="button" class="btn btn--primary btn--block" id="btnInstallApp" hidden><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-download"></use></svg>Baixar / instalar aplicativo</button>
-      <p class="hint">Se o botão acima não aparecer, seu navegador já oferece essa opção por conta própria: no Android, toque no menu ⋮ do navegador e escolha "Instalar aplicativo" ou "Adicionar à tela inicial"; no iPhone/iPad, toque em Compartilhar e depois em "Adicionar à Tela de Início"; no computador, procure o ícone de instalação (⊕) na barra de endereço.</p>
-    </div>
+        <div class="card" id="settingsCardTema">
+          <div class="card__header"><h2>Tema</h2></div>
+          <p class="hint">Paleta de cores da plataforma. A troca é aplicada na hora, em todas as telas.</p>
+          <div class="palette-swatches" id="paletteSwatches"></div>
+        </div>
 
-    <div class="card" id="settingsCardIdentidadeVisual">
-      <div class="card__header"><h2>Identidade visual</h2></div>
-      <p class="hint">Personalize o nome e os ícones usados pelo app. Deixe em branco / clique em "Usar padrão" para manter o visual original até você trocar.</p>
-      <label class="field">
-        <span>Nome do aplicativo</span>
-        <input type="text" id="brandName" placeholder="Bingo (padrão)">
-      </label>
-      <div id="brandFields"></div>
-    </div>
-
-    <div class="card" id="settingsCardTema">
-      <div class="card__header"><h2>Tema</h2></div>
-      <p class="hint">Escolha a paleta de cores da plataforma. A troca é aplicada na hora, em todas as telas.</p>
-      <div class="palette-swatches" id="paletteSwatches"></div>
-    </div>
-
-    <form class="card" id="formConfig">
-      <div id="settingsSection-intervaloSorteio">
-        <div class="card__header"><h2>Intervalo do sorteio</h2></div>
-        <div class="field-row">
-          <label class="field">
-            <span>Número inicial</span>
-            <input type="number" id="cfgMin" min="1" required>
+        <div class="card" id="settingsCardIdentidadeVisual">
+          <div class="card__header"><h2>Identidade visual</h2></div>
+          <p class="hint">Nome e ícones do app. Em branco / "Usar padrão" mantém o visual original.</p>
+          <label class="field field--narrow">
+            <span>Nome do aplicativo</span>
+            <input type="text" id="brandName" placeholder="Bingo (padrão)">
           </label>
-          <label class="field">
-            <span>Número final</span>
-            <input type="number" id="cfgMax" min="2" required>
-          </label>
+          <div id="brandFields" class="brand-fields"></div>
+        </div>
+
+        <form id="formConfig" class="settings-form">
+          <div class="card" id="cfgRegras">
+            <div class="card__header"><h2>Regras do jogo</h2></div>
+
+            <div class="settings-section" id="settingsSection-intervaloSorteio">
+              <div class="settings-section__head"><h3>Intervalo do sorteio</h3><p class="hint">Faixa de números da globo.</p></div>
+              <div class="settings-section__body field-row">
+                <label class="field">
+                  <span>Número inicial</span>
+                  <input type="number" id="cfgMin" min="1" required>
+                </label>
+                <label class="field">
+                  <span>Número final</span>
+                  <input type="number" id="cfgMax" min="2" required>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-section" id="settingsSection-criteriosVitoria">
+              <div class="settings-section__head"><h3>Critérios de vitória</h3><p class="hint">Podem ser combinados.</p></div>
+              <div class="settings-section__body">
+                <label class="field field--check field--switch">
+                  <input type="checkbox" id="cfgCheia">
+                  <span>Cartela Cheia</span>
+                </label>
+                <label class="field field--check field--switch">
+                  <input type="checkbox" id="cfgQuatroPontas">
+                  <span>Quatro Pontas (cantos da cartela)</span>
+                </label>
+                <label class="field field--check field--switch">
+                  <input type="checkbox" id="cfgQuinaPrimeiraLetra">
+                  <span>Quina da primeira letra sorteada</span>
+                </label>
+                <label class="field field--check field--switch">
+                  <input type="checkbox" id="cfgQuina">
+                  <span>Quina</span>
+                </label>
+                <label class="field" id="quinaTipoWrap">
+                  <span>Tipo de quina válida</span>
+                  <select id="cfgQuinaTipo">
+                    <option value="horizontal">Horizontal (linha)</option>
+                    <option value="transversal">Transversal (coluna)</option>
+                    <option value="diagonal">Diagonal</option>
+                    <option value="todos">Todos (qualquer uma)</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-section" id="settingsSection-cartela">
+              <div class="settings-section__head"><h3>Cartela</h3></div>
+              <div class="settings-section__body">
+                <label class="field field--check field--switch">
+                  <input type="checkbox" id="cfgFreeCenter">
+                  <span>Cartelas possuem espaço livre no centro</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-section" id="settingsSection-exibicao">
+              <div class="settings-section__head"><h3>Exibição</h3></div>
+              <div class="settings-section__body">
+                <label class="field field--narrow">
+                  <span>Quantidade de últimas bolas exibidas</span>
+                  <input type="number" id="cfgLastCount" min="1" max="50" required>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__header"><h2>Painel de números e bola</h2></div>
+            <div class="settings-section" id="settingsSection-aparenciaPainelNumeros">
+              <div class="settings-section__head"><h3>Painel de números</h3></div>
+              <div class="settings-section__body">
+                <label class="field">
+                  <span>Tamanho do número <output id="outBoardFontSize">14px</output></span>
+                  <input type="range" id="cfgBoardFontSize" min="10" max="22" step="1">
+                </label>
+                <label class="field">
+                  <span>Tamanho do card <output id="outBoardCellSize">56px</output></span>
+                  <input type="range" id="cfgBoardCellSize" min="36" max="90" step="2">
+                </label>
+                <label class="field field--check field--switch">
+                  <input type="checkbox" id="cfgBoardBold">
+                  <span>Número em negrito</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-section" id="settingsSection-aparenciaBolaSorteada">
+              <div class="settings-section__head"><h3>Bola sorteada</h3></div>
+              <div class="settings-section__body">
+                <label class="field">
+                  <span>Tamanho da letra <output id="outBallLetterSize">22px</output></span>
+                  <input type="range" id="cfgBallLetterSize" min="14" max="34" step="1">
+                </label>
+                <label class="field">
+                  <span>Tamanho do número <output id="outBallNumberSize">48px</output></span>
+                  <input type="range" id="cfgBallNumberSize" min="30" max="90" step="2">
+                </label>
+                <label class="field field--check field--switch">
+                  <input type="checkbox" id="cfgBallBold">
+                  <span>Negrito</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="card desktop-only-field" id="cameraSelectWrap">
+            <div class="card__header"><h2>Câmera (computador)</h2></div>
+            <label class="field field--narrow">
+              <span>Selecionar câmera</span>
+              <select id="cfgCamera">
+                <option value="">Automática</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="save-bar">
+            <p class="save-hint" id="configSaveHint" hidden>Configurações salvas ✓</p>
+            <button type="submit" class="btn btn--primary">Salvar configurações</button>
+          </div>
+        </form>
+
+        <div class="card" id="settingsCardAplicativo">
+          <div class="card__header"><h2>Aplicativo</h2></div>
+          <p class="hint">Instale o Bingo como aplicativo, no celular ou no computador, para abrir direto da tela inicial sem precisar do navegador.</p>
+          <button type="button" class="btn btn--primary" id="btnInstallApp" hidden><svg class="icon icon--inline" aria-hidden="true"><use href="#icon-download"></use></svg>Baixar / instalar aplicativo</button>
+          <details class="disclosure">
+            <summary>O botão não apareceu?</summary>
+            <p class="hint">Seu navegador já oferece a opção por conta própria: no Android, menu ⋮ → "Instalar aplicativo"; no iPhone/iPad, Compartilhar → "Adicionar à Tela de Início"; no computador, ícone de instalação (⊕) na barra de endereço.</p>
+          </details>
         </div>
       </div>
-
-      <div id="settingsSection-exibicao">
-        <div class="card__header"><h2>Exibição</h2></div>
-        <label class="field">
-          <span>Quantidade de últimas bolas exibidas</span>
-          <input type="number" id="cfgLastCount" min="1" max="50" required>
-        </label>
-      </div>
-
-      <div id="settingsSection-criteriosVitoria">
-        <div class="card__header"><h2>Critérios de vitória</h2></div>
-
-        <label class="field field--check">
-          <input type="checkbox" id="cfgCheia">
-          <span>Cartela Cheia</span>
-        </label>
-
-        <label class="field field--check">
-          <input type="checkbox" id="cfgQuatroPontas">
-          <span>Quatro Pontas (cantos da cartela)</span>
-        </label>
-
-        <label class="field field--check">
-          <input type="checkbox" id="cfgQuinaPrimeiraLetra">
-          <span>Quina da primeira letra sorteada</span>
-        </label>
-
-        <label class="field field--check">
-          <input type="checkbox" id="cfgQuina">
-          <span>Quina</span>
-        </label>
-        <label class="field" id="quinaTipoWrap">
-          <span>Tipo de quina válida</span>
-          <select id="cfgQuinaTipo">
-            <option value="horizontal">Horizontal (linha)</option>
-            <option value="transversal">Transversal (coluna)</option>
-            <option value="diagonal">Diagonal</option>
-            <option value="todos">Todos (qualquer uma)</option>
-          </select>
-        </label>
-      </div>
-
-      <div id="settingsSection-cartela">
-        <div class="card__header"><h2>Cartela</h2></div>
-        <label class="field field--check">
-          <input type="checkbox" id="cfgFreeCenter">
-          <span>Cartelas possuem espaço livre no centro</span>
-        </label>
-      </div>
-
-      <div class="desktop-only-field" id="cameraSelectWrap">
-        <div class="card__header"><h2>Câmera (computador)</h2></div>
-        <label class="field">
-          <span>Selecionar câmera</span>
-          <select id="cfgCamera">
-            <option value="">Automática</option>
-          </select>
-        </label>
-      </div>
-
-      <div id="settingsSection-aparenciaPainelNumeros">
-        <div class="card__header"><h2>Aparência do painel de números</h2></div>
-        <label class="field">
-          <span>Tamanho do número <output id="outBoardFontSize">14px</output></span>
-          <input type="range" id="cfgBoardFontSize" min="10" max="22" step="1">
-        </label>
-        <label class="field">
-          <span>Tamanho do card <output id="outBoardCellSize">56px</output></span>
-          <input type="range" id="cfgBoardCellSize" min="36" max="90" step="2">
-        </label>
-        <label class="field field--check">
-          <input type="checkbox" id="cfgBoardBold">
-          <span>Número em negrito</span>
-        </label>
-      </div>
-
-      <div id="settingsSection-aparenciaBolaSorteada">
-        <div class="card__header"><h2>Aparência da bola sorteada</h2></div>
-        <label class="field">
-          <span>Tamanho da letra <output id="outBallLetterSize">22px</output></span>
-          <input type="range" id="cfgBallLetterSize" min="14" max="34" step="1">
-        </label>
-        <label class="field">
-          <span>Tamanho do número <output id="outBallNumberSize">48px</output></span>
-          <input type="range" id="cfgBallNumberSize" min="30" max="90" step="2">
-        </label>
-        <label class="field field--check">
-          <input type="checkbox" id="cfgBallBold">
-          <span>Negrito</span>
-        </label>
-      </div>
-
-      <button type="submit" class="btn btn--primary btn--block">Salvar configurações</button>
-      <p class="save-hint" id="configSaveHint" hidden>Configurações salvas ✓</p>
-    </form>
+    </div>
   </section>
 
   <!-- ===================== USUÁRIOS (MASTER) ===================== -->
   <section class="view" id="view-usuarios" data-view="usuarios" hidden>
-    <div class="card" id="masterUsersCard">
-      <div class="card__header"><h2>Usuários</h2></div>
-      <p class="hint">Crie um login para cada operador e escolha o papel dele. Cada usuário só vê o próprio histórico; use o filtro no topo da tela para visualizar o de qualquer um deles.</p>
-      <div class="field-row">
-        <label class="field" style="flex:1;">
-          <span>Nome do novo usuário</span>
+    <div class="users-layout" id="masterUsersCard">
+      <div class="card users-layout__form">
+        <div class="card__header"><h2>Novo usuário</h2></div>
+        <p class="hint">Crie um login para cada operador. Cada usuário só vê o próprio histórico; use o filtro no topo para visualizar o de qualquer um.</p>
+        <label class="field">
+          <span>Nome</span>
           <input type="text" id="newUserName" placeholder="Ex: Maria Silva">
         </label>
-        <label class="field" style="flex:1;">
-          <span>E-mail do novo usuário</span>
+        <label class="field">
+          <span>E-mail</span>
           <input type="email" id="newUserEmail" placeholder="nome@exemplo.com">
         </label>
-      </div>
-      <div class="field-row">
-        <label class="field" style="flex:1;">
+        <label class="field">
           <span>Senha provisória</span>
           <input type="text" id="newUserPassword" placeholder="Mín. 8, com maiúscula, número e símbolo">
         </label>
-        <label class="field" style="flex:1;">
+        <label class="field">
           <span>Papel</span>
           <select id="newUserRole">
             <option value="user">Usuário</option>
             <option value="master">Master</option>
           </select>
         </label>
+        <p class="hint">Mínimo de 8 caracteres, com letra maiúscula, minúscula, número e caractere especial. O usuário troca a senha no primeiro acesso.</p>
+        <button type="button" class="btn btn--primary btn--block" id="btnCreateUser">Criar usuário</button>
       </div>
-      <p class="hint">A senha precisa ter no mínimo 8 caracteres, com letra maiúscula, minúscula, número e caractere especial (ex: . , ; ! @).</p>
-      <button type="button" class="btn btn--primary btn--block" id="btnCreateUser">Criar usuário</button>
-      <div id="usersList" class="cards-summary"></div>
+      <div class="card users-layout__list">
+        <div class="card__header"><h2>Usuários cadastrados</h2></div>
+        <div id="usersList" class="users-list"></div>
+      </div>
     </div>
   </section>
 
   <!-- ===================== PERMISSÕES (MASTER) ===================== -->
   <section class="view" id="view-permissoes" data-view="permissoes" hidden>
     <div class="card" id="masterPermissionsCard">
-      <div class="card__header"><h2>Permissões</h2></div>
-      <p class="hint">Cada papel tem seu próprio conjunto de acessos. Escolha um papel abaixo para ver ou editar o que ele enxerga.</p>
+      <div class="card__header"><h2>Permissões por papel</h2></div>
+      <p class="hint">Cada papel tem seu próprio conjunto de acessos. Escolha um papel para ver ou editar o que ele enxerga.</p>
 
-      <div class="role-tabs" id="permRoleTabs">
-        <button type="button" class="role-tab" data-perm-role="master">Master</button>
-        <button type="button" class="role-tab is-active" data-perm-role="user">Usuário</button>
+      <div class="segmented segmented--inline role-tabs" id="permRoleTabs">
+        <button type="button" class="role-tab segmented__btn" data-perm-role="master">Master</button>
+        <button type="button" class="role-tab segmented__btn is-active" data-perm-role="user">Usuário</button>
       </div>
 
       <div id="permPanel-master" hidden>
-        <p class="hint">O Master tem acesso completo a todos os menus e a todas as seções de Configurações — isto não pode ser alterado.</p>
-        <div class="permissions-group">
-          <h3 class="permissions-group__title">Menus</h3>
-          <div id="permMenusListMaster" class="permissions-grid"></div>
-        </div>
-        <div class="permissions-group">
-          <h3 class="permissions-group__title">Configurações</h3>
-          <div id="permSettingsListMaster" class="permissions-grid"></div>
+        <p class="callout"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-shield"></use></svg>O Master tem acesso completo a todos os menus e seções de Configurações — isto não pode ser alterado.</p>
+        <div class="permissions-columns">
+          <div class="permissions-group">
+            <h3 class="permissions-group__title">Menus</h3>
+            <div id="permMenusListMaster" class="permissions-grid"></div>
+          </div>
+          <div class="permissions-group">
+            <h3 class="permissions-group__title">Configurações</h3>
+            <div id="permSettingsListMaster" class="permissions-grid"></div>
+          </div>
         </div>
       </div>
 
       <div id="permPanel-user">
-        <p class="hint">Escolha quais menus e seções de Configurações os usuários comuns podem ver.</p>
-        <div class="permissions-group">
-          <h3 class="permissions-group__title">Menus</h3>
-          <div id="permMenusList" class="permissions-grid"></div>
+        <div class="permissions-columns">
+          <div class="permissions-group">
+            <h3 class="permissions-group__title">Menus visíveis</h3>
+            <div id="permMenusList" class="permissions-grid"></div>
+          </div>
+          <div class="permissions-group">
+            <h3 class="permissions-group__title">Seções de Configurações</h3>
+            <div id="permSettingsList" class="permissions-grid"></div>
+          </div>
         </div>
-        <div class="permissions-group">
-          <h3 class="permissions-group__title">Configurações</h3>
-          <div id="permSettingsList" class="permissions-grid"></div>
+        <div class="save-bar save-bar--inline">
+          <p class="save-hint" id="permissionsSaveHint" hidden>Permissões salvas ✓</p>
+          <button type="button" class="btn btn--primary" id="btnSavePermissions">Salvar permissões</button>
         </div>
-        <button type="button" class="btn btn--primary btn--block" id="btnSavePermissions">Salvar permissões</button>
-        <p class="save-hint" id="permissionsSaveHint" hidden>Permissões salvas ✓</p>
       </div>
     </div>
   </section>
@@ -894,5 +1069,6 @@
 <script src="js/state.js"></script>
 <script src="js/ocr.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/redesign.js"></script>
 </body>
 </html>

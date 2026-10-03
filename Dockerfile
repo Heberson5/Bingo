@@ -11,6 +11,7 @@ COPY manifest.webmanifest /usr/share/nginx/html/manifest.webmanifest
 COPY sw.js /usr/share/nginx/html/sw.js
 COPY css/ /usr/share/nginx/html/css/
 COPY js/ /usr/share/nginx/html/js/
+COPY fonts/ /usr/share/nginx/html/fonts/
 COPY icons/ /usr/share/nginx/html/icons/
 
 # Browsers cache css/js for 1h (see nginx.conf) — without this, a
