@@ -16,7 +16,7 @@ Não há tela de login — a aplicação roda inteiramente no navegador (HTML/CS
 - Botão **Encerrar jogo**: arquiva as cartelas da partida atual (elas não podem ser reaproveitadas em jogos futuros) e inicia uma nova partida.
 
 ### Cartelas
-- **Escanear cartela**: abre a câmera do dispositivo, tira uma foto da cartela física e tenta reconhecer os números automaticamente (OCR via [Tesseract.js](https://github.com/naptha/tesseract.js), carregado por CDN). Os números reconhecidos preenchem uma grade 5×5 editável para conferência/correção antes de salvar — o reconhecimento é "melhor esforço" e sempre pode ser ajustado manualmente.
+- **Escanear cartela**: pela câmera ou por uma foto da galeria. O app acha a grade 5×5 sozinho, corrige a perspectiva, limpa as manchas do papel e lê cada casa (OCR via [Tesseract.js](https://github.com/naptha/tesseract.js), carregado por CDN), conferindo pela faixa de cada letra (B 1–15, I 16–30...) e sem repetir números. Também lê o número da cartela impresso abaixo da grade e gira a foto sozinho se ela estiver de lado. Tudo cai numa grade editável para conferência antes de salvar.
 - **Cadastro manual**: preenche a cartela sem usar a câmera.
 - Cada cartela é vinculada a um nome de participante.
 - Uma cartela com o mesmo conjunto de números não pode ser cadastrada duas vezes na mesma partida, nem reaproveitada depois de ter participado de um jogo já encerrado.
@@ -25,6 +25,7 @@ Não há tela de login — a aplicação roda inteiramente no navegador (HTML/CS
 ### Configurações
 - Intervalo numérico do sorteio (número inicial e final).
 - Quantidade de últimas bolas exibidas na tela de sorteio.
+- Como o telão aparece: **Completo** (bola, últimas bolas e painel com todos os números) ou **Só a bola**.
 - Critérios de vitória (podem ser combinados):
   - **Cartela Cheia**
   - **Quatro Pontas** (os quatro cantos da cartela)
