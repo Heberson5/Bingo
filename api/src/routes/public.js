@@ -9,7 +9,7 @@ const router = express.Router();
  * (display.html) calls, and it's meant to be opened on a DIFFERENT
  * device/browser than the one running the draw (no session, no token
  * available there). Exposes only what that screen actually needs
- * (numbers + suspense/reveal state), never cards, names or history.
+ * (numbers + suspense/reveal state + layout do telão), never cards, names or history.
  *
  * :userId is a UUID (not sequential/guessable) — acceptable exposure
  * for a private single-organizer event tool, not a public multi-tenant
@@ -37,6 +37,7 @@ router.get('/display/:userId', async (req, res) => {
     min: typeof config.min === 'number' ? config.min : 1,
     max: typeof config.max === 'number' ? config.max : 75,
     suspenseMode: !!config.suspenseMode,
+    telaoMode: config.telaoMode === 'bola' ? 'bola' : 'completo',
   });
 });
 

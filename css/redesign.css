@@ -1115,3 +1115,36 @@ body[data-view="sorteio"] .toast { bottom: calc(var(--bottom-nav-h) + 84px + var
   .kpi__value { font-size: 22px; }
   .kpi__hint { display: none; }
 }
+
+/* Escolha do modo do telão (Configurações > Exibição). */
+.choice-group { border: none; padding: 0; margin: 4px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.choice-group legend { font-size: 13px; font-weight: 500; color: var(--color-text-dim); margin-bottom: 8px; padding: 0; }
+.choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg);
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.choice:hover { border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border-strong)); }
+.choice input { position: absolute; opacity: 0; pointer-events: none; }
+.choice:has(input:checked) { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.choice:has(input:focus-visible) { outline: 2px solid var(--color-primary-light); outline-offset: 2px; }
+.choice__text { display: flex; flex-direction: column; gap: 2px; }
+.choice__text strong { color: var(--color-text); font-size: 14px; }
+.choice__text small { color: var(--color-text-dim); font-size: 12px; line-height: 1.4; }
+.choice__preview { height: 72px; border-radius: 10px; background: #0a0b0f; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; }
+.choice__preview i { display: block; font-style: normal; }
+.pv-ball { width: 46px; height: 46px; border-radius: 50%; background: radial-gradient(circle, #fff 0 52%, transparent 54%), var(--l-b); flex-shrink: 0; }
+.choice__preview--completo .pv-ball { width: 40px; height: 40px; }
+.pv-side { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.pv-row { height: 8px; border-radius: 4px; background: repeating-linear-gradient(90deg, var(--l-i) 0 8px, transparent 8px 11px, var(--l-g) 11px 19px, transparent 19px 22px, var(--l-o) 22px 30px, transparent 30px 33px); }
+.pv-board { height: 34px; border-radius: 4px; background:
+  repeating-linear-gradient(90deg, transparent 0 7px, #0a0b0f 7px 9px),
+  linear-gradient(180deg, var(--l-b) 0 20%, var(--l-i) 20% 40%, var(--l-n) 40% 60%, var(--l-g) 60% 80%, var(--l-o) 80%);
+  opacity: .55; }

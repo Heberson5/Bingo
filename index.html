@@ -748,12 +748,27 @@
             </div>
 
             <div class="settings-section" id="settingsSection-exibicao">
-              <div class="settings-section__head"><h3>Exibição</h3></div>
+              <div class="settings-section__head"><h3>Exibição</h3><p class="hint">Tela de sorteio e telão do público.</p></div>
               <div class="settings-section__body">
                 <label class="field field--narrow">
                   <span>Quantidade de últimas bolas exibidas</span>
                   <input type="number" id="cfgLastCount" min="1" max="50" required>
                 </label>
+                <fieldset class="choice-group">
+                  <legend>Como o telão aparece</legend>
+                  <label class="choice">
+                    <input type="radio" name="cfgTelaoMode" id="cfgTelaoCompleto" value="completo">
+                    <span class="choice__preview choice__preview--completo" aria-hidden="true">
+                      <i class="pv-ball"></i><i class="pv-side"><i class="pv-row"></i><i class="pv-board"></i></i>
+                    </span>
+                    <span class="choice__text"><strong>Completo</strong><small>Bola sorteada, últimas bolas e o painel com todos os números</small></span>
+                  </label>
+                  <label class="choice">
+                    <input type="radio" name="cfgTelaoMode" id="cfgTelaoBola" value="bola">
+                    <span class="choice__preview choice__preview--bola" aria-hidden="true"><i class="pv-ball"></i></span>
+                    <span class="choice__text"><strong>Só a bola</strong><small>Apenas a bola sorteada, bem grande, e a contagem</small></span>
+                  </label>
+                </fieldset>
               </div>
             </div>
           </div>

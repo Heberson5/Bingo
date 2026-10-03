@@ -112,6 +112,13 @@
   .footer { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; color: #4a5060; font-size: min(1.3vw, 2vh); font-weight: 600; }
   .footer__brand { display: flex; align-items: center; gap: 1vmin; }
   .footer__dot { width: 1vmin; height: 1vmin; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 .5vmin rgba(34,197,94,.2); }
+  /* Modo "Só a bola" (Configurações > Exibição > Como o telão aparece). */
+  .stage.is-ball-only { grid-template-columns: 1fr; }
+  .stage.is-ball-only .side { display: none; }
+  .stage.is-ball-only .ball { width: min(84vw, 72vh); height: min(84vw, 72vh); }
+  .stage.is-ball-only .ball__letter { font-size: min(10vw, 9vh); }
+  .stage.is-ball-only .ball__number { font-size: min(32vw, 30vh); }
+  .stage.is-ball-only .stats { font-size: min(3.4vw, 3.6vh); }
   @media (max-aspect-ratio: 1/1) {
     body { overflow: auto; }
     .stage { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; min-height: 100%; }
@@ -267,6 +274,7 @@
     }
 
     showState('ball');
+    stageEl.classList.toggle('is-ball-only', data.telaoMode === 'bola');
     var last = revealed[revealed.length - 1];
     var idx = letterIndex(last, min, max);
     document.getElementById('letter').textContent = letterForNumber(last, min, max);

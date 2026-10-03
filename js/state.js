@@ -28,6 +28,7 @@ const DEFAULT_CONFIG = {
   quinaTipo: 'todos', // horizontal | transversal | diagonal | todos
   cameraDeviceId: '', // '' = automatic (facingMode: environment)
   suspenseMode: false,
+  telaoMode: 'completo', // completo (bola + últimas + painel) | bola (só a bola sorteada)
   display: {
     boardCellSize: 56,
     boardFontSize: 14,

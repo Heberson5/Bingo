@@ -871,6 +871,7 @@ let quad = defaultQuad();
 
 const CAPTURE_HINT = 'Alinhe as bordas da cartela com o quadro e as linhas guia antes de capturar.';
 const REVIEW_HINT = 'Arraste cada bolinha para o canto correspondente da grade de números (sem o cabeçalho BINGO nem a borda da cartela) — funciona mesmo se a foto estiver em ângulo. Gire a foto se estiver de lado. Depois toque em "Reconhecer números".';
+const REVIEW_HINT_FOUND = 'Grade encontrada automaticamente. Se algum canto ficou fora do lugar, arraste a bolinha e toque em "Reconhecer números" de novo.';
 
 function showCapturePhase() {
   currentPhotoDataUrl = null;
@@ -892,6 +893,27 @@ function showReviewPhase() {
   quad = defaultQuad();
   applyQuadStyle();
   $('#scanHint').textContent = REVIEW_HINT;
+  autoDetectAndRecognize();
+}
+
+/**
+ * Logo depois da foto: acha a grade sozinho e já reconhece os números.
+ * Se não achar, o operador posiciona os cantos como antes.
+ */
+async function autoDetectAndRecognize() {
+  const photo = currentPhotoDataUrl;
+  $('#ocrStatus').textContent = 'Procurando a grade da cartela...';
+  let found = null;
+  try { found = await Ocr.detectGridQuad(photo); } catch (e) { found = null; }
+  if (photo !== currentPhotoDataUrl) return; // trocou de foto no meio
+  if (!found) {
+    $('#ocrStatus').textContent = 'Não encontrei a grade sozinho — arraste os cantos e toque em "Reconhecer números".';
+    return;
+  }
+  quad = found;
+  applyQuadStyle();
+  $('#scanHint').textContent = REVIEW_HINT_FOUND;
+  runRecognition(true);
 }
 
 /* ---------------- Quad corners (drag to mark the number grid) ---------------- */
@@ -1007,6 +1029,9 @@ $('#galleryInput').addEventListener('change', (e) => {
 $('#btnRotate').addEventListener('click', async () => {
   currentPhotoDataUrl = await Ocr.rotate90(currentPhotoDataUrl);
   $('#capturedPreview').src = currentPhotoDataUrl;
+  quad = defaultQuad();
+  applyQuadStyle();
+  autoDetectAndRecognize();
 });
 
 $('#btnRetake').addEventListener('click', () => {
@@ -1016,26 +1041,70 @@ $('#btnRetake').addEventListener('click', () => {
   });
 });
 
-$('#btnRecognize').addEventListener('click', async () => {
-  $('#ocrStatus').textContent = 'Reconhecendo números da cartela... 0%';
+let recognizing = false;
+
+function countInRange(grid) {
+  const ranges = getColumnRanges(Store.config.min, Store.config.max);
+  let n = 0;
+  grid.forEach((row) => row.forEach((v, c) => { if (v != null && v >= ranges[c][0] && v <= ranges[c][1]) n++; }));
+  return n;
+}
+
+/**
+ * Reconhece os números da foto atual. Com `autoRotate`, se quase nada
+ * fizer sentido (foto de lado/de cabeça para baixo), gira a foto e
+ * tenta de novo, ficando com a melhor leitura.
+ */
+async function runRecognition(autoRotate) {
+  if (recognizing) return;
+  recognizing = true;
+  $('#btnRecognize').disabled = true;
+  $('#btnRotate').disabled = true;
+  const opts = { min: Store.config.min, max: Store.config.max };
+  const progress = (label) => (pct) => { $('#ocrStatus').textContent = `${label}... ${pct}%`; };
   try {
-    const recognizedGrid = await Ocr.recognizeGrid(currentPhotoDataUrl, Store.config.freeCenter, quad, (pct) => {
-      $('#ocrStatus').textContent = `Reconhecendo números da cartela... ${pct}%`;
-    });
-    const count = fillGridFromCells(recognizedGrid);
+    let best = { photo: currentPhotoDataUrl, quad, ...(await Ocr.recognizeGrid(currentPhotoDataUrl, Store.config.freeCenter, quad, progress('Reconhecendo números da cartela'), opts)) };
+    best.score = countInRange(best.grid);
+    if (autoRotate && best.score < 10) {
+      let photo = currentPhotoDataUrl;
+      for (let turn = 1; turn <= 3 && best.score < 18; turn++) {
+        photo = await Ocr.rotate90(photo);
+        const q = await Ocr.detectGridQuad(photo);
+        if (!q) continue;
+        const res = await Ocr.recognizeGrid(photo, Store.config.freeCenter, q, progress(`Foto parece de lado — tentando girada (${turn}/3)`), opts);
+        const score = countInRange(res.grid);
+        if (score > best.score) best = { photo, quad: q, ...res, score };
+      }
+      if (best.photo !== currentPhotoDataUrl) {
+        currentPhotoDataUrl = best.photo;
+        $('#capturedPreview').src = best.photo;
+        quad = best.quad;
+        applyQuadStyle();
+      }
+    }
+
+    const count = fillGridFromCells(best.grid);
+    if (best.cardNumber && !$('#cardNumberInput').value.trim()) $('#cardNumberInput').value = best.cardNumber;
     const total = Store.config.freeCenter ? 24 : 25;
     const invalid = highlightInvalidCells();
+    const numberNote = best.cardNumber ? ` Número da cartela: ${best.cardNumber}.` : '';
     if (count === 0) {
-      $('#ocrStatus').textContent = 'Não foi possível reconhecer os números automaticamente. Preencha manualmente abaixo, ou gire a foto e tente de novo.';
+      $('#ocrStatus').textContent = 'Não foi possível reconhecer os números automaticamente. Ajuste os cantos da grade, gire a foto ou preencha manualmente abaixo.';
     } else if (invalid.length > 0) {
-      $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos, mas ${invalid.length} ficaram fora da faixa da coluna (em vermelho) — corrija antes de salvar.`;
+      $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos, mas ${invalid.length} ficaram fora da faixa da coluna (em vermelho) — corrija antes de salvar.${numberNote}`;
     } else {
-      $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos. Confira e corrija antes de salvar — dá pra tocar em qualquer casa e ajustar.`;
+      $('#ocrStatus').textContent = `${count} de ${total} números reconhecidos.${numberNote} Confira com a cartela antes de salvar — dá pra tocar em qualquer casa e ajustar.`;
     }
   } catch (err) {
     $('#ocrStatus').textContent = 'Falha no reconhecimento automático. Preencha manualmente. (' + err.message + ')';
+  } finally {
+    recognizing = false;
+    $('#btnRecognize').disabled = false;
+    $('#btnRotate').disabled = false;
   }
-});
+}
+
+$('#btnRecognize').addEventListener('click', () => runRecognition(false));
 
 $('#btnSaveCard').addEventListener('click', () => {
   const name = $('#cardParticipant').value.trim();
@@ -1761,6 +1830,7 @@ function renderConfigForm() {
   $('#cfgMin').value = cfg.min;
   $('#cfgMax').value = cfg.max;
   $('#cfgLastCount').value = cfg.lastCount;
+  $(cfg.telaoMode === 'bola' ? '#cfgTelaoBola' : '#cfgTelaoCompleto').checked = true;
   $('#cfgFreeCenter').checked = cfg.freeCenter;
   $('#cfgCheia').checked = cfg.criteria.cheia;
   $('#cfgQuatroPontas').checked = cfg.criteria.quatroPontas;
@@ -1804,6 +1874,7 @@ $('#formConfig').addEventListener('submit', (e) => {
     Store.config.min = min;
     Store.config.max = max;
     Store.config.lastCount = lastCount;
+    Store.config.telaoMode = $('#cfgTelaoBola').checked ? 'bola' : 'completo';
     Store.config.freeCenter = $('#cfgFreeCenter').checked;
     Store.config.criteria.cheia = $('#cfgCheia').checked;
     Store.config.criteria.quatroPontas = $('#cfgQuatroPontas').checked;
