@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../prisma');
 const { requireAuth, requireMaster } = require('../auth');
+const { logAudit } = require('../audit');
 
 const router = express.Router();
 
@@ -25,7 +26,10 @@ router.get('/:key', requireAuth, async (req, res) => {
   const { key } = req.params;
   if (!STATE_KEYS.includes(key)) return res.status(404).json({ error: 'not_found' });
 
-  const { userId } = resolveTarget(req);
+  const { userId, readOnly } = resolveTarget(req);
+  // Master abrindo os dados de outro usuário: registra uma vez por
+  // visualização (a chave "config" é sempre a primeira lida).
+  if (readOnly && key === 'config') await logAudit(req, 'view_user_data', { target: userId });
   const row = await prisma.userState.findUnique({ where: { userId_key: { userId, key } } });
   res.json({ value: row ? row.value : null });
 });
@@ -86,6 +90,7 @@ router.delete('/history/:userId/:gameId', requireAuth, requireMaster, async (req
     update: { value: filtered },
     create: { userId, key: 'history', value: filtered },
   });
+  await logAudit(req, 'game_delete', { target: userId, details: { gameId } });
   res.json({ ok: true });
 });
 
@@ -117,6 +122,7 @@ router.post('/reset-counter/:userId', requireAuth, requireMaster, async (req, re
     update: { value: game },
     create: { userId, key: 'game', value: game },
   });
+  await logAudit(req, 'game_counter_reset', { target: userId, details: { nextId } });
   res.json({ ok: true, nextId });
 });
 

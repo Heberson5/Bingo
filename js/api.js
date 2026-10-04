@@ -239,4 +239,39 @@ const Api = {
     if (!res.ok) throw new Error('error');
     return res.json();
   },
+
+  /* ---------- Privacidade (LGPD) ---------- */
+
+  async fetchPrivacy() {
+    const res = await this.request('/privacy/settings');
+    if (!res.ok) return null;
+    return (await res.json()).value;
+  },
+
+  async savePrivacy(value) {
+    const res = await this.request('/privacy/settings', { method: 'PUT', body: JSON.stringify({ value }) });
+    if (!res.ok) throw new Error('error');
+    return (await res.json()).value;
+  },
+
+  /** Baixa tudo o que o sistema guarda sobre o usuário logado (JSON). */
+  async exportMyData() {
+    const res = await this.request('/privacy/export');
+    if (!res.ok) throw new Error('error');
+    return res.json();
+  },
+
+  /** Apaga os nomes de participantes das partidas encerradas (scope 'me' ou 'all'). */
+  async anonymizeParticipants(scope) {
+    const res = await this.request('/privacy/anonymize', { method: 'POST', body: JSON.stringify({ scope }) });
+    if (!res.ok) throw new Error('error');
+    return res.json();
+  },
+
+  /** Master only: registro de atividades. */
+  async fetchAudit(limit = 200) {
+    const res = await this.request(`/audit?limit=${limit}`);
+    if (!res.ok) return [];
+    return (await res.json()).entries;
+  },
 };

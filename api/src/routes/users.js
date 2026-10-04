@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../prisma');
 const { publicUser, requireAuth, requireMaster } = require('../auth');
 const { isPasswordStrong } = require('../passwordPolicy');
+const { logAudit } = require('../audit');
 
 const router = express.Router();
 
@@ -34,6 +35,7 @@ router.post('/', async (req, res) => {
   const user = await prisma.user.create({
     data: { name: normalizedName, email: normalizedEmail, passwordHash, role: normalizedRole, mustChangePassword: true },
   });
+  await logAudit(req, 'user_create', { target: user.email, details: { role: user.role } });
   res.status(201).json({ user: publicUser(user) });
 });
 
@@ -54,6 +56,7 @@ router.patch('/:id', async (req, res) => {
 
   const user = await prisma.user.update({ where: { id: req.params.id }, data }).catch(() => null);
   if (!user) return res.status(404).json({ error: 'not_found' });
+  await logAudit(req, 'user_update', { target: user.email, details: { fields: Object.keys(data) } });
   res.json({ user: publicUser(user) });
 });
 
@@ -63,6 +66,7 @@ router.delete('/:id', async (req, res) => {
   // config/game/cards/history desse usuário, sem deixar lixo órfão.
   const user = await prisma.user.delete({ where: { id: req.params.id } }).catch(() => null);
   if (!user) return res.status(404).json({ error: 'not_found' });
+  await logAudit(req, 'user_delete', { target: user.email });
   res.json({ ok: true });
 });
 
@@ -75,6 +79,7 @@ router.patch('/:id/password', async (req, res) => {
     .update({ where: { id: req.params.id }, data: { passwordHash, mustChangePassword: true } })
     .catch(() => null);
   if (!user) return res.status(404).json({ error: 'not_found' });
+  await logAudit(req, 'user_password_reset', { target: user.email });
   res.json({ user: publicUser(user) });
 });
 

@@ -2,7 +2,7 @@
 
 Aplicação web responsiva para sortear números de bingo, cadastrar cartelas dos participantes (por escaneamento com a câmera ou manualmente), marcar automaticamente os números sorteados em cada cartela e alertar o vencedor de acordo com os critérios configurados.
 
-Não há tela de login — a aplicação roda inteiramente no navegador (HTML/CSS/JavaScript puro, sem back-end), guardando o estado do jogo e das cartelas em `localStorage`.
+O frontend é HTML/CSS/JavaScript puro (sem etapa de build), servido por Nginx; o back-end (`api/`, Express + Prisma + PostgreSQL) cuida do login por usuário (papéis Master e Usuário), do estado de cada operador, do telão público e das regras de privacidade (LGPD).
 
 ## Funcionalidades
 
@@ -22,6 +22,15 @@ Não há tela de login — a aplicação roda inteiramente no navegador (HTML/CS
 - Uma cartela com o mesmo conjunto de números não pode ser cadastrada duas vezes na mesma partida, nem reaproveitada depois de ter participado de um jogo já encerrado.
 - Histórico de cartelas já utilizadas em jogos anteriores.
 
+### Telão, locução e QR Code
+- **Telão** (`display.html`, sem login): modo **Completo** (bola, últimas bolas e painel) ou **Só a bola**; faixa **"Valendo"** com o prêmio selecionado; tela de **BINGO!** com o ganhador, o critério, o prêmio e a cartela marcada quando o operador confirma o prêmio.
+- **Locução**: o próprio aparelho fala a bola sorteada ("B... sete") e anuncia o ganhador, no aparelho do operador e/ou no telão (no telão é preciso tocar uma vez em "ativar a voz", regra dos navegadores). Funciona sem internet.
+- **QR Code** (botão no topo): um para o telão e outro para a **Minha cartela**, para o público abrir no celular.
+- **Minha cartela** (`cartela.html`, sem login): o participante digita o número da cartela e vê os números marcados ao vivo. Não mostra nenhum nome.
+
+### Relatórios
+- Em **Histórico**: exportar **planilha (CSV)**, que abre direto no Excel, ou **relatório para imprimir / salvar em PDF**. Os nomes dos ganhadores só entram se a opção for marcada.
+
 ### Configurações
 - Intervalo numérico do sorteio (número inicial e final).
 - Quantidade de últimas bolas exibidas na tela de sorteio.
@@ -31,7 +40,51 @@ Não há tela de login — a aplicação roda inteiramente no navegador (HTML/CS
   - **Quatro Pontas** (os quatro cantos da cartela)
   - **Quina da primeira letra sorteada** (quina na coluna correspondente à letra do primeiro número sorteado da partida)
   - **Quina**, com o tipo configurável: horizontal (linha), transversal (coluna), diagonal, ou qualquer uma delas
+  - **Formatos especiais**: X (as duas diagonais), Moldura, Letra T e Cruz
 - Opção de a cartela ter ou não espaço livre (FREE) no centro.
+
+## Privacidade e LGPD
+
+O sistema foi ajustado para tratar o mínimo de dados pessoais e dar ao titular os direitos da Lei nº 13.709/2018:
+
+| O quê | Como |
+|---|---|
+| **Minimização** | Só o nome/apelido do participante (para entregar o prêmio) e o login dos operadores. O cadastro avisa para não pedir CPF, telefone ou endereço. Fotos de cartela são lidas no aparelho e não são enviadas nem guardadas. |
+| **Telão público** | O nome do ganhador aparece reduzido ("Maria S."), só como número da cartela ou completo — escolha do Master em Configurações › Privacidade. A redução é feita no servidor, então o nome completo nunca chega ao telão. |
+| **Retenção** | Os nomes de participantes são apagados sozinhos X dias depois do fim da partida (7, 30, 90, 180, 365 ou nunca; padrão 90). Números, prêmios e estatísticas continuam. O registro de atividades é apagado depois de 90/180/365 dias. A rotina roda todo dia na API. |
+| **Direitos do titular** | Em Configurações › Privacidade: **Baixar meus dados** (JSON com tudo o que existe sobre o usuário) e **Apagar nomes** das partidas encerradas (o Master pode fazer isso para todos). |
+| **Transparência** | `privacidade.html` — Política de Privacidade preenchida com a organização e o encarregado (DPO) configurados pelo Master; link no login, no telão e na Minha cartela. |
+| **Segurança** | Senhas com bcrypt, limite de tentativas de login, saída por inatividade, **registro de atividades** (logins, falhas, usuários, permissões, exclusões, exportações, anonimizações) com IP truncado, **Content-Security-Policy** (nada é carregado de sites externos — OCR, QR Code e fonte ficam em `vendor/` e `fonts/`), HTTPS com HSTS e **backup diário criptografado**. |
+
+## Backup automático (criptografado)
+
+O serviço `backup` do `docker-compose.yml` faz uma cópia do banco ao subir e depois todo dia às `BACKUP_HOUR` (padrão 3h, horário de Brasília), em `./backups/`, compactada e criptografada com AES-256. Guarda `BACKUP_KEEP_DAYS` dias (padrão 14).
+
+1. No `.env` da VPS, defina a senha do backup (sem ela **nenhuma cópia é gravada**, porque o banco tem dados pessoais):
+   ```bash
+   echo "BACKUP_PASSPHRASE=$(openssl rand -base64 32)" >> .env
+   ```
+   Guarde essa senha **fora da VPS** (gerenciador de senhas): sem ela não dá para restaurar.
+2. `docker compose up -d --build` e confira: `docker compose logs backup` deve mostrar `[backup] ok: bingo_....sql.gz.enc`.
+3. Para restaurar uma cópia (substitui todo o banco atual):
+   ```bash
+   docker compose exec backup restore.sh bingo_2026-10-04_0300.sql.gz.enc
+   ```
+4. Recomendado: copiar a pasta `backups/` periodicamente para outro lugar (outro servidor, nuvem).
+
+## HTTPS
+
+O container já sabe ligar o HTTPS sozinho: ao subir, se existir o certificado de `BINGO_DOMAIN` em `/etc/letsencrypt` no host, ele ativa a porta 443 (publicada na VPS como `BINGO_HTTPS_PORT`, padrão `8443`, já que a 443 pode ser de outro app). A câmera do celular (escanear cartela) só funciona em HTTPS.
+
+1. Emita o certificado na VPS (uma vez), usando a pasta de desafio que o Bingo já serve:
+   ```bash
+   sudo apt install certbot
+   sudo certbot certonly --webroot -w ~/Bingo/certbot-webroot -d bingo.sauberlich.com.br
+   ```
+   (O desafio é feito pela porta 80 do domínio; se a 80 for de outro app, ele precisa repassar `/.well-known/acme-challenge/` para a porta 8082 do Bingo.)
+2. `docker compose restart bingo` — o log mostra `[bingo] HTTPS ativado`.
+3. Acesse `https://bingo.sauberlich.com.br:8443` (ou pela 443, se ela estiver livre: `BINGO_HTTPS_PORT=443` no `.env`).
+4. Renovação: o Certbot renova sozinho; depois de cada renovação, `docker compose restart bingo` (dá para automatizar com `--deploy-hook "docker restart bingo"`).
 
 ## Design
 
@@ -68,7 +121,7 @@ python3 -m http.server 8000
 # depois acesse http://localhost:8000
 ```
 
-O reconhecimento de números por câmera exige HTTPS (ou `localhost`) para o navegador conceder acesso à câmera, e conexão com a internet para carregar a biblioteca de OCR via CDN. Sem OCR disponível, o cadastro manual continua funcionando normalmente.
+O reconhecimento de números por câmera exige HTTPS (ou `localhost`) para o navegador conceder acesso à câmera. A biblioteca de OCR fica no próprio projeto (`vendor/tesseract`), então não precisa de internet externa.
 
 ## Publicando no GitHub Pages
 
@@ -131,7 +184,13 @@ docker compose down        # parar e remover o container
 
 ```
 index.html            Marcação das telas (Sorteio, Cartelas, Histórico, Dashboard, Configurações) e modais
-display.html          Tela cheia do sorteio, para projetar a bola sorteada em outra tela
+display.html          Telão público (bola, painel, prêmio valendo, BINGO!, voz) — js/display.js
+cartela.html          "Minha cartela" pública para o participante — js/cartela.js
+privacidade.html      Política de Privacidade (LGPD) — js/privacidade.js
+vendor/               Tesseract.js (OCR) e gerador de QR Code, servidos localmente
+backup/               Serviço de backup diário criptografado (backup.sh / restore.sh)
+docker/               Script que liga o HTTPS quando o certificado existe
+api/                  Back-end (login, estado, telão público, privacidade, registro de atividades)
 manifest.webmanifest  Metadados do PWA (nome, ícones, cor, modo standalone)
 sw.js                 Service worker: cache do app shell e uso offline
 icons/                Ícones do app (normal, maskable e apple-touch) em vários tamanhos
@@ -139,6 +198,8 @@ css/styles.css        Estilos responsivos (mobile-first)
 js/state.js           Estado do jogo, cartelas, configuração e regras de vitória
 js/ocr.js             Captura de câmera e reconhecimento de números (Tesseract.js)
 js/ui.js              Navegação, renderização das telas e eventos
+js/extras.js          Privacidade, registro de atividades, QR Code, relatórios
+js/voice.js           Locução (voz do navegador)
 Dockerfile            Imagem Nginx servindo os arquivos estáticos
 nginx.conf            Configuração do Nginx usada dentro do container
 docker-compose.yml    Sobe o container pronto para uso em uma VPS

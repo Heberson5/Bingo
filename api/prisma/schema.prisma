@@ -70,3 +70,22 @@ model AppSetting {
 
   @@map("app_settings")
 }
+
+/// Registro de atividades (LGPD, art. 37 e 46): quem fez o quê e quando
+/// nas ações sensíveis — login, gestão de usuários, permissões,
+/// exclusões, exportação e anonimização de dados. O IP é guardado já
+/// truncado (último bloco zerado) e o registro é apagado sozinho depois
+/// do prazo de retenção (ver src/retention.js).
+model AuditLog {
+  id         String   @id @default(uuid())
+  at         DateTime @default(now())
+  actorId    String?
+  actorEmail String?
+  action     String
+  target     String?
+  details    Json?
+  ip         String?
+
+  @@index([at])
+  @@map("audit_logs")
+}

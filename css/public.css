@@ -1,0 +1,49 @@
+/* Páginas públicas (Minha cartela, Política de Privacidade): mesmo
+   visual do app, sem depender do styles.css inteiro. */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(../fonts/inter-latin-wght-normal.woff2) format('woff2-variations');
+}
+:root {
+  color-scheme: dark;
+  --bg: #0b0c10; --surface: #13151b; --surface-2: #1b1e26; --line: #282b37;
+  --text: #eef0f5; --dim: #9aa1b2; --faint: #6b7283; --accent: #8b5cf6; --ok: #4ade80; --warn: #fbbf24;
+  --l-b: #3b82f6; --l-i: #ef4444; --l-n: #a78bfa; --l-g: #22c55e; --l-o: #f59e0b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+a { color: #c4b5fd; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 750; font-size: 17px; }
+.brand__logo { width: 32px; height: 32px; border-radius: 10px; background: #7c3aed; display: grid; place-items: center; color: #fff; font-size: 14px; }
+h1 { font-size: 28px; line-height: 1.15; letter-spacing: -.02em; margin: 0; }
+h2 { font-size: 18px; margin: 0; letter-spacing: -.01em; }
+p { margin: 0; }
+.muted { color: var(--dim); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.lookup { display: flex; gap: 8px; }
+.lookup input { flex: 1; min-width: 0; font: inherit; font-size: 20px; font-weight: 700; letter-spacing: .06em; padding: 12px 14px; border-radius: 12px; border: 1px solid #343847; background: var(--bg); color: var(--text); }
+.lookup input:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,92,246,.25); }
+.btn { font: inherit; font-weight: 650; border: none; border-radius: 12px; padding: 12px 18px; background: #7c3aed; color: #fff; cursor: pointer; }
+.btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+.status { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); color: var(--dim); }
+.pill--ok { background: rgba(34,197,94,.14); color: var(--ok); }
+.pill--warn { background: rgba(245,158,11,.14); color: var(--warn); }
+.bingo { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.bingo__letter { text-align: center; font-weight: 900; font-size: 22px; }
+.bingo__cell { aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; background: var(--surface-2); color: var(--faint); font-weight: 800; font-size: clamp(16px, 5vw, 26px); font-variant-numeric: tabular-nums; transition: background .3s ease, color .3s ease, transform .3s ease; }
+.bingo__cell.is-marked { color: #fff; }
+.bingo__cell.is-free { font-size: 11px; letter-spacing: .08em; }
+.bingo__cell.is-last { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px #fff; transform: scale(1.04); }
+.footer { color: var(--faint); font-size: 13px; text-align: center; }
+.policy h2 { margin-top: 8px; }
+.policy ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.policy table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.policy th, .policy td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.policy th { color: var(--dim); font-weight: 600; }
+.table-wrap { overflow-x: auto; }
+[hidden] { display: none !important; }

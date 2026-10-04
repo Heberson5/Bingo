@@ -9,7 +9,7 @@
    activate() below throws out the old precached copies.
 =================================================================== */
 
-const CACHE_NAME = 'bingo-shell-v2';
+const CACHE_NAME = 'bingo-shell-v3';
 
 const APP_SHELL = [
   './',
@@ -22,7 +22,10 @@ const APP_SHELL = [
   './js/state.js',
   './js/ocr.js',
   './js/ui.js',
+  './js/voice.js',
+  './js/extras.js',
   './js/redesign.js',
+  './vendor/qrcode/qrcode.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-192.png',

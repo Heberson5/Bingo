@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Política de Privacidade — Bingo</title>
+<meta name="theme-color" content="#0b0c10">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="stylesheet" href="css/public.css">
+</head>
+<body>
+<main class="wrap policy">
+  <div class="brand"><span class="brand__logo">B</span>Bingo</div>
+  <div>
+    <h1>Política de Privacidade</h1>
+    <p class="muted">Como este sistema de bingo trata dados pessoais, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD).</p>
+  </div>
+
+  <section class="card">
+    <h2>Quem é o responsável</h2>
+    <p>O controlador dos dados é <strong data-fill="orgName">a organização que realiza este bingo</strong>.</p>
+    <p data-show="dpo">Encarregado pelo tratamento de dados (DPO): <strong data-fill="dpoName"></strong><span data-show="dpoEmail"> — <a data-fill-mail="dpoEmail"></a></span>.</p>
+  </section>
+
+  <section class="card">
+    <h2>Quais dados são tratados e por quê</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Dado</th><th>De quem</th><th>Para quê</th><th>Base legal (LGPD)</th></tr></thead>
+        <tbody>
+          <tr><td>Nome ou apelido e número da cartela</td><td>Participantes</td><td>Identificar a cartela e entregar o prêmio a quem ganhou</td><td>Art. 7º, V e IX (execução da participação e legítimo interesse)</td></tr>
+          <tr><td>Nome, e-mail e senha (guardada criptografada)</td><td>Operadores do sistema</td><td>Login e controle de quem pode operar o sorteio</td><td>Art. 7º, V e IX</td></tr>
+          <tr><td>Registro de atividades (data, ação e rede de origem com o último bloco do IP apagado)</td><td>Operadores</td><td>Segurança e prevenção de fraudes</td><td>Art. 7º, IX e art. 37</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Não pedimos CPF, telefone, endereço nem qualquer dado sensível. As fotos das cartelas usadas no cadastro são lidas no próprio aparelho do operador e <strong>não são enviadas nem guardadas</strong>.</p>
+  </section>
+
+  <section class="card">
+    <h2>Telão e "Minha cartela"</h2>
+    <ul>
+      <li>O telão mostra as bolas sorteadas e, quando há um ganhador, <span data-fill="telaoNameText">o primeiro nome e a inicial do sobrenome</span>.</li>
+      <li>A página "Minha cartela" mostra só os números da cartela consultada — nunca o nome de ninguém.</li>
+      <li>Essas páginas não usam cookies de rastreamento nem coletam dados de quem as acessa.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Por quanto tempo</h2>
+    <ul>
+      <li>Nomes de participantes: apagados automaticamente <strong data-fill="retentionText">90 dias</strong> depois do fim da partida. Números, prêmios e estatísticas continuam, sem identificar ninguém.</li>
+      <li>Registro de atividades: apagado depois de <strong data-fill="auditText">180 dias</strong>.</li>
+      <li>Contas de operadores: enquanto estiverem ativas, ou até serem excluídas.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Compartilhamento e segurança</h2>
+    <ul>
+      <li>Os dados ficam no servidor da própria organização. Não são vendidos nem compartilhados com terceiros, e o sistema não carrega nada de sites externos.</li>
+      <li>Senhas criptografadas (bcrypt), acesso por perfil (Master e Usuário), saída automática por inatividade e registro das ações sensíveis.</li>
+      <li>Cópias de segurança diárias do banco de dados, criptografadas.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Seus direitos</h2>
+    <p>Você pode pedir, a qualquer momento (LGPD, art. 18): confirmação de que tratamos seus dados, acesso a eles, correção, anonimização ou eliminação, portabilidade e informação sobre com quem foram compartilhados.</p>
+    <p data-show="dpoEmail">Para isso, fale com o encarregado: <a data-fill-mail="dpoEmail"></a>.</p>
+    <p data-hide="dpoEmail">Para isso, procure a organização do bingo no local do evento.</p>
+    <p class="muted">Operadores podem baixar os próprios dados e apagar os nomes de participantes em Configurações › Privacidade.</p>
+  </section>
+
+  <p class="footer">Política atualizada em outubro de 2026. <a href="./">Voltar</a></p>
+</main>
+<script src="js/privacidade.js"></script>
+</body>
+</html>

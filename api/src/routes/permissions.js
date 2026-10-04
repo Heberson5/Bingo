@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../prisma');
 const { requireAuth, requireMaster } = require('../auth');
+const { logAudit } = require('../audit');
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ const DEFAULT_PERMISSIONS = {
     aparenciaBolaSorteada: false,
     aplicativo: false,
     identidadeVisual: false,
+    locucao: true,
   },
 };
 
@@ -53,6 +55,7 @@ router.put('/', requireAuth, requireMaster, async (req, res) => {
     update: { value },
     create: { key: SETTING_KEY, value },
   });
+  await logAudit(req, 'permissions_update');
   res.json({ value });
 });
 

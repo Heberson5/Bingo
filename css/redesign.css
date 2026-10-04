@@ -1148,3 +1148,51 @@ body[data-view="sorteio"] .toast { bottom: calc(var(--bottom-nav-h) + 84px + var
   repeating-linear-gradient(90deg, transparent 0 7px, #0a0b0f 7px 9px),
   linear-gradient(180deg, var(--l-b) 0 20%, var(--l-i) 20% 40%, var(--l-n) 40% 60%, var(--l-g) 60% 80%, var(--l-o) 80%);
   opacity: .55; }
+
+/* ---------- v3: privacidade, QR, relatórios, formatos ---------- */
+.login-privacy { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: var(--color-text-dim); justify-content: center; }
+.login-privacy .icon { color: #4ade80; }
+.login-privacy a { color: var(--primary-text); }
+.hint--privacy { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; }
+.hint--privacy .icon { color: #4ade80; margin-top: 2px; flex-shrink: 0; }
+.settings-subtitle { font-size: 12px; font-weight: 600; color: var(--color-text-faint); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 0; }
+.pattern-mini { display: inline-grid; grid-template-columns: repeat(5, 4px); gap: 1px; vertical-align: -3px; margin-right: 10px; padding: 2px; border-radius: 3px; background: var(--color-surface-3); }
+.pattern-mini b { width: 4px; height: 4px; border-radius: 1px; background: var(--color-border-strong); }
+.pattern-mini b.on { background: var(--color-accent); }
+.privacy-master { display: flex; flex-direction: column; gap: 14px; padding: 14px; border-radius: 14px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
+.privacy-master .settings-section:first-child { border-top: none; padding-top: 0; }
+#cfgPrivacidade .field--check small { font-size: 12px; }
+.report-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.report-bar__names { margin-left: auto; }
+.report-bar__names span { font-size: 13px; }
+.table-wrap { overflow-x: auto; }
+.audit-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.audit-table th, .audit-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+.audit-table td:nth-child(4) { white-space: normal; }
+.audit-table th { color: var(--color-text-faint); font-weight: 600; font-size: 12px; }
+.audit-table tr.is-warn td { color: #fbbf24; }
+.audit-table .muted { color: var(--color-text-faint); }
+.modal__sheet--wide { max-width: 720px !important; }
+.qr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.qr-card { margin: 0; display: flex; flex-direction: column; gap: 10px; align-items: stretch; padding: 14px; border-radius: 14px; background: var(--color-surface-2); border: 1px solid var(--color-border); }
+.qr-card__code { background: #fff; border-radius: 10px; padding: 10px; aspect-ratio: 1; display: grid; place-items: center; }
+.qr-card__code svg { width: 100%; height: 100%; }
+.qr-card figcaption { display: flex; flex-direction: column; gap: 2px; }
+.qr-card figcaption span { font-size: 12px; color: var(--color-text-dim); }
+.qr-card__link { display: flex; gap: 6px; }
+.qr-card__link input { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--color-border-strong); background: var(--color-bg); color: var(--color-text-dim); }
+
+@media print {
+  .report { font-family: 'Inter Variable', Arial, sans-serif; color: #111; }
+  .report__head h1 { font-size: 18pt; margin: 0 0 2mm; }
+  .report__head p { font-size: 9pt; color: #555; margin: 0 0 6mm; }
+  .report__stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin-bottom: 6mm; }
+  .report__stats div { border: 0.5pt solid #bbb; border-radius: 2mm; padding: 3mm; display: flex; flex-direction: column; }
+  .report__stats strong { font-size: 16pt; }
+  .report__stats span { font-size: 8pt; color: #555; }
+  .report__table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  .report__table th, .report__table td { border-bottom: 0.5pt solid #ccc; padding: 1.6mm 1.4mm; text-align: left; }
+  .report__table th { background: #f1f1f4; }
+  .report__table tr { break-inside: avoid; }
+  .report__foot { margin-top: 6mm; font-size: 8pt; color: #555; }
+}

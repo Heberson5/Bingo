@@ -24,11 +24,18 @@ const DEFAULT_CONFIG = {
     quatroPontas: false,
     quinaPrimeiraLetra: false,
     quina: true,
+    x: false,
+    moldura: false,
+    letraT: false,
+    cruz: false,
   },
   quinaTipo: 'todos', // horizontal | transversal | diagonal | todos
   cameraDeviceId: '', // '' = automatic (facingMode: environment)
   suspenseMode: false,
   telaoMode: 'completo', // completo (bola + últimas + painel) | bola (só a bola sorteada)
+  // Locução: falar a bola sorteada no aparelho do operador e/ou no
+  // telão, e anunciar o ganhador quando o prêmio é confirmado.
+  voice: { operador: false, telao: true, ganhador: true },
   display: {
     boardCellSize: 56,
     boardFontSize: 14,
@@ -43,7 +50,16 @@ const DEFAULT_GAME = { id: 1, drawnNumbers: [], firstNumber: null, startedAt: nu
 
 function mergeWithDefault(fallback, value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return structuredClone(fallback);
-  return { ...structuredClone(fallback), ...value };
+  const out = { ...structuredClone(fallback), ...value };
+  // Objetos aninhados (criteria, voice, display...) também recebem as
+  // chaves novas com o valor padrão — configs salvas antes de uma
+  // opção existir continuam funcionando.
+  for (const [k, def] of Object.entries(fallback)) {
+    if (def && typeof def === 'object' && !Array.isArray(def) && value[k] && typeof value[k] === 'object' && !Array.isArray(value[k])) {
+      out[k] = { ...structuredClone(def), ...value[k] };
+    }
+  }
+  return out;
 }
 
 const Store = {
@@ -422,6 +438,33 @@ function checkFourCorners(grid) {
 }
 
 /**
+ * Formatos de vitória desenhados na cartela (coordenadas [linha, coluna]).
+ * Cada um vale quando todas as casas dele estão marcadas — a casa livre
+ * do centro conta como marcada.
+ */
+const PATTERNS = {
+  x: { label: 'Formato X', cells: [0, 1, 2, 3, 4].flatMap((i) => [[i, i], [i, 4 - i]]) },
+  moldura: { label: 'Moldura', cells: [0, 1, 2, 3, 4].flatMap((i) => [[0, i], [4, i], [i, 0], [i, 4]]) },
+  letraT: { label: 'Letra T', cells: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 2], [2, 2], [3, 2], [4, 2]] },
+  cruz: { label: 'Cruz', cells: [0, 1, 2, 3, 4].flatMap((i) => [[2, i], [i, 2]]) },
+};
+const PATTERN_KEYS = Object.keys(PATTERNS);
+
+function patternCells(grid, key) {
+  const seen = new Set();
+  return PATTERNS[key].cells.filter(([r, c]) => {
+    const k = r * 5 + c;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).map(([r, c]) => grid[r][c]);
+}
+
+function checkPattern(grid, key) {
+  return patternCells(grid, key).every(isMarked);
+}
+
+/**
  * Which criteria are enabled in Config right now, in display order.
  */
 function activeCriteriaKeys() {
@@ -431,6 +474,7 @@ function activeCriteriaKeys() {
   if (cfg.criteria.quatroPontas) keys.push('quatroPontas');
   if (cfg.criteria.quinaPrimeiraLetra) keys.push('quinaPrimeiraLetra');
   if (cfg.criteria.quina) keys.push('quina');
+  for (const k of PATTERN_KEYS) if (cfg.criteria[k]) keys.push(k);
   return keys;
 }
 
@@ -438,6 +482,7 @@ function criterionLabel(key) {
   if (key === 'cheia') return 'Cartela Cheia';
   if (key === 'quatroPontas') return 'Quatro Pontas';
   if (key === 'quina') return 'Quina';
+  if (PATTERNS[key]) return PATTERNS[key].label;
   if (key === 'quinaPrimeiraLetra') {
     if (Store.game.firstNumber !== null) {
       const colIdx = columnIndexForNumber(Store.game.firstNumber, Store.config.min, Store.config.max);
@@ -525,6 +570,12 @@ function evaluateCard(card) {
     found.push({ key: 'quina', label: criterionLabel('quina') });
   }
 
+  for (const k of PATTERN_KEYS) {
+    if (cfg.criteria[k] && !isCriterionClosed(k) && checkPattern(card.grid, k)) {
+      found.push({ key: k, label: criterionLabel(k) });
+    }
+  }
+
   const existingKeys = card.achievements.map((a) => a.key);
   const newOnes = found.filter((f) => !existingKeys.includes(f.key));
   const drawIndex = Store.game.drawnNumbers.length;
@@ -568,6 +619,20 @@ function confirmAchievement(cardId, key, prize) {
   achievement.confirmed = true;
   achievement.prize = (prize || '').trim();
   Store.saveCards();
+
+  // Anúncio no telão ("BINGO!"): o nome vai completo para o servidor,
+  // que o reduz conforme Configurações > Privacidade antes de mostrar
+  // em público (ver api/src/routes/public.js).
+  Store.game.announcement = {
+    id: `${card.id}:${key}:${Date.now()}`,
+    at: new Date().toISOString(),
+    name: card.name || '',
+    cardNumber: card.cardNumber || '',
+    criterion: achievement.label,
+    prize: achievement.prize,
+    grid: card.grid.map((row) => row.map((cell) => ({ v: cell.free ? null : cell.value, f: !!cell.free, m: !!(cell.free || cell.marked) }))),
+  };
+  Store.saveGame();
 }
 
 /**
@@ -658,6 +723,12 @@ function evaluateNearMiss(card) {
       const val = unmarkedValue(line.cells);
       if (val !== null) results.push({ label: line.label, neededNumber: val });
     }
+  }
+
+  for (const k of PATTERN_KEYS) {
+    if (!cfg.criteria[k] || isCriterionClosed(k)) continue;
+    const val = unmarkedValue(patternCells(grid, k));
+    if (val !== null) results.push({ label: PATTERNS[k].label, neededNumber: val });
   }
 
   return results;

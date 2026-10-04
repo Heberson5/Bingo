@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minha cartela — Bingo</title>
+<meta name="theme-color" content="#0b0c10">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="stylesheet" href="css/public.css">
+</head>
+<body>
+<main class="wrap">
+  <div class="brand"><span class="brand__logo">B</span>Bingo</div>
+  <div>
+    <h1>Minha cartela</h1>
+    <p class="muted">Digite o número impresso na sua cartela (no canto de baixo) e acompanhe os números marcados ao vivo.</p>
+  </div>
+
+  <form class="card" id="lookupForm" autocomplete="off">
+    <label for="cardNumber" class="muted">Número da cartela</label>
+    <div class="lookup">
+      <input id="cardNumber" inputmode="numeric" pattern="[0-9]*" maxlength="8" placeholder="Ex: 034" required>
+      <button class="btn" type="submit">Ver</button>
+    </div>
+    <p class="muted" id="lookupMsg"></p>
+  </form>
+
+  <section class="card" id="result" hidden>
+    <div class="status" id="status"></div>
+    <div class="bingo" id="grid"></div>
+    <p class="muted" id="resultHint"></p>
+  </section>
+
+  <p class="footer">Esta página não mostra nomes nem guarda nada no seu celular além do número digitado. <a href="privacidade.html">Política de Privacidade</a></p>
+</main>
+<script src="js/cartela.js"></script>
+</body>
+</html>

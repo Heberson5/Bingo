@@ -13,3 +13,6 @@ api/node_modules/
 # execução na VPS.
 certbot-webroot/*
 !certbot-webroot/.gitkeep
+
+# Cópias de segurança do banco (ver backup/) — ficam só na VPS.
+backups/

@@ -1,7 +1,7 @@
 /* ===================================================================
    BINGO — captura de câmera + reconhecimento (OCR) de números da cartela
    Usa a câmera do dispositivo (ou uma foto da galeria) e o Tesseract.js
-   (carregado via CDN) para ler os números impressos.
+   (servido pelo próprio app, em vendor/tesseract) para ler os números impressos.
 
    Etapas:
      1. Localiza a grade 5x5 sozinho (detectGridQuad): as linhas da grade
@@ -850,7 +850,7 @@ const Ocr = {
    */
   async recognizeGrid(dataUrl, freeCenter, quad, onProgress, options = {}) {
     if (typeof Tesseract === 'undefined') {
-      throw new Error('Biblioteca de OCR não carregada (sem conexão com a internet?).');
+      throw new Error('Biblioteca de OCR não carregada.');
     }
     const min = options.min ?? 1;
     const max = options.max ?? 75;
@@ -867,7 +867,16 @@ const Ocr = {
     const grid = this._warpRegion(src, hom, 0, 1, 0, 1, S, S);
     const lineMask = this._adaptiveThreshold(grid, S, S, 25, 0.18);
 
-    const worker = await Tesseract.createWorker('eng');
+    // Tudo servido pelo próprio servidor do Bingo (pasta vendor/): o
+    // reconhecimento funciona sem depender de site externo e nenhuma
+    // foto ou dado sai para terceiros.
+    const abs = (p) => new URL(p, window.location.href).href;
+    const worker = await Tesseract.createWorker('eng', 1, {
+      workerPath: abs('vendor/tesseract/worker.min.js'),
+      corePath: abs('vendor/tesseract/core'),
+      langPath: abs('vendor/tesseract/lang'),
+      gzip: true,
+    });
     await worker.setParameters({ tessedit_char_whitelist: '0123456789' });
 
     const result = [];

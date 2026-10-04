@@ -8,6 +8,9 @@ const stateRoutes = require('./routes/state');
 const usersRoutes = require('./routes/users');
 const permissionsRoutes = require('./routes/permissions');
 const publicRoutes = require('./routes/public');
+const privacyRoutes = require('./routes/privacy');
+const auditRoutes = require('./routes/audit');
+const { scheduleRetention } = require('./retention');
 
 const app = express();
 
@@ -18,10 +21,9 @@ const app = express();
 app.set('trust proxy', 1);
 
 // helmet cobre os cabecalhos de seguranca padrao (no-sniff, sem
-// referrer vazando pra fora, etc). CSP fica desligado por enquanto: o
-// frontend carrega tesseract.js de um CDN e essa politica precisa de
-// uma auditoria propria (toda tag <script>/style inline) antes de
-// entrar, senao quebra a tela sem avisar.
+// referrer vazando pra fora, etc). A CSP das paginas fica no nginx
+// (nginx-security-headers.conf), que e quem serve o HTML; a API so
+// responde JSON.
 app.use(helmet({ contentSecurityPolicy: false }));
 app.disable('x-powered-by'); // helmet ja remove, redundante de proposito
 
@@ -65,6 +67,8 @@ app.use('/api/state', stateRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/permissions', permissionsRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/privacy', privacyRoutes);
+app.use('/api/audit', auditRoutes);
 
 app.use((req, res) => res.status(404).json({ error: 'not_found' }));
 
@@ -76,3 +80,4 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`[bingo-api] ouvindo na porta ${PORT}`));
+scheduleRetention();

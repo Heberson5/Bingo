@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../prisma');
 const { REFRESH_SECRET, publicUser, signAccessToken, signRefreshToken, requireAuth } = require('../auth');
 const { isPasswordStrong } = require('../passwordPolicy');
+const { logAudit } = require('../audit');
 
 const router = express.Router();
 
@@ -14,15 +15,22 @@ router.post('/login', async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email: String(email).toLowerCase().trim() } });
   // Mesma mensagem de erro tanto para "nao existe" quanto para "senha
   // errada" — nao da pra um atacante descobrir quais e-mails tem conta.
-  if (!user || !user.active) return res.status(401).json({ error: 'invalid_credentials' });
+  if (!user || !user.active) {
+    await logAudit(req, 'login_failed', { target: String(email).toLowerCase().trim().slice(0, 160) });
+    return res.status(401).json({ error: 'invalid_credentials' });
+  }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(401).json({ error: 'invalid_credentials' });
+  if (!ok) {
+    await logAudit(req, 'login_failed', { actor: user });
+    return res.status(401).json({ error: 'invalid_credentials' });
+  }
 
   // Marca a sessão como ativa — é isto que a tela de acompanhamento
   // pública (ver routes/public.js) usa para saber se ainda há alguém
   // logado rodando esse jogo.
   await prisma.user.update({ where: { id: user.id }, data: { activeSessionSince: new Date() } });
+  await logAudit(req, 'login', { actor: user });
 
   res.json({
     accessToken: signAccessToken(user),
@@ -44,7 +52,8 @@ router.post('/logout', async (req, res) => {
   if (!refreshToken) return res.json({ ok: true }); // nada pra limpar
   try {
     const payload = jwt.verify(refreshToken, REFRESH_SECRET);
-    await prisma.user.update({ where: { id: payload.sub }, data: { activeSessionSince: null } });
+    const user = await prisma.user.update({ where: { id: payload.sub }, data: { activeSessionSince: null } });
+    await logAudit(req, 'logout', { actor: user });
   } catch (err) {
     // Token inválido/expirado — não há sessão pra invalidar mesmo.
   }
@@ -85,6 +94,7 @@ router.post('/change-password', requireAuth, async (req, res) => {
     where: { id: req.user.id },
     data: { passwordHash, mustChangePassword: false },
   });
+  await logAudit(req, 'password_change');
   res.json({ ok: true });
 });
 

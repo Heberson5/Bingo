@@ -7,11 +7,19 @@ COPY nginx-security-headers.conf /etc/nginx/snippets/bingo-security-headers.conf
 
 COPY index.html /usr/share/nginx/html/index.html
 COPY display.html /usr/share/nginx/html/display.html
+COPY cartela.html /usr/share/nginx/html/cartela.html
+COPY privacidade.html /usr/share/nginx/html/privacidade.html
 COPY manifest.webmanifest /usr/share/nginx/html/manifest.webmanifest
 COPY sw.js /usr/share/nginx/html/sw.js
 COPY css/ /usr/share/nginx/html/css/
 COPY js/ /usr/share/nginx/html/js/
 COPY fonts/ /usr/share/nginx/html/fonts/
+COPY vendor/ /usr/share/nginx/html/vendor/
+
+# HTTPS automático: se o certificado do domínio existir no host
+# (montado em /etc/letsencrypt), este script liga o bloco 443 ao subir.
+COPY docker/40-bingo-https.sh /docker-entrypoint.d/40-bingo-https.sh
+RUN chmod +x /docker-entrypoint.d/40-bingo-https.sh
 COPY icons/ /usr/share/nginx/html/icons/
 
 # Browsers cache css/js for 1h (see nginx.conf) — without this, a
@@ -27,8 +35,8 @@ COPY icons/ /usr/share/nginx/html/icons/
 # when those files' content actually changed.
 RUN STAMP=$(date +%s) && \
     sed -i "s#\(href=\"css/[^\"]*\)\"#\1?v=${STAMP}\"#g; s#\(src=\"js/[^\"]*\)\"#\1?v=${STAMP}\"#g" \
-    /usr/share/nginx/html/index.html
+    /usr/share/nginx/html/*.html
 
-EXPOSE 80
+EXPOSE 80 443
 
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1

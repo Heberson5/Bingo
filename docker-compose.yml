@@ -29,17 +29,42 @@ services:
     build: .
     container_name: bingo
     restart: unless-stopped
+    environment:
+      BINGO_DOMAIN: ${BINGO_DOMAIN:-bingo.sauberlich.com.br}
     ports:
       # Só 8082 — a porta 80 da VPS já pertence a outro app (ver deploy
       # de 2026-09-17). O domínio aponta pra 163.176.182.42:8082, então
       # o Bingo não precisa da 80 pra ser acessado.
       - "8082:80"
+      # HTTPS: só passa a responder depois que o certificado existir
+      # (ver docker/40-bingo-https.sh e a seção HTTPS do README). A 443
+      # da VPS pode já ser de outro app, por isso a porta é configurável.
+      - "${BINGO_HTTPS_PORT:-8443}:443"
     volumes:
       # Onde o Certbot grava o desafio ACME (ver nginx.conf) para
       # emitir/renovar o certificado de bingo.sauberlich.com.br.
       - ./certbot-webroot:/var/www/certbot:ro
+      # Certificados emitidos pelo Certbot no host (somente leitura).
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - api
+
+  # Cópia de segurança diária do banco, criptografada (ver backup/).
+  # Precisa de BACKUP_PASSPHRASE no .env — sem ela, não grava nada.
+  backup:
+    build: ./backup
+    container_name: bingo-backup
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      BACKUP_PASSPHRASE: ${BACKUP_PASSPHRASE:-}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      BACKUP_HOUR: ${BACKUP_HOUR:-3}
+      TZ: ${TZ:-America/Sao_Paulo}
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      - postgres
 
 volumes:
   bingo-postgres-data:

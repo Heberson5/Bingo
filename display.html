@@ -112,6 +112,29 @@
   .footer { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; color: #4a5060; font-size: min(1.3vw, 2vh); font-weight: 600; }
   .footer__brand { display: flex; align-items: center; gap: 1vmin; }
   .footer__dot { width: 1vmin; height: 1vmin; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 .5vmin rgba(34,197,94,.2); }
+  .prize-banner { position: fixed; top: 3vmin; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; align-items: center; gap: 1.4vmin; padding: 1vmin 2.6vmin; border-radius: 999px; background: rgba(245,158,11,.14); border: 1px solid rgba(245,158,11,.4); color: #fbbf24; font-size: min(2vw, 3vh); white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
+  .prize-banner[hidden] { display: none; }
+  .prize-banner span { text-transform: uppercase; letter-spacing: .12em; font-size: .7em; font-weight: 700; opacity: .85; }
+  .prize-banner strong { color: #fff; font-weight: 800; }
+  .footer__right { display: flex; gap: 2vmin; align-items: center; }
+  .footer a { color: inherit; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+  .winner { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 35%, rgba(245,158,11,.30), transparent 60%), #08090c; animation: fade .4s ease; }
+  .winner[hidden] { display: none; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .winner__card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1.6vmin; animation: pop .6s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .winner__title { margin: 0; font-size: min(16vw, 22vh); font-weight: 900; letter-spacing: -.04em; line-height: .9; background: linear-gradient(180deg, #fde68a, #f59e0b); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .winner__name { margin: 0; font-size: min(6vw, 8vh); font-weight: 800; }
+  .winner__meta { margin: 0; font-size: min(2.6vw, 3.6vh); color: var(--dim); }
+  .winner__meta strong { color: #fbbf24; }
+  .winner__grid { display: grid; grid-template-columns: repeat(5, min(6vw, 8vh)); gap: .8vmin; margin-top: 1vmin; }
+  .winner__grid span { aspect-ratio: 1; border-radius: 1vmin; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: min(2vw, 2.8vh); background: var(--surface-2); color: #4a5060; font-variant-numeric: tabular-nums; }
+  .winner__grid span.on { background: #f59e0b; color: #1a1205; }
+  .winner__grid span.free { font-size: min(1vw, 1.4vh); }
+  .sound-btn { position: fixed; bottom: 7vmin; left: 50%; transform: translateX(-50%); z-index: 30; border: 1px solid #333846; background: #1b1e26; color: #eef0f5; font: 600 16px inherit; font-family: inherit; padding: 12px 20px; border-radius: 999px; cursor: pointer; }
+  .sound-btn[hidden] { display: none; }
+
   /* Modo "Só a bola" (Configurações > Exibição > Como o telão aparece). */
   .stage.is-ball-only { grid-template-columns: 1fr; }
   .stage.is-ball-only .side { display: none; }
@@ -136,6 +159,7 @@
 </style>
 </head>
 <body>
+  <div class="prize-banner" id="prizeBanner" hidden><span>Valendo</span><strong id="prizeName"></strong></div>
   <div class="stage is-idle" id="stage">
     <section class="hero">
       <div class="ball" id="ball" hidden>
@@ -153,169 +177,20 @@
     </section>
     <p class="msg" id="emptyHint" hidden><strong>Já vai começar!</strong>Aguardando a primeira bola do sorteio…</p>
     <p class="msg" id="inactiveHint" hidden><strong>Sessão encerrada</strong>O operador saiu do aplicativo. Esta tela volta a funcionar assim que ele entrar de novo e iniciar um sorteio.</p>
-    <footer class="footer"><span class="footer__brand"><span class="footer__dot"></span>BINGO · ao vivo</span><span id="clock"></span></footer>
+    <footer class="footer"><span class="footer__brand"><span class="footer__dot"></span>BINGO · ao vivo</span><span class="footer__right"><a href="privacidade.html" target="_blank" rel="noopener">Privacidade</a><span id="clock"></span></span></footer>
   </div>
 
-<script>
-  var LETTERS = ['B', 'I', 'N', 'G', 'O'];
-  var lastRenderedCount = -1;
+  <div class="winner" id="winner" hidden>
+    <div class="winner__card">
+      <p class="winner__title">BINGO!</p>
+      <p class="winner__name" id="winnerName"></p>
+      <p class="winner__meta" id="winnerMeta"></p>
+      <div class="winner__grid" id="winnerGrid"></div>
+    </div>
+  </div>
+  <button type="button" class="sound-btn" id="soundBtn" hidden>🔊 Toque para ativar a voz</button>
 
-  // Which user's game this screen shows — set as a query param by the
-  // main app (see updateDisplayLinkHref() in js/ui.js) when it builds
-  // the "Abrir tela do sorteio" link, so this page works with no login
-  // of its own: it can be opened on any other device/browser.
-  var params = new URLSearchParams(location.search);
-  var userId = params.get('u');
-
-  var ballEl = document.getElementById('ball');
-  var emptyHintEl = document.getElementById('emptyHint');
-  var inactiveHintEl = document.getElementById('inactiveHint');
-  var statsEl = document.getElementById('stats');
-  var stageEl = document.getElementById('stage');
-  var recentEl = document.getElementById('recent');
-  var boardEl = document.getElementById('board');
-  var LETTER_VARS = ['--l-b', '--l-i', '--l-n', '--l-g', '--l-o'];
-  var lastBoardKey = '';
-
-  function letterIndex(num, min, max) {
-    var ranges = getColumnRanges(min, max);
-    for (var i = 0; i < ranges.length; i++) {
-      if (num >= ranges[i][0] && num <= ranges[i][1]) return i;
-    }
-    return 0;
-  }
-
-  function renderBoard(revealed, min, max) {
-    var key = min + ':' + max + ':' + revealed.join(',');
-    if (key === lastBoardKey) return;
-    lastBoardKey = key;
-    var drawnSet = {};
-    revealed.forEach(function (n) { drawnSet[n] = true; });
-    var last = revealed[revealed.length - 1];
-    var ranges = getColumnRanges(min, max);
-    var html = '';
-    for (var c = 0; c < 5; c++) {
-      var s = ranges[c][0], e = ranges[c][1];
-      html += '<div class="board__row" style="--lc:var(' + LETTER_VARS[c] + ');--cols:' + (e - s + 1) + '"><span class="board__letter">' + LETTERS[c] + '</span>';
-      for (var n = s; n <= e; n++) {
-        html += '<span class="board__num' + (drawnSet[n] ? ' is-drawn' : '') + (n === last ? ' is-last' : '') + '">' + n + '</span>';
-      }
-      html += '</div>';
-    }
-    boardEl.innerHTML = html;
-
-    recentEl.innerHTML = revealed.slice(-9, -1).reverse().map(function (n) {
-      return '<span class="recent__ball" style="--ball:var(' + LETTER_VARS[letterIndex(n, min, max)] + ')">' + n + '</span>';
-    }).join('');
-  }
-
-  function tickClock() {
-    var d = new Date();
-    document.getElementById('clock').textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  }
-  tickClock();
-  setInterval(tickClock, 10000);
-
-  function getColumnRanges(min, max) {
-    var total = max - min + 1;
-    var size = Math.floor(total / 5);
-    var ranges = [];
-    var start = min;
-    for (var i = 0; i < 5; i++) {
-      var end = i === 4 ? max : start + size - 1;
-      ranges.push([start, end]);
-      start = end + 1;
-    }
-    return ranges;
-  }
-
-  function letterForNumber(num, min, max) {
-    var ranges = getColumnRanges(min, max);
-    for (var i = 0; i < ranges.length; i++) {
-      if (num >= ranges[i][0] && num <= ranges[i][1]) return LETTERS[i];
-    }
-    return '';
-  }
-
-  function showState(which) {
-    stageEl.classList.toggle('is-idle', which !== 'ball');
-    ballEl.hidden = which !== 'ball';
-    emptyHintEl.hidden = which !== 'empty';
-    inactiveHintEl.hidden = which !== 'inactive';
-  }
-
-  function applyState(data) {
-    if (!data.active) {
-      showState('inactive');
-      statsEl.textContent = '';
-      lastRenderedCount = -1;
-      return;
-    }
-
-    var min = data.min != null ? data.min : 1;
-    var max = data.max != null ? data.max : 75;
-    var drawn = data.drawnNumbers || [];
-
-    // In suspense mode the main app deliberately holds `revealedCount`
-    // behind drawnNumbers.length until the operator taps the ball there
-    // — this display only ever shows numbers up to that point, so the
-    // audience sees a ball appear exactly when the operator reveals it,
-    // never the instant it's actually drawn.
-    var revealedCount = data.suspenseMode
-      ? Math.min(data.revealedCount || 0, drawn.length)
-      : drawn.length;
-    var revealed = drawn.slice(0, revealedCount);
-
-    if (revealed.length === 0) {
-      showState('empty');
-      statsEl.textContent = '';
-      lastRenderedCount = 0;
-      return;
-    }
-
-    showState('ball');
-    stageEl.classList.toggle('is-ball-only', data.telaoMode === 'bola');
-    var last = revealed[revealed.length - 1];
-    var idx = letterIndex(last, min, max);
-    document.getElementById('letter').textContent = letterForNumber(last, min, max);
-    document.getElementById('number').textContent = last;
-    ballEl.style.setProperty('--ball', 'var(' + LETTER_VARS[idx] + ')');
-    stageEl.style.setProperty('--ball', 'var(' + LETTER_VARS[idx] + ')');
-    var total = max - min + 1;
-    statsEl.innerHTML = '<strong>' + revealed.length + '</strong> de ' + total + ' bolas sorteadas';
-    renderBoard(revealed, min, max);
-
-    if (revealed.length !== lastRenderedCount) {
-      ballEl.classList.remove('is-bouncing');
-      void ballEl.offsetWidth;
-      ballEl.classList.add('is-bouncing');
-    }
-    lastRenderedCount = revealed.length;
-  }
-
-  function showInvalidLink() {
-    inactiveHintEl.innerHTML = '<strong>Link inválido</strong>Abra esta tela pelo botão dentro do aplicativo (ícone de monitor, no topo da tela de Sorteio).';
-    showState('inactive');
-  }
-
-  async function poll() {
-    try {
-      var res = await fetch('/api/public/display/' + encodeURIComponent(userId), { cache: 'no-store' });
-      if (!res.ok) throw new Error('http_' + res.status);
-      var data = await res.json();
-      applyState(data);
-    } catch (e) {
-      // Rede fora do ar / API indisponível — mantém o que já estava na
-      // tela em vez de piscar "sessão encerrada" a cada falha passageira.
-    }
-  }
-
-  if (!userId) {
-    showInvalidLink();
-  } else {
-    poll();
-    setInterval(poll, 1500);
-  }
-</script>
+<script src="js/voice.js"></script>
+<script src="js/display.js"></script>
 </body>
 </html>

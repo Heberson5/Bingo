@@ -159,6 +159,7 @@ $('#currentBall').addEventListener('click', () => {
   if (!hasUnrevealedNumber()) return;
   revealPendingNumber();
   renderSuspenseState();
+  speakLastNumber();
   showToast('Bola revelada no telão!');
 });
 
@@ -173,7 +174,12 @@ let activePrizeName = '';
 
 function renderPrizes() {
   const prizes = gamePrizes();
-  if (!prizes.includes(activePrizeName)) activePrizeName = prizes[0] || '';
+  if (!prizes.includes(activePrizeName)) activePrizeName = (prizes.includes(Store.game.activePrize) ? Store.game.activePrize : prizes[0]) || '';
+  // O prêmio selecionado aparece no telão ("Valendo: ...").
+  if ((Store.game.activePrize || '') !== activePrizeName && !Session.isObserving()) {
+    Store.game.activePrize = activePrizeName;
+    Store.saveGame();
+  }
 
   $('#prizeList').innerHTML = prizes.length
     ? prizes.map((p) => `
@@ -434,6 +440,12 @@ function renderActiveCardsSummary() {
  * number called from a physical globe, since both should behave
  * identically from that point on.
  */
+function speakLastNumber() {
+  if (!Store.config.voice || !Store.config.voice.operador) return;
+  const last = Store.game.drawnNumbers[Store.game.drawnNumbers.length - 1];
+  if (last !== undefined) Voice.number(last, letterForNumber(last));
+}
+
 function afterNumberDrawn() {
   const ball = $('#currentBall');
   ball.classList.remove('is-bouncing');
@@ -441,6 +453,9 @@ function afterNumberDrawn() {
   ball.classList.add('is-bouncing');
 
   renderSorteio();
+
+  // Locução no aparelho do operador (no modo suspense, só ao revelar).
+  if (!isSuspenseModeOn()) speakLastNumber();
 
   const winners = evaluateAllActiveCards();
   if (winners.length) {
@@ -1372,7 +1387,7 @@ function renderHistorico() {
             ? `<div class="cards-summary">${g.winners.map((w) => `
                 <div class="card-item ${w.confirmed ? 'is-winner' : 'card-item--expired'}">
                   <div>
-                    <div class="card-item__name">${escapeHtml(w.name || 'Sem nome')}</div>
+                    <div class="card-item__name">${escapeHtml(w.name || (w.anonymized ? 'Nome apagado (LGPD)' : 'Sem nome'))}</div>
                     <div class="card-item__meta">${escapeHtml(w.criterion)}${w.cardNumber ? ' · Cartela nº ' + escapeHtml(w.cardNumber) : ''}${w.prize ? ' · Prêmio: ' + escapeHtml(w.prize) : ''}${!w.confirmed ? ' · não confirmado' : ''}</div>
                   </div>
                 </div>`).join('')}</div>`
@@ -1837,6 +1852,14 @@ function renderConfigForm() {
   $('#cfgQuinaPrimeiraLetra').checked = cfg.criteria.quinaPrimeiraLetra;
   $('#cfgQuina').checked = cfg.criteria.quina;
   $('#cfgQuinaTipo').value = cfg.quinaTipo;
+  $('#cfgPatternX').checked = !!cfg.criteria.x;
+  $('#cfgPatternMoldura').checked = !!cfg.criteria.moldura;
+  $('#cfgPatternLetraT').checked = !!cfg.criteria.letraT;
+  $('#cfgPatternCruz').checked = !!cfg.criteria.cruz;
+  const voice = cfg.voice || {};
+  $('#cfgVoiceOperador').checked = !!voice.operador;
+  $('#cfgVoiceTelao').checked = !!voice.telao;
+  $('#cfgVoiceGanhador').checked = !!voice.ganhador;
   $('#quinaTipoWrap').style.display = cfg.criteria.quina ? '' : 'none';
 
   const d = cfg.display;
@@ -1881,6 +1904,15 @@ $('#formConfig').addEventListener('submit', (e) => {
     Store.config.criteria.quinaPrimeiraLetra = $('#cfgQuinaPrimeiraLetra').checked;
     Store.config.criteria.quina = $('#cfgQuina').checked;
     Store.config.quinaTipo = $('#cfgQuinaTipo').value;
+    Store.config.criteria.x = $('#cfgPatternX').checked;
+    Store.config.criteria.moldura = $('#cfgPatternMoldura').checked;
+    Store.config.criteria.letraT = $('#cfgPatternLetraT').checked;
+    Store.config.criteria.cruz = $('#cfgPatternCruz').checked;
+    Store.config.voice = {
+      operador: $('#cfgVoiceOperador').checked,
+      telao: $('#cfgVoiceTelao').checked,
+      ganhador: $('#cfgVoiceGanhador').checked,
+    };
     Store.config.cameraDeviceId = $('#cfgCamera').value;
     Store.config.display = readDisplayForm();
     Store.saveConfig();
@@ -1925,6 +1957,7 @@ const DEFAULT_PERMISSIONS = {
     aparenciaBolaSorteada: false,
     aplicativo: false,
     identidadeVisual: false,
+    locucao: true,
   },
 };
 
@@ -1946,6 +1979,7 @@ const PERMISSION_SETTING_LABELS = {
   aparenciaBolaSorteada: 'Aparência da bola sorteada',
   aplicativo: 'Aplicativo (instalar)',
   identidadeVisual: 'Identidade visual',
+  locucao: 'Locução (voz)',
 };
 
 // Liga cada chave de "settings" ao elemento da tela de Configurações
@@ -1961,6 +1995,7 @@ const SETTINGS_SECTION_ELEMENT_IDS = {
   cameraComputador: 'cameraSelectWrap',
   aparenciaPainelNumeros: 'settingsSection-aparenciaPainelNumeros',
   aparenciaBolaSorteada: 'settingsSection-aparenciaBolaSorteada',
+  locucao: 'settingsSection-locucao',
 };
 
 let Permissions = structuredClone(DEFAULT_PERMISSIONS);
