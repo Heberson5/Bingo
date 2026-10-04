@@ -1183,6 +1183,8 @@ body[data-view="sorteio"] .toast { bottom: calc(var(--bottom-nav-h) + 84px + var
 .qr-card__link input { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--color-border-strong); background: var(--color-bg); color: var(--color-text-dim); }
 
 @media print {
+  :root { color-scheme: light !important; }
+  html, body, #printArea, .report { background: #fff !important; color: #111 !important; }
   .report { font-family: 'Inter Variable', Arial, sans-serif; color: #111; }
   .report__head h1 { font-size: 18pt; margin: 0 0 2mm; }
   .report__head p { font-size: 9pt; color: #555; margin: 0 0 6mm; }
