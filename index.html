@@ -171,6 +171,10 @@
       <rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect>
       <line x1="11" y1="18" x2="13" y2="18"></line>
     </symbol>
+    <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="8" y="8" width="12" height="12" rx="2"></rect>
+      <path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"></path>
+    </symbol>
     <symbol id="icon-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <rect x="3" y="3" width="7" height="7" rx="1"></rect>
       <rect x="14" y="3" width="7" height="7" rx="1"></rect>
@@ -343,8 +347,25 @@
       </label>
       <span class="app-header__game" id="gameLabel">Jogo #1</span>
       <button class="app-header__icon-btn" id="btnToggleSuspense" title="Suspense: segurar a revelação da bola no telão até tocar nela" aria-label="Ativar/desativar suspense"><svg class="icon" aria-hidden="true"><use href="#icon-spark"></use></svg><span class="app-header__btn-label">Suspense</span></button>
-      <button type="button" class="app-header__icon-btn" id="btnShareQr" title="QR Code do telão e da Minha cartela" aria-label="Mostrar QR Code"><svg class="icon" aria-hidden="true"><use href="#icon-qr"></use></svg><span class="app-header__btn-label">QR Code</span></button>
-      <a class="app-header__icon-btn app-header__icon-btn--primary" id="btnOpenDisplay" href="display.html" target="_blank" rel="noopener" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio"><svg class="icon" aria-hidden="true"><use href="#icon-monitor"></use></svg><span class="app-header__btn-label">Abrir telão</span></a>
+      <div class="split-btn" id="telaoSplit">
+        <a class="app-header__icon-btn app-header__icon-btn--primary" id="btnOpenDisplay" href="display.html" target="_blank" rel="noopener" title="Abrir tela do sorteio em tela cheia" aria-label="Abrir tela do sorteio"><svg class="icon" aria-hidden="true"><use href="#icon-monitor"></use></svg><span class="app-header__btn-label">Abrir telão</span></a>
+        <button type="button" class="app-header__icon-btn app-header__icon-btn--primary split-btn__more" id="btnTelaoMenu" aria-haspopup="true" aria-expanded="false" aria-controls="telaoMenu" title="Mais opções do telão: copiar link, QR Code, voz" aria-label="Mais opções do telão"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-chevron-down"></use></svg></button>
+        <div class="telao-menu" id="telaoMenu" role="menu" hidden>
+          <p class="telao-menu__title">Telão e participantes</p>
+          <a class="telao-menu__item" id="menuOpenDisplay" href="display.html" target="_blank" rel="noopener" role="menuitem"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-monitor"></use></svg><span>Abrir o telão em outra aba</span></a>
+          <button type="button" class="telao-menu__item" id="btnCopyTelaoLink" role="menuitem"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-copy"></use></svg><span>Copiar link do telão<small>para abrir em outra tela ou computador</small></span></button>
+          <button type="button" class="telao-menu__item" id="btnCopyFollowLink" role="menuitem"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-phone"></use></svg><span>Copiar link para os participantes<small>acompanhar pelo celular</small></span></button>
+          <div class="telao-menu__group" role="group" aria-label="QR Code no telão">
+            <p class="telao-menu__label">QR Code no telão</p>
+            <label class="telao-menu__radio"><input type="radio" name="telaoQr" value="off"><span>Não mostrar</span></label>
+            <label class="telao-menu__radio"><input type="radio" name="telaoQr" value="acompanhar"><span>Acompanhar o sorteio</span></label>
+            <label class="telao-menu__radio"><input type="radio" name="telaoQr" value="cartela"><span>Minha cartela</span></label>
+            <label class="telao-menu__radio"><input type="radio" name="telaoQr" value="ambos"><span>Os dois</span></label>
+          </div>
+          <label class="telao-menu__switch"><span>Voz no telão<small>narra cada bola</small></span><input type="checkbox" id="menuVoiceTelao"></label>
+          <button type="button" class="telao-menu__item" id="btnShareQr" role="menuitem"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-qr"></use></svg><span>Ver os QR Codes e links<small>para mostrar ou imprimir</small></span></button>
+        </div>
+      </div>
       <button type="button" class="app-header__icon-btn app-header__icon-btn--logout" id="btnLogoutHeader" title="Sair" aria-label="Sair"><svg class="icon" aria-hidden="true"><use href="#icon-logout"></use></svg></button>
     </div>
   </div>
@@ -376,6 +397,7 @@
           <span class="metric"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-history"></use></svg><span id="heroElapsed">—</span></span>
           <span class="metric"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-cards"></use></svg><span id="heroCards">0 cartelas</span></span>
           <span class="metric metric--accent draw-stats--secondary" id="nearMissStat" hidden></span>
+          <button type="button" class="metric metric--btn" id="btnToggleVoice" aria-pressed="false" title="Narrar cada bola sorteada neste aparelho"><svg class="icon icon--sm" aria-hidden="true"><use href="#icon-volume"></use></svg><span id="voiceLabel">Voz: desligada</span></button>
         </div>
       </div>
 

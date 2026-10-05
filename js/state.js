@@ -36,6 +36,8 @@ const DEFAULT_CONFIG = {
   // Locução: falar a bola sorteada no aparelho do operador e/ou no
   // telão, e anunciar o ganhador quando o prêmio é confirmado.
   voice: { operador: false, telao: true, ganhador: true },
+  // QR Code no telão para o público: off | acompanhar | cartela | ambos
+  telaoQr: 'off',
   display: {
     boardCellSize: 56,
     boardFontSize: 14,

@@ -1198,3 +1198,69 @@ body[data-view="sorteio"] .toast { bottom: calc(var(--bottom-nav-h) + 84px + var
   .report__table tr { break-inside: avoid; }
   .report__foot { margin-top: 6mm; font-size: 8pt; color: #555; }
 }
+
+/* ---------- v3.1: menu do telão (copiar link, QR no telão, voz) ---------- */
+.split-btn { position: relative; display: inline-flex; }
+.split-btn .app-header__icon-btn { border-radius: 10px 0 0 10px; }
+.split-btn .split-btn__more { width: 30px; padding: 0; border-radius: 0 10px 10px 0; margin-left: 1px; justify-content: center; }
+.split-btn .split-btn__more[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.telao-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: min(330px, calc(100vw - 24px));
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+.telao-menu[hidden] { display: none; }
+.telao-menu__title { font-size: 11px; font-weight: 600; color: var(--color-text-faint); text-transform: uppercase; letter-spacing: .06em; padding: 6px 10px 4px; }
+.telao-menu__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.telao-menu__item .icon { margin-top: 2px; color: var(--color-text-dim); }
+.telao-menu__item:hover, .telao-menu__item:focus-visible { background: var(--color-surface-3); outline: none; }
+.telao-menu__item span, .telao-menu__switch span { display: flex; flex-direction: column; gap: 1px; }
+.telao-menu small { font-size: 12px; font-weight: 400; color: var(--color-text-dim); }
+.telao-menu__group { margin: 4px 0; padding: 8px 10px; border-radius: 10px; background: var(--color-bg); border: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 2px; }
+.telao-menu__label { font-size: 12px; font-weight: 600; color: var(--color-text-dim); margin-bottom: 4px; }
+.telao-menu__radio { display: flex; align-items: center; gap: 10px; padding: 5px 2px; font-size: 14px; cursor: pointer; }
+.telao-menu__radio input { accent-color: var(--color-primary); width: 16px; height: 16px; margin: 0; }
+.telao-menu__switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px; font-size: 14px; font-weight: 550; cursor: pointer; border-radius: 10px; }
+.telao-menu__switch:hover { background: var(--color-surface-3); }
+.telao-menu__switch input { accent-color: var(--color-primary); width: 18px; height: 18px; margin: 0; }
+
+.metric--btn { cursor: pointer; font: inherit; font-size: 12px; font-weight: 600; transition: background .15s ease, color .15s ease; }
+.metric--btn:hover { background: var(--color-surface-3); color: var(--color-text); }
+.metric--btn:focus-visible { outline: 2px solid var(--color-primary-light); outline-offset: 2px; }
+.metric--btn.is-on { background: var(--primary-soft); color: var(--primary-text); border-color: transparent; }
+
+@media (max-width: 719px) {
+  .split-btn .app-header__icon-btn { width: 38px; }
+  .split-btn .split-btn__more { width: 28px; }
+}
+
+/* O cabeçalho (com o menu do telão) precisa ficar acima do conteúdo da página,
+   inclusive dos botões Sortear/Manual (z-index 25). Modais (50) continuam acima. */
+.app-header { z-index: 40; }

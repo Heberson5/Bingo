@@ -52,13 +52,18 @@
     if (card && a) Voice.winner(card.name, a.label, prize);
   });
 
-  /* ---------------- QR Code ---------------- */
-  function publicUrl(page) {
+  /* ---------------- Links, QR Code e menu do telão ---------------- */
+  // Links públicos (sem login). "part" = modo participante do telão:
+  // sem QR Code e sem voz, ideal para o celular de quem acompanha.
+  function publicUrl(page, extra) {
     const uid = Session.viewingUserId || (Session.user && Session.user.id);
-    const base = new URL(page, window.location.href);
-    base.search = `?u=${encodeURIComponent(uid || '')}`;
-    return base.href;
+    const url = new URL(page, window.location.href);
+    url.search = `?u=${encodeURIComponent(uid || '')}${extra ? '&' + extra : ''}`;
+    return url.href;
   }
+  const telaoLink = () => publicUrl('display.html');
+  const followLink = () => publicUrl('display.html', 'm=part');
+  const cardLink = () => publicUrl('cartela.html');
 
   function qrSvg(text) {
     const qr = qrcode(0, 'M');
@@ -67,27 +72,96 @@
     return qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
   }
 
+  async function copyText(text, okMessage) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(okMessage);
+    } catch (e) {
+      // Sem permissão de área de transferência (comum em http/IP): mostra o link para copiar à mão.
+      window.prompt('Copie o link:', text);
+    }
+  }
+
   function openQrModal() {
-    const telao = publicUrl('display.html');
-    const cartela = publicUrl('cartela.html');
-    $('#qrTelao').innerHTML = qrSvg(telao);
-    $('#qrCartela').innerHTML = qrSvg(cartela);
-    $('#qrTelaoLink').value = telao;
-    $('#qrCartelaLink').value = cartela;
+    $('#qrTelao').innerHTML = qrSvg(followLink());
+    $('#qrCartela').innerHTML = qrSvg(cardLink());
+    $('#qrTelaoLink').value = followLink();
+    $('#qrCartelaLink').value = cardLink();
     $('#qrModal').hidden = false;
   }
-  $('#btnShareQr').addEventListener('click', openQrModal);
-  $$('[data-close-qr]').forEach((el) => el.addEventListener('click', () => { $('#qrModal').hidden = true; }));
-  $$('[data-copy]').forEach((btn) => btn.addEventListener('click', async () => {
-    const input = document.getElementById(btn.dataset.copy);
-    try {
-      await navigator.clipboard.writeText(input.value);
-      showToast('Link copiado.');
-    } catch (e) {
-      input.select();
-      showToast('Selecione e copie o link.');
-    }
+
+  const menu = $('#telaoMenu');
+  const menuBtn = $('#btnTelaoMenu');
+
+  function syncTelaoMenu() {
+    const qr = Store.config.telaoQr || 'off';
+    const radio = document.querySelector(`input[name="telaoQr"][value="${qr}"]`);
+    if (radio) radio.checked = true;
+    $('#menuVoiceTelao').checked = !!(Store.config.voice && Store.config.voice.telao);
+    $('#menuOpenDisplay').href = telaoLink();
+  }
+  function setTelaoMenu(open) {
+    if (open) syncTelaoMenu();
+    menu.hidden = !open;
+    menuBtn.setAttribute('aria-expanded', String(open));
+  }
+  menuBtn.addEventListener('click', (e) => { e.stopPropagation(); setTelaoMenu(menu.hidden); });
+  document.addEventListener('click', (e) => { if (!menu.hidden && !$('#telaoSplit').contains(e.target)) setTelaoMenu(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setTelaoMenu(false); menuBtn.focus(); } });
+  $('#menuOpenDisplay').addEventListener('click', () => setTelaoMenu(false));
+
+  $('#btnCopyTelaoLink').addEventListener('click', () => { setTelaoMenu(false); copyText(telaoLink(), 'Link do telão copiado — cole em outra tela.'); });
+  $('#btnCopyFollowLink').addEventListener('click', () => { setTelaoMenu(false); copyText(followLink(), 'Link para os participantes copiado.'); });
+  $('#btnShareQr').addEventListener('click', () => { setTelaoMenu(false); openQrModal(); });
+
+  const QR_MESSAGES = {
+    off: 'QR Code removido do telão.',
+    acompanhar: 'QR Code para acompanhar o sorteio aparece no telão.',
+    cartela: 'QR Code da Minha cartela aparece no telão.',
+    ambos: 'Os dois QR Codes aparecem no telão.',
+  };
+  $$('input[name="telaoQr"]').forEach((r) => r.addEventListener('change', () => {
+    if (Session.isObserving()) { showToast('Somente leitura enquanto você visualiza outro usuário.'); syncTelaoMenu(); return; }
+    Store.config.telaoQr = r.value;
+    Store.saveConfig();
+    showToast(QR_MESSAGES[r.value]);
   }));
+
+  $('#menuVoiceTelao').addEventListener('change', (e) => {
+    if (Session.isObserving()) { showToast('Somente leitura enquanto você visualiza outro usuário.'); syncTelaoMenu(); return; }
+    Store.config.voice = { ...(Store.config.voice || {}), telao: e.target.checked };
+    Store.saveConfig();
+    showToast(e.target.checked ? 'Voz do telão ligada — toque em "ativar a voz" na tela do telão.' : 'Voz do telão desligada.');
+  });
+
+  $$('[data-close-qr]').forEach((el) => el.addEventListener('click', () => { $('#qrModal').hidden = true; }));
+  $$('[data-copy]').forEach((btn) => btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.copy);
+    copyText(input.value, 'Link copiado.');
+  }));
+
+  /* ---------------- Voz do operador: botão rápido ---------------- */
+  function renderVoiceChip() {
+    const on = !!(Store.config.voice && Store.config.voice.operador);
+    const btn = $('#btnToggleVoice');
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-pressed', String(on));
+    $('#voiceLabel').textContent = on ? 'Voz: ligada' : 'Voz: desligada';
+  }
+  wrapFn('renderSorteio', renderVoiceChip);
+
+  $('#btnToggleVoice').addEventListener('click', () => {
+    if (Session.isObserving()) { showToast('Somente leitura enquanto você visualiza outro usuário.'); return; }
+    if (!Voice.supported()) { showToast('Este navegador não tem voz disponível. Tente o Chrome ou o Edge.'); return; }
+    const on = !(Store.config.voice && Store.config.voice.operador);
+    Store.config.voice = { ...(Store.config.voice || {}), operador: on };
+    Store.saveConfig();
+    renderVoiceChip();
+    // O toque no botão libera o áudio do navegador; já fala uma amostra.
+    if (on) Voice.number(42, 'N');
+    else Voice.stop();
+    showToast(on ? 'Voz ligada: cada bola sorteada será narrada neste aparelho.' : 'Voz desligada.');
+  });
 
   /* ---------------- Privacidade (LGPD) ---------------- */
   async function renderPrivacy() {

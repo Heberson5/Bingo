@@ -57,7 +57,11 @@ router.get('/display/:userId', async (req, res) => {
     max: typeof config.max === 'number' ? config.max : 75,
     suspenseMode: !!config.suspenseMode,
     telaoMode: config.telaoMode === 'bola' ? 'bola' : 'completo',
-    voice: !!(config.voice && config.voice.telao),
+    // Sem a chave "voice" (config salva antes de existir a opção) vale o
+    // padrão do app: voz do telão ligada.
+    voice: config.voice && typeof config.voice.telao === 'boolean' ? config.voice.telao : true,
+    // QR Code mostrado no telão para o público: off | acompanhar | cartela | ambos
+    telaoQr: ['acompanhar', 'cartela', 'ambos'].includes(config.telaoQr) ? config.telaoQr : 'off',
     prize: typeof game.activePrize === 'string' ? game.activePrize : '',
     gameId: game.id || null,
     announcement,

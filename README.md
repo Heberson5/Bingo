@@ -25,7 +25,9 @@ O frontend é HTML/CSS/JavaScript puro (sem etapa de build), servido por Nginx; 
 ### Telão, locução e QR Code
 - **Telão** (`display.html`, sem login): modo **Completo** (bola, últimas bolas e painel) ou **Só a bola**; faixa **"Valendo"** com o prêmio selecionado; tela de **BINGO!** com o ganhador, o critério, o prêmio e a cartela marcada quando o operador confirma o prêmio.
 - **Locução**: o próprio aparelho fala a bola sorteada ("B... sete") e anuncia o ganhador, no aparelho do operador e/ou no telão (no telão é preciso tocar uma vez em "ativar a voz", regra dos navegadores). Funciona sem internet.
-- **QR Code** (botão no topo): um para o telão e outro para a **Minha cartela**, para o público abrir no celular.
+- **Menu "Abrir telão ▾"** (topo do Sorteio): abrir o telão, **copiar o link do telão** (para abrir em outra tela ou computador), **copiar o link para os participantes**, escolher o **QR Code que aparece no telão** (nenhum, acompanhar o sorteio, Minha cartela ou os dois), ligar a voz do telão e ver os QR Codes para imprimir.
+- **Acompanhar pelo celular**: o link de participante (`display.html?u=...&m=part`) mostra a bola e o painel sem QR Code e sem voz.
+- **Voz neste aparelho**: botão "Voz: ligada/desligada" no painel do Sorteio; já fala uma amostra ao ligar.
 - **Minha cartela** (`cartela.html`, sem login): o participante digita o número da cartela e vê os números marcados ao vivo. Não mostra nenhum nome.
 
 ### Relatórios

@@ -30,10 +30,11 @@ const Voice = {
     window.speechSynthesis.speak(u);
   },
 
-  /** "B... sete" — a letra, uma pausa curta e o número. */
+  /** "B, 7" — a letra, uma pausa curta (vírgula) e o número. Reticências
+   *  não: alguns sintetizadores leem "ponto ponto ponto". */
   number(num, letter) {
     if (num === null || num === undefined) return;
-    this.say(letter ? `${letter}... ${num}` : String(num), { rate: 0.85 });
+    this.say(letter ? `${letter}, ${num}` : String(num), { rate: 0.85 });
   },
 
   winner(name, criterion, prize) {

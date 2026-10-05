@@ -13,6 +13,9 @@ var LETTERS = ['B', 'I', 'N', 'G', 'O'];
   // of its own: it can be opened on any other device/browser.
   var params = new URLSearchParams(location.search);
   var userId = params.get('u');
+  // m=part: tela para o celular do participante (sem QR Code nem voz).
+  var participant = params.get('m') === 'part';
+  if (participant) document.body.classList.add('is-participant');
 
   var ballEl = document.getElementById('ball');
   var emptyHintEl = document.getElementById('emptyHint');
@@ -28,10 +31,16 @@ var LETTERS = ['B', 'I', 'N', 'G', 'O'];
   var voiceUnlocked = false;
   var lastSpokenCount = -1;
 
-  soundBtnEl.addEventListener('click', function () {
+  function unlockVoice(announce) {
+    if (voiceUnlocked) return;
     voiceUnlocked = true;
     soundBtnEl.hidden = true;
-    Voice.say('Voz ativada');
+    if (announce) Voice.say('Voz ativada');
+  }
+  soundBtnEl.addEventListener('click', function () { unlockVoice(true); });
+  // Qualquer toque/tecla na página também libera o áudio (regra dos navegadores).
+  ['pointerdown', 'keydown'].forEach(function (evt) {
+    document.addEventListener(evt, function () { unlockVoice(false); }, { once: false, passive: true });
   });
   winnerEl.addEventListener('click', function () { winnerEl.hidden = true; });
   var stageEl = document.getElementById('stage');
@@ -114,13 +123,15 @@ var LETTERS = ['B', 'I', 'N', 'G', 'O'];
     prizeNameEl.textContent = prize;
 
     // Voz: precisa de um toque na tela uma vez (regra dos navegadores).
-    voiceWanted = !!data.voice;
+    voiceWanted = !!data.voice && !participant;
     soundBtnEl.hidden = !(voiceWanted && !voiceUnlocked && Voice.supported());
     if (voiceWanted && voiceUnlocked && revealed && lastSpokenCount >= 0 && revealed.length > lastSpokenCount) {
       var n = revealed[revealed.length - 1];
       Voice.number(n, letterForNumber(n, min, max));
     }
     if (revealed) lastSpokenCount = revealed.length;
+
+    renderShareQr(data.telaoQr);
 
     // Anúncio de ganhador
     var a = data.announcement;
@@ -132,6 +143,39 @@ var LETTERS = ['B', 'I', 'N', 'G', 'O'];
       lastAnnouncementId = '';
     }
   }
+
+  var lastQrMode = null;
+  function renderShareQr(mode) {
+    var el = document.getElementById('shareQr');
+    mode = participant || !data_active_ok(mode) ? 'off' : mode;
+    if (mode === lastQrMode) return;
+    lastQrMode = mode;
+    el.innerHTML = '';
+    if (mode === 'off' || typeof qrcode === 'undefined') { el.hidden = true; return; }
+    var base = location.origin + location.pathname.replace(/[^\/]*$/, '');
+    var items = [];
+    if (mode === 'acompanhar' || mode === 'ambos') items.push({ url: base + 'display.html?u=' + encodeURIComponent(userId) + '&m=part', title: 'Acompanhe ao vivo', sub: 'Aponte a câmera' });
+    if (mode === 'cartela' || mode === 'ambos') items.push({ url: base + 'cartela.html?u=' + encodeURIComponent(userId), title: 'Minha cartela', sub: 'Veja seus números' });
+    items.forEach(function (it) {
+      var qr = qrcode(0, 'M');
+      qr.addData(it.url);
+      qr.make();
+      var fig = document.createElement('figure');
+      var tile = document.createElement('div');
+      tile.className = 'qr-tile';
+      tile.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 0, scalable: true });
+      var cap = document.createElement('figcaption');
+      cap.textContent = it.title;
+      var sub = document.createElement('span');
+      sub.textContent = it.sub;
+      cap.appendChild(sub);
+      fig.appendChild(tile);
+      fig.appendChild(cap);
+      el.appendChild(fig);
+    });
+    el.hidden = !items.length;
+  }
+  function data_active_ok(mode) { return mode === 'acompanhar' || mode === 'cartela' || mode === 'ambos'; }
 
   function showWinner(a) {
     document.getElementById('winnerName').textContent = a.name || '';
@@ -164,6 +208,7 @@ var LETTERS = ['B', 'I', 'N', 'G', 'O'];
   function applyState(data) {
     if (!data.active) {
       applyExtras(data, null, 1, 75);
+      renderShareQr('off');
       showState('inactive');
       statsEl.textContent = '';
       lastRenderedCount = -1;

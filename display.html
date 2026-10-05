@@ -132,6 +132,13 @@
   .winner__grid span { aspect-ratio: 1; border-radius: 1vmin; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: min(2vw, 2.8vh); background: var(--surface-2); color: #4a5060; font-variant-numeric: tabular-nums; }
   .winner__grid span.on { background: #f59e0b; color: #1a1205; }
   .winner__grid span.free { font-size: min(1vw, 1.4vh); }
+  .share-qr { position: fixed; right: 3vmin; bottom: 9.5vmin; z-index: 6; display: flex; gap: 2vmin; align-items: flex-end; }
+  .share-qr[hidden] { display: none; }
+  .share-qr figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: .8vmin; }
+  .share-qr .qr-tile { width: min(9vw, 14vh); height: min(9vw, 14vh); background: #fff; border-radius: 1.2vmin; padding: .7vmin; box-shadow: 0 1vmin 3vmin rgba(0,0,0,.5); }
+  .share-qr .qr-tile svg { width: 100%; height: 100%; display: block; }
+  .share-qr figcaption { font-size: min(1.1vw, 1.7vh); font-weight: 700; color: var(--text); text-align: center; line-height: 1.2; max-width: min(11vw, 17vh); }
+  .share-qr figcaption span { display: block; font-weight: 500; color: var(--dim); }
   .sound-btn { position: fixed; bottom: 7vmin; left: 50%; transform: translateX(-50%); z-index: 30; border: 1px solid #333846; background: #1b1e26; color: #eef0f5; font: 600 16px inherit; font-family: inherit; padding: 12px 20px; border-radius: 999px; cursor: pointer; }
   .sound-btn[hidden] { display: none; }
 
@@ -188,8 +195,10 @@
       <div class="winner__grid" id="winnerGrid"></div>
     </div>
   </div>
+  <aside class="share-qr" id="shareQr" hidden aria-label="QR Codes para o público"></aside>
   <button type="button" class="sound-btn" id="soundBtn" hidden>🔊 Toque para ativar a voz</button>
 
+<script src="vendor/qrcode/qrcode.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/display.js"></script>
 </body>
