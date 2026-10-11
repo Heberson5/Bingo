@@ -28,7 +28,7 @@ O frontend é HTML/CSS/JavaScript puro (sem etapa de build), servido por Nginx; 
 - **Menu "Abrir telão ▾"** (topo do Sorteio): abrir o telão, **copiar o link do telão** (para abrir em outra tela ou computador), **copiar o link para os participantes**, escolher o **QR Code que aparece no telão** (nenhum, acompanhar o sorteio, Minha cartela ou os dois), ligar a voz do telão e ver os QR Codes para imprimir.
 - **Acompanhar pelo celular**: o link de participante (`display.html?u=...&m=part`) mostra a bola e o painel sem QR Code e sem voz.
 - **Voz neste aparelho**: botão "Voz: ligada/desligada" no painel do Sorteio; já fala uma amostra ao ligar.
-- **Minha cartela** (`cartela.html`, sem login): o participante digita o número da cartela e vê os números marcados ao vivo. Não mostra nenhum nome.
+- **Minha cartela** (`cartela.html`, sem login): o participante digita o número da cartela e vê os números marcados ao vivo, sozinhos, a cada bola sorteada. Não mostra nenhum nome. O organizador liga e desliga em **Configurações › Exibição** (ou no menu "Abrir telão ▾"); desligada, o link deixa de mostrar cartelas e o QR Code dela some do telão.
 
 ### Relatórios
 - Em **Histórico**: exportar **planilha (CSV)**, que abre direto no Excel, ou **relatório para imprimir / salvar em PDF**. Os nomes dos ganhadores só entram se a opção for marcada.

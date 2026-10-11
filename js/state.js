@@ -38,6 +38,8 @@ const DEFAULT_CONFIG = {
   voice: { operador: false, telao: true, ganhador: true },
   // QR Code no telão para o público: off | acompanhar | cartela | ambos
   telaoQr: 'off',
+  // Participante pode conferir a cartela online (cartela.html), com marcação automática.
+  minhaCartela: true,
   display: {
     boardCellSize: 56,
     boardFontSize: 14,

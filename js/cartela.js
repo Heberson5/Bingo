@@ -37,6 +37,11 @@
       msg.textContent = 'O sorteio não está acontecendo agora. Tente de novo quando o bingo começar.';
       return;
     }
+    if (data.disabled) {
+      result.hidden = true;
+      msg.textContent = 'A consulta da cartela online não está habilitada neste bingo. Confira sua cartela com o organizador. Se for liberada, esta página volta sozinha.';
+      return;
+    }
     if (!data.found) {
       result.hidden = true;
       msg.textContent = 'Não encontramos a cartela ' + current + ' na partida de agora. Confira o número impresso.';

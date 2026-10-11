@@ -84,7 +84,9 @@
 
   function openQrModal() {
     $('#qrTelao').innerHTML = qrSvg(followLink());
-    $('#qrCartela').innerHTML = qrSvg(cardLink());
+    const cardOn = Store.config.minhaCartela !== false;
+    $('#qrCartela').closest('figure').hidden = !cardOn;
+    $('#qrCartela').innerHTML = cardOn ? qrSvg(cardLink()) : '';
     $('#qrTelaoLink').value = followLink();
     $('#qrCartelaLink').value = cardLink();
     $('#qrModal').hidden = false;
@@ -98,6 +100,10 @@
     const radio = document.querySelector(`input[name="telaoQr"][value="${qr}"]`);
     if (radio) radio.checked = true;
     $('#menuVoiceTelao').checked = !!(Store.config.voice && Store.config.voice.telao);
+    const cardOn = Store.config.minhaCartela !== false;
+    $('#menuMinhaCartela').checked = cardOn;
+    // Sem "Minha cartela", as opções de QR dela ficam indisponíveis.
+    ['cartela', 'ambos'].forEach((v) => { document.querySelector(`input[name="telaoQr"][value="${v}"]`).disabled = !cardOn; });
     $('#menuOpenDisplay').href = telaoLink();
   }
   function setTelaoMenu(open) {
@@ -132,6 +138,17 @@
     Store.config.voice = { ...(Store.config.voice || {}), telao: e.target.checked };
     Store.saveConfig();
     showToast(e.target.checked ? 'Voz do telão ligada — toque em "ativar a voz" na tela do telão.' : 'Voz do telão desligada.');
+  });
+
+  $('#menuMinhaCartela').addEventListener('change', (e) => {
+    if (Session.isObserving()) { showToast('Somente leitura enquanto você visualiza outro usuário.'); syncTelaoMenu(); return; }
+    Store.config.minhaCartela = e.target.checked;
+    if (!e.target.checked && (Store.config.telaoQr === 'cartela' || Store.config.telaoQr === 'ambos')) {
+      Store.config.telaoQr = Store.config.telaoQr === 'ambos' ? 'acompanhar' : 'off';
+    }
+    Store.saveConfig();
+    syncTelaoMenu();
+    showToast(e.target.checked ? 'Minha cartela online ligada.' : 'Minha cartela online desligada: o link deixa de mostrar cartelas.');
   });
 
   $$('[data-close-qr]').forEach((el) => el.addEventListener('click', () => { $('#qrModal').hidden = true; }));

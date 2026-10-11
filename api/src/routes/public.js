@@ -61,7 +61,13 @@ router.get('/display/:userId', async (req, res) => {
     // padrão do app: voz do telão ligada.
     voice: config.voice && typeof config.voice.telao === 'boolean' ? config.voice.telao : true,
     // QR Code mostrado no telão para o público: off | acompanhar | cartela | ambos
-    telaoQr: ['acompanhar', 'cartela', 'ambos'].includes(config.telaoQr) ? config.telaoQr : 'off',
+    // Se "Minha cartela" estiver desligada, o QR dela some do telão.
+    telaoQr: (() => {
+      const q = ['acompanhar', 'cartela', 'ambos'].includes(config.telaoQr) ? config.telaoQr : 'off';
+      if (config.minhaCartela === false) return q === 'cartela' ? 'off' : q === 'ambos' ? 'acompanhar' : q;
+      return q;
+    })(),
+    minhaCartela: config.minhaCartela !== false,
     prize: typeof game.activePrize === 'string' ? game.activePrize : '',
     gameId: game.id || null,
     announcement,
@@ -84,6 +90,8 @@ const normalizeNumber = (s) => String(s || '').trim().replace(/^0+(?=\d)/, '');
 router.get('/card/:userId/:cardNumber', cardLimiter, async (req, res) => {
   const live = await loadLive(req.params.userId);
   if (!live) return res.json({ active: false });
+  // O operador pode desligar a consulta online em Configurações.
+  if (live.config.minhaCartela === false) return res.json({ active: true, disabled: true });
   const wanted = normalizeNumber(req.params.cardNumber).slice(0, 12);
   const card = live.cards.find((c) => c.status === 'active' && c.cardNumber && normalizeNumber(c.cardNumber) === wanted);
   if (!wanted || !card || !Array.isArray(card.grid)) return res.json({ active: true, found: false, drawnCount: live.revealed.length });

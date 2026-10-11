@@ -1860,6 +1860,7 @@ function renderConfigForm() {
   $('#cfgVoiceOperador').checked = !!voice.operador;
   $('#cfgVoiceTelao').checked = !!voice.telao;
   $('#cfgVoiceGanhador').checked = !!voice.ganhador;
+  $('#cfgMinhaCartela').checked = cfg.minhaCartela !== false;
   $('#quinaTipoWrap').style.display = cfg.criteria.quina ? '' : 'none';
 
   const d = cfg.display;
@@ -1908,6 +1909,7 @@ $('#formConfig').addEventListener('submit', (e) => {
     Store.config.criteria.moldura = $('#cfgPatternMoldura').checked;
     Store.config.criteria.letraT = $('#cfgPatternLetraT').checked;
     Store.config.criteria.cruz = $('#cfgPatternCruz').checked;
+    Store.config.minhaCartela = $('#cfgMinhaCartela').checked;
     Store.config.voice = {
       operador: $('#cfgVoiceOperador').checked,
       telao: $('#cfgVoiceTelao').checked,
